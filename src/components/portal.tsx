@@ -1,20 +1,28 @@
-import React from 'react'
-import { ReactNode } from 'react'
+import { useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useForceUpdate } from '../util/force-update'
 
-import usePortal from '../hooks/portal'
+export const Portal = ({ children }) => {
+  const mountNode = useRef<any>(null)
+  const portalNode = useRef<any>(null)
+  const forceUpdate = useForceUpdate()
 
-interface PortalProps {
-  id: string
-  children: ReactNode
-  noPortal?: boolean
+  useLayoutEffect(() => {
+    if (!mountNode.current) return
+
+    portalNode.current = document?.createElement('div')
+    portalNode.current.dataset.portal = 'true'
+    document.body.appendChild(portalNode.current)
+    forceUpdate()
+
+    return () => {
+      if (portalNode.current) document.body.removeChild(portalNode.current)
+    }
+  }, [forceUpdate])
+
+  return portalNode.current ? (
+    createPortal(children, portalNode.current)
+  ) : (
+    <span ref={mountNode} />
+  )
 }
-
-const Portal = ({ id, noPortal, children }: PortalProps) => {
-  const target = usePortal(id)
-
-  if (noPortal) return <>{children}</>
-  return createPortal(children, target)
-}
-
-export default Portal
