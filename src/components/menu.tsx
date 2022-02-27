@@ -10,6 +10,7 @@ import {
   Dispatch,
   SetStateAction,
   MutableRefObject,
+  MouseEventHandler,
 } from 'react'
 import _ from 'lodash'
 import { Dialog, DialogContent } from './dialog'
@@ -216,9 +217,17 @@ export const List = ({ children }) => {
 }
 
 export const Item = ({ onClick = () => {}, menuIdx = -1, children }) => {
-  const { focus, actionHandlerRef } = useMenuContext()
+  const { focus, setFocus, actionHandlerRef } = useMenuContext()
   const { level } = useMenuListContext()
   const hasVirtualFocus = focus[level] === menuIdx
+  const handleHover: MouseEventHandler = () => {
+    setFocus((s) => {
+      const clone = _.clone(s)
+      const sliced = clone.slice(0, level + 1)
+      sliced[level] = menuIdx
+      return sliced
+    })
+  }
 
   // register click handler on virtual focus
   useEffect(() => {
@@ -233,6 +242,7 @@ export const Item = ({ onClick = () => {}, menuIdx = -1, children }) => {
   return (
     <li
       onClick={onClick}
+      onMouseEnter={handleHover}
       style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
     >
       [{menuIdx}]{children}
