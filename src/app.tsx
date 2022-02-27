@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 // import styled from 'styled-components'
 import { Dialog, DialogContent } from './components/dialog'
 import * as Menu from './components/menu'
+import { mergeRefs } from './util/merge-refs'
 
 const DialogExample = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -25,7 +26,7 @@ const DialogExample = () => {
 const MenuExample = () => {
   return (
     <div>
-      <Menu.MenuContextProvider>
+      <Menu.ContextProvider>
         <Menu.Menu
           level={0}
           trigger={({ open }) => <button onClick={open}>open</button>}
@@ -76,7 +77,7 @@ const MenuExample = () => {
             </Menu.Menu>
           </Menu.List>
         </Menu.Menu>
-      </Menu.MenuContextProvider>
+      </Menu.ContextProvider>
     </div>
   )
 }
@@ -87,7 +88,7 @@ const MenuPopoutExample = () => {
 
   return (
     <div>
-      <Menu.MenuContextProvider>
+      <Menu.ContextProvider>
         <Menu.Menu
           level={0}
           trigger={({ open }) => <button onClick={open}>open</button>}
@@ -120,7 +121,7 @@ const MenuPopoutExample = () => {
             </Menu.Menu>
           </Menu.List>
         </Menu.Menu>
-      </Menu.MenuContextProvider>
+      </Menu.ContextProvider>
       <Dialog isOpen={isPopoutOpen}>
         <DialogContent initialFocusRef={initialPopoutFocusRef}>
           <button>other</button>
@@ -136,13 +137,15 @@ const ComboboxExample = () => {
   const inputRef = useRef<any>(null)
   return (
     <div>
-      <Menu.MenuContextProvider>
+      <Menu.ContextProvider noFocusTrap>
         <Menu.Menu
-          noFocusTrap
           level={0}
-          trigger={({ open, handleKeyDown }) => (
+          trigger={({ stickyTriggerRef, open, handleKeyDown }) => (
             <>
-              <input ref={inputRef} onKeyDown={handleKeyDown} />
+              <input
+                ref={mergeRefs(stickyTriggerRef, inputRef)}
+                onKeyDown={handleKeyDown}
+              />
               <button
                 onClick={() => {
                   open()
@@ -184,7 +187,7 @@ const ComboboxExample = () => {
             </Menu.Menu>
           </Menu.List>
         </Menu.Menu>
-      </Menu.MenuContextProvider>
+      </Menu.ContextProvider>
     </div>
   )
 }

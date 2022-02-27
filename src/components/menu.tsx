@@ -16,16 +16,20 @@ import { Dialog, DialogContent } from './dialog'
 
 // TODO: aria attrs
 
+interface ListChildState {
+  count: number
+  stickyChildren: { [index: number]: MutableRefObject<any> }
+}
+
 interface MenuContext {
   focus: number[]
   setFocus: Dispatch<SetStateAction<number[]>>
   actionHandlerRef: MutableRefObject<(() => void) | null>
   keyboardEventHandler: KeyboardEventHandler
   listChildStateRef: MutableRefObject<ListChildState[]>
-}
-interface ListChildState {
-  count: number
-  stickyChildren: { [index: number]: MutableRefObject<any> }
+  stickyTriggerRef: MutableRefObject<any>
+  focusTrapRef: MutableRefObject<any>
+  noFocusTrap: boolean
 }
 const menuContext = createContext<MenuContext>({
   focus: [],
@@ -33,6 +37,9 @@ const menuContext = createContext<MenuContext>({
   actionHandlerRef: { current: null },
   keyboardEventHandler: () => {},
   listChildStateRef: { current: [] },
+  stickyTriggerRef: { current: null },
+  focusTrapRef: { current: null },
+  noFocusTrap: false,
 })
 const useMenuContext = () => useContext(menuContext)
 
@@ -44,10 +51,12 @@ const menuListContext = createContext<MenuListContext>({
 })
 const useMenuListContext = () => useContext(menuListContext)
 
-export const MenuContextProvider = ({ children }) => {
+export const ContextProvider = ({ noFocusTrap = false, children }) => {
   const [focus, setFocus] = useState<number[]>([])
   const actionHandlerRef = useRef<(() => void) | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
+  const stickyTriggerRef = useRef<any>()
+  const focusTrapRef = useRef<any>()
   const keyboardEventHandler: KeyboardEventHandler = (e) => {
     if (!focus.length) {
       setFocus([0])
@@ -109,8 +118,9 @@ export const MenuContextProvider = ({ children }) => {
       return focus[level] >= actualIdx && !!stickyEl
     })
     if (matchingStickyEl) matchingStickyEl.current?.focus()
+    else if (noFocusTrap) stickyTriggerRef.current.focus?.()
     else document.getElementById('trap')?.focus()
-  }, [focus])
+  }, [focus, noFocusTrap])
 
   return (
     <menuContext.Provider
@@ -120,6 +130,9 @@ export const MenuContextProvider = ({ children }) => {
         actionHandlerRef,
         keyboardEventHandler,
         listChildStateRef,
+        stickyTriggerRef,
+        focusTrapRef,
+        noFocusTrap,
       }}
     >
       <menuListContext.Provider value={{ level: -1 }}>
@@ -129,20 +142,21 @@ export const MenuContextProvider = ({ children }) => {
   )
 }
 
-export const Menu = ({
-  noFocusTrap = false,
-  level,
-  trigger,
-  children,
-  ...props
-}) => {
-  const focusControllerRef = useRef<any>(null)
-  const { focus, setFocus, keyboardEventHandler } = useMenuContext()
+export const Menu = ({ level, trigger, children, ...props }) => {
+  const {
+    focus,
+    setFocus,
+    keyboardEventHandler,
+    stickyTriggerRef,
+    focusTrapRef,
+    noFocusTrap,
+  } = useMenuContext()
   const isOpen = !_.isUndefined(focus[level])
 
   return (
     <>
       {trigger({
+        stickyTriggerRef,
         handleKeyDown: keyboardEventHandler,
         open: () =>
           setFocus((s) => {
@@ -153,15 +167,12 @@ export const Menu = ({
         ...props,
       })}
       <Dialog isOpen={isOpen}>
-        <DialogContent
-          initialFocusRef={focusControllerRef}
-          noFocusLock={level > 0}
-        >
+        <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
           {noFocusTrap ? null : (
             <span
               id="trap"
               tabIndex={0}
-              ref={focusControllerRef}
+              ref={focusTrapRef}
               onKeyDown={keyboardEventHandler}
             />
           )}
