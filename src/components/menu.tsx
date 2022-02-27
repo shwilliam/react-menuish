@@ -113,14 +113,15 @@ export const ContextProvider = ({ noFocusTrap = false, children }) => {
           return clone
         }, Array.from({ length: state.count })),
       )
-    const matchingLevel = stuff.find((stickyEls, idx) => !!stickyEls.length)
+    const matchingLevel = stuff.find((stickyEls) => !!stickyEls.length)
     const matchingStickyEl = matchingLevel?.reverse().find((stickyEl, idx) => {
       const actualIdx = matchingLevel.length - idx - 1
       return focus[level] >= actualIdx && !!stickyEl
     })
+
     if (matchingStickyEl) matchingStickyEl.current?.focus()
     else if (noFocusTrap) stickyTriggerRef.current.focus?.()
-    else document.getElementById('trap')?.focus()
+    else focusTrapRef.current?.focus?.()
   }, [focus, noFocusTrap])
 
   return (
@@ -169,9 +170,9 @@ export const Menu = ({ level, trigger, children, ...props }) => {
       })}
       <Dialog isOpen={isOpen}>
         <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
-          {noFocusTrap ? null : (
+          {noFocusTrap || level > 0 ? null : (
             <span
-              id="trap"
+              aria-hidden
               tabIndex={0}
               ref={focusTrapRef}
               onKeyDown={keyboardEventHandler}
