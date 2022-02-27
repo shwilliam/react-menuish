@@ -144,7 +144,29 @@ export const ContextProvider = ({ noFocusTrap = false, children }) => {
   )
 }
 
-export const Menu = ({ level, trigger, children, ...props }) => {
+interface MenuProps extends MenuInnerProps {
+  noFocusTrap?: boolean
+}
+
+export const Menu = ({ noFocusTrap, ...props }: MenuProps) => {
+  return (
+    <ContextProvider noFocusTrap={noFocusTrap}>
+      <MenuInner {...props} />
+    </ContextProvider>
+  )
+}
+
+export const Submenu = (props) => {
+  return <MenuInner {...props} />
+}
+
+interface MenuInnerProps {
+  level: number
+  trigger: any
+  children: any
+}
+
+const MenuInner = ({ level, trigger, children, ...props }: MenuInnerProps) => {
   const {
     focus,
     setFocus,
@@ -217,7 +239,13 @@ export const List = ({ children }) => {
   )
 }
 
-export const Item = ({ onClick = () => {}, menuIdx = -1, children }) => {
+interface ItemProps {
+  onClick?: () => void
+  menuIdx?: number
+  children: any
+}
+
+export const Item = ({ onClick, menuIdx = -1, children }: ItemProps) => {
   const { focus, setFocus, actionHandlerRef } = useMenuContext()
   const { level } = useMenuListContext()
   const hasVirtualFocus = focus[level] === menuIdx
@@ -233,7 +261,7 @@ export const Item = ({ onClick = () => {}, menuIdx = -1, children }) => {
   // register click handler on virtual focus
   useEffect(() => {
     if (hasVirtualFocus) {
-      actionHandlerRef.current = onClick
+      actionHandlerRef.current = onClick || null
       return () => {
         actionHandlerRef.current = null
       }

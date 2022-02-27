@@ -26,58 +26,56 @@ const DialogExample = () => {
 const MenuExample = () => {
   return (
     <div>
-      <Menu.ContextProvider>
-        <Menu.Menu
-          level={0}
-          trigger={({ open }) => <button onClick={open}>open</button>}
-        >
-          <Menu.List>
-            <Menu.Item>item 1</Menu.Item>
-            <Menu.Item>item 2</Menu.Item>
-            <Menu.Item>item 3</Menu.Item>
-            <Menu.Menu
-              level={1}
-              trigger={({ menuIdx, open }) => (
-                <Menu.Item menuIdx={menuIdx} onClick={open}>
-                  open
-                </Menu.Item>
-              )}
-            >
-              <Menu.List>
-                <Menu.Item>item 1</Menu.Item>
-                <Menu.Item>item 2</Menu.Item>
-                <Menu.Item>item 3</Menu.Item>
-                <Menu.Item>item 4</Menu.Item>
-                <Menu.Item>item 5</Menu.Item>
-                <Menu.Menu
-                  level={2}
-                  trigger={({ menuIdx, open }) => (
-                    <Menu.Item menuIdx={menuIdx} onClick={open}>
-                      open
-                    </Menu.Item>
-                  )}
-                >
-                  <Menu.List>
-                    <Menu.Item>item 1</Menu.Item>
-                    <Menu.FocusableItem>
-                      {({ focusableRef, handleKeyDown }) => (
-                        <input ref={focusableRef} onKeyDown={handleKeyDown} />
-                      )}
-                    </Menu.FocusableItem>
-                    <Menu.Item>item 2</Menu.Item>
-                    <Menu.Item>item 3</Menu.Item>
-                    <Menu.FocusableItem>
-                      {({ focusableRef, handleKeyDown }) => (
-                        <input ref={focusableRef} onKeyDown={handleKeyDown} />
-                      )}
-                    </Menu.FocusableItem>
-                  </Menu.List>
-                </Menu.Menu>
-              </Menu.List>
-            </Menu.Menu>
-          </Menu.List>
-        </Menu.Menu>
-      </Menu.ContextProvider>
+      <Menu.Menu
+        level={0}
+        trigger={({ open }) => <button onClick={open}>open</button>}
+      >
+        <Menu.List>
+          <Menu.Item>item 1</Menu.Item>
+          <Menu.Item>item 2</Menu.Item>
+          <Menu.Item>item 3</Menu.Item>
+          <Menu.Submenu
+            level={1}
+            trigger={({ menuIdx, open }) => (
+              <Menu.Item menuIdx={menuIdx} onClick={open}>
+                open
+              </Menu.Item>
+            )}
+          >
+            <Menu.List>
+              <Menu.Item>item 1</Menu.Item>
+              <Menu.Item>item 2</Menu.Item>
+              <Menu.Item>item 3</Menu.Item>
+              <Menu.Item>item 4</Menu.Item>
+              <Menu.Item>item 5</Menu.Item>
+              <Menu.Submenu
+                level={2}
+                trigger={({ menuIdx, open }) => (
+                  <Menu.Item menuIdx={menuIdx} onClick={open}>
+                    open
+                  </Menu.Item>
+                )}
+              >
+                <Menu.List>
+                  <Menu.Item>item 1</Menu.Item>
+                  <Menu.FocusableItem>
+                    {({ focusableRef, handleKeyDown }) => (
+                      <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                    )}
+                  </Menu.FocusableItem>
+                  <Menu.Item>item 2</Menu.Item>
+                  <Menu.Item>item 3</Menu.Item>
+                  <Menu.FocusableItem>
+                    {({ focusableRef, handleKeyDown }) => (
+                      <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                    )}
+                  </Menu.FocusableItem>
+                </Menu.List>
+              </Menu.Submenu>
+            </Menu.List>
+          </Menu.Submenu>
+        </Menu.List>
+      </Menu.Menu>
     </div>
   )
 }
@@ -88,40 +86,38 @@ const MenuPopoutExample = () => {
 
   return (
     <div>
-      <Menu.ContextProvider>
-        <Menu.Menu
-          level={0}
-          trigger={({ open }) => <button onClick={open}>open</button>}
-        >
-          <Menu.List>
-            <Menu.Item>item 1</Menu.Item>
-            <Menu.Item>item 2</Menu.Item>
-            <Menu.Item>item 3</Menu.Item>
-            <Menu.Menu
-              level={1}
-              trigger={({ menuIdx, open }) => (
-                <Menu.Item menuIdx={menuIdx} onClick={open}>
-                  open
-                </Menu.Item>
-              )}
-            >
-              <Menu.List>
-                <Menu.Item>item 1</Menu.Item>
-                <Menu.FocusableItem>
-                  {({ focusableRef, handleKeyDown }) => (
-                    <input ref={focusableRef} onKeyDown={handleKeyDown} />
-                  )}
-                </Menu.FocusableItem>
-                <Menu.Item>item 2</Menu.Item>
-                <Menu.Item>item 3</Menu.Item>
-                <Menu.Item onClick={() => setIsPopoutOpen(true)}>
-                  popout
-                </Menu.Item>
-              </Menu.List>
-            </Menu.Menu>
-          </Menu.List>
-        </Menu.Menu>
-      </Menu.ContextProvider>
+      <Menu.Menu
+        level={0}
+        trigger={({ open }) => <button onClick={open}>open</button>}
+      >
+        <Menu.List>
+          <Menu.Item>item 1</Menu.Item>
+          <Menu.Item>item 2</Menu.Item>
+          <Menu.Item>item 3</Menu.Item>
+          <Menu.Submenu
+            level={1}
+            trigger={({ menuIdx, open }) => (
+              <Menu.Item menuIdx={menuIdx} onClick={open}>
+                open
+              </Menu.Item>
+            )}
+          >
+            <Menu.List>
+              <Menu.Item>item 1</Menu.Item>
+              <Menu.FocusableItem>
+                {({ focusableRef, handleKeyDown }) => (
+                  <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                )}
+              </Menu.FocusableItem>
+              <Menu.Item>item 2</Menu.Item>
+              <Menu.Item>item 3</Menu.Item>
+              <Menu.Item onClick={() => setIsPopoutOpen(true)}>
+                popout
+              </Menu.Item>
+            </Menu.List>
+          </Menu.Submenu>
+        </Menu.List>
+      </Menu.Menu>
       <Dialog isOpen={isPopoutOpen}>
         <DialogContent initialFocusRef={initialPopoutFocusRef}>
           <button>other</button>
@@ -137,57 +133,116 @@ const ComboboxExample = () => {
   const inputRef = useRef<any>(null)
   return (
     <div>
-      <Menu.ContextProvider noFocusTrap>
-        <Menu.Menu
-          level={0}
-          trigger={({ stickyTriggerRef, open, handleKeyDown }) => (
-            <>
-              <input
-                ref={mergeRefs(stickyTriggerRef, inputRef)}
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                onClick={() => {
-                  open()
-                  inputRef.current.focus()
-                }}
-              >
-                v
-              </button>
-            </>
-          )}
-        >
-          <Menu.List>
-            <Menu.Item>item 1</Menu.Item>
-            <Menu.Item>item 2</Menu.Item>
-            <Menu.Item>item 3</Menu.Item>
-            <Menu.Menu
-              level={1}
-              trigger={({ menuIdx, open }) => (
-                <Menu.Item menuIdx={menuIdx} onClick={open}>
-                  open
-                </Menu.Item>
-              )}
+      <Menu.Menu
+        noFocusTrap
+        level={0}
+        trigger={({ stickyTriggerRef, open, handleKeyDown }) => (
+          <>
+            <input
+              ref={mergeRefs(stickyTriggerRef, inputRef)}
+              onKeyDown={handleKeyDown}
+            />
+            <button
+              onClick={() => {
+                open()
+                inputRef.current.focus()
+              }}
             >
-              <Menu.List>
-                <Menu.Item>item 1</Menu.Item>
-                <Menu.FocusableItem>
-                  {({ focusableRef, handleKeyDown }) => (
-                    <input ref={focusableRef} onKeyDown={handleKeyDown} />
-                  )}
-                </Menu.FocusableItem>
-                <Menu.Item>item 2</Menu.Item>
-                <Menu.Item>item 3</Menu.Item>
-                <Menu.FocusableItem>
-                  {({ focusableRef, handleKeyDown }) => (
-                    <input ref={focusableRef} onKeyDown={handleKeyDown} />
-                  )}
-                </Menu.FocusableItem>
-              </Menu.List>
-            </Menu.Menu>
-          </Menu.List>
-        </Menu.Menu>
-      </Menu.ContextProvider>
+              v
+            </button>
+          </>
+        )}
+      >
+        <Menu.List>
+          <Menu.Item>item 1</Menu.Item>
+          <Menu.Item>item 2</Menu.Item>
+          <Menu.Item>item 3</Menu.Item>
+          <Menu.Submenu
+            level={1}
+            trigger={({ menuIdx, open }) => (
+              <Menu.Item menuIdx={menuIdx} onClick={open}>
+                open
+              </Menu.Item>
+            )}
+          >
+            <Menu.List>
+              <Menu.Item>item 1</Menu.Item>
+              <Menu.FocusableItem>
+                {({ focusableRef, handleKeyDown }) => (
+                  <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                )}
+              </Menu.FocusableItem>
+              <Menu.Item>item 2</Menu.Item>
+              <Menu.Item>item 3</Menu.Item>
+              <Menu.FocusableItem>
+                {({ focusableRef, handleKeyDown }) => (
+                  <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                )}
+              </Menu.FocusableItem>
+            </Menu.List>
+          </Menu.Submenu>
+        </Menu.List>
+      </Menu.Menu>
+    </div>
+  )
+}
+
+const DropdownExample = () => {
+  const [value, setValue] = useState<string | null>(null)
+  return (
+    <div>
+      <Menu.Menu
+        level={0}
+        trigger={({ open }) => (
+          <button onClick={open}>{value || 'open'}</button>
+        )}
+      >
+        <Menu.List>
+          <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
+          <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+          <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
+          <Menu.Submenu
+            level={1}
+            trigger={({ menuIdx, open }) => (
+              <Menu.Item menuIdx={menuIdx} onClick={open}>
+                open
+              </Menu.Item>
+            )}
+          >
+            <Menu.List>
+              <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
+              <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+              <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
+              <Menu.Item onClick={() => setValue('4')}>item 4</Menu.Item>
+              <Menu.Item onClick={() => setValue('5')}>item 5</Menu.Item>
+              <Menu.Submenu
+                level={2}
+                trigger={({ menuIdx, open }) => (
+                  <Menu.Item menuIdx={menuIdx} onClick={open}>
+                    open
+                  </Menu.Item>
+                )}
+              >
+                <Menu.List>
+                  <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
+                  <Menu.FocusableItem>
+                    {({ focusableRef, handleKeyDown }) => (
+                      <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                    )}
+                  </Menu.FocusableItem>
+                  <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+                  <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
+                  <Menu.FocusableItem>
+                    {({ focusableRef, handleKeyDown }) => (
+                      <input ref={focusableRef} onKeyDown={handleKeyDown} />
+                    )}
+                  </Menu.FocusableItem>
+                </Menu.List>
+              </Menu.Submenu>
+            </Menu.List>
+          </Menu.Submenu>
+        </Menu.List>
+      </Menu.Menu>
     </div>
   )
 }
@@ -202,6 +257,7 @@ export const App = () => {
       <MenuExample />
       <MenuPopoutExample />
       <ComboboxExample />
+      <DropdownExample />
       <ul>
         <li>hihi</li>
         <li>hoho</li>
