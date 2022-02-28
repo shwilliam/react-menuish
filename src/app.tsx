@@ -33,7 +33,11 @@ const MenuWithFilter = () => {
     <div>
       <Menu.Menu
         level={0}
-        trigger={({ open }) => <button onClick={open}>open</button>}
+        trigger={({ anchorRef, open }) => (
+          <button ref={anchorRef} onClick={open}>
+            menu w/ filter
+          </button>
+        )}
       >
         <Menu.List>
           <Menu.FocusableItem>
@@ -49,8 +53,8 @@ const MenuWithFilter = () => {
           {fruitItems}
           <Menu.Submenu
             level={1}
-            trigger={({ menuIdx, open }) => (
-              <Menu.Item menuIdx={menuIdx} onClick={open}>
+            trigger={({ anchorRef, menuIdx, open }) => (
+              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                 open
               </Menu.Item>
             )}
@@ -93,7 +97,11 @@ const MenuExample = () => {
     <div>
       <Menu.Menu
         level={0}
-        trigger={({ open }) => <button onClick={open}>open</button>}
+        trigger={({ anchorRef, open }) => (
+          <button ref={anchorRef} onClick={open}>
+            open
+          </button>
+        )}
       >
         <Menu.List>
           <Menu.Item>item 1</Menu.Item>
@@ -101,8 +109,8 @@ const MenuExample = () => {
           <Menu.Item>item 3</Menu.Item>
           <Menu.Submenu
             level={1}
-            trigger={({ menuIdx, open }) => (
-              <Menu.Item menuIdx={menuIdx} onClick={open}>
+            trigger={({ anchorRef, menuIdx, open }) => (
+              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                 open
               </Menu.Item>
             )}
@@ -115,8 +123,8 @@ const MenuExample = () => {
               <Menu.Item>item 5</Menu.Item>
               <Menu.Submenu
                 level={2}
-                trigger={({ menuIdx, open }) => (
-                  <Menu.Item menuIdx={menuIdx} onClick={open}>
+                trigger={({ anchorRef, menuIdx, open }) => (
+                  <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                     open
                   </Menu.Item>
                 )}
@@ -153,7 +161,11 @@ const MenuPopoutExample = () => {
     <div>
       <Menu.Menu
         level={0}
-        trigger={({ open }) => <button onClick={open}>open</button>}
+        trigger={({ anchorRef, open }) => (
+          <button ref={anchorRef} onClick={open}>
+            open
+          </button>
+        )}
       >
         <Menu.List>
           <Menu.Item>item 1</Menu.Item>
@@ -161,8 +173,8 @@ const MenuPopoutExample = () => {
           <Menu.Item>item 3</Menu.Item>
           <Menu.Submenu
             level={1}
-            trigger={({ menuIdx, open }) => (
-              <Menu.Item menuIdx={menuIdx} onClick={open}>
+            trigger={({ anchorRef, menuIdx, open }) => (
+              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                 open
               </Menu.Item>
             )}
@@ -210,9 +222,9 @@ const ComboboxExample = () => {
       <Menu.Menu
         noFocusTrap
         level={0}
-        trigger={({ stickyTriggerRef, open, handleKeyDown }) => (
+        trigger={({ anchorRef, stickyTriggerRef, open, handleKeyDown }) => (
           <ComboboxInput
-            ref={mergeRefs(stickyTriggerRef, inputRef)}
+            ref={mergeRefs(anchorRef, stickyTriggerRef, inputRef)}
             onKeyDown={handleKeyDown}
             buttonProps={{
               onClick: () => {
@@ -229,8 +241,8 @@ const ComboboxExample = () => {
           <Menu.Item>item 3</Menu.Item>
           <Menu.Submenu
             level={1}
-            trigger={({ menuIdx, open }) => (
-              <Menu.Item menuIdx={menuIdx} onClick={open}>
+            trigger={({ anchorRef, menuIdx, open }) => (
+              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                 open
               </Menu.Item>
             )}
@@ -263,8 +275,10 @@ const DropdownExample = () => {
     <div>
       <Menu.Menu
         level={0}
-        trigger={({ open }) => (
-          <button onClick={open}>{value || 'open'}</button>
+        trigger={({ anchorRef, open }) => (
+          <button ref={anchorRef} onClick={open}>
+            {value || 'open'}
+          </button>
         )}
       >
         <Menu.List>
@@ -273,8 +287,8 @@ const DropdownExample = () => {
           <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
           <Menu.Submenu
             level={1}
-            trigger={({ menuIdx, open }) => (
-              <Menu.Item menuIdx={menuIdx} onClick={open}>
+            trigger={({ anchorRef, menuIdx, open }) => (
+              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                 open
               </Menu.Item>
             )}
@@ -287,8 +301,8 @@ const DropdownExample = () => {
               <Menu.Item onClick={() => setValue('5')}>item 5</Menu.Item>
               <Menu.Submenu
                 level={2}
-                trigger={({ menuIdx, open }) => (
-                  <Menu.Item menuIdx={menuIdx} onClick={open}>
+                trigger={({ anchorRef, menuIdx, open }) => (
+                  <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
                     open
                   </Menu.Item>
                 )}

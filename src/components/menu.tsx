@@ -17,6 +17,7 @@ import {
   forwardRef,
 } from 'react'
 import _ from 'lodash'
+import { usePopper } from 'react-popper'
 import { Dialog, DialogContent } from './dialog'
 
 // TODO: aria attrs
@@ -212,10 +213,19 @@ const MenuInner = forwardRef(
       noFocusTrap,
     } = useMenuContext()
     const isOpen = !_.isUndefined(focus[level])
+    const isSubmenu = level > 0
+    const [referenceElement, setReferenceElement] = useState<any>()
+    const [popperElement, setPopperElement] = useState<any>()
+    const [arrowElement, setArrowElement] = useState<any>()
+    const { styles, attributes } = usePopper(referenceElement, popperElement, {
+      placement: isSubmenu ? 'right-start' : 'bottom',
+      modifiers: [{ name: 'arrow', options: { element: arrowElement } }],
+    })
 
     return (
       <>
         {trigger({
+          anchorRef: setReferenceElement,
           stickyTriggerRef,
           handleKeyDown: keyboardEventHandler,
           open: () =>
@@ -228,15 +238,22 @@ const MenuInner = forwardRef(
         })}
         <Dialog isOpen={isOpen}>
           <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
-            {noFocusTrap || level > 0 ? null : (
-              <span
-                aria-hidden
-                tabIndex={0}
-                ref={focusTrapRef}
-                onKeyDown={keyboardEventHandler}
-              />
-            )}
-            {children}
+            <div
+              ref={setPopperElement}
+              style={styles.popper}
+              {...attributes.poppper}
+            >
+              <span ref={setArrowElement} style={styles.arrow} />
+              {noFocusTrap || level > 0 ? null : (
+                <span
+                  aria-hidden
+                  tabIndex={0}
+                  ref={focusTrapRef}
+                  onKeyDown={keyboardEventHandler}
+                />
+              )}
+              {children}
+            </div>
           </DialogContent>
         </Dialog>
       </>
