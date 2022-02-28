@@ -175,9 +175,7 @@ export const ContextProvider = ({
         noFocusTrap,
       }}
     >
-      <menuListContext.Provider value={{ level: -1 }}>
-        {children}
-      </menuListContext.Provider>
+      {children}
     </menuContext.Provider>
   )
 }
@@ -189,7 +187,9 @@ interface MenuProps extends MenuInnerProps {
 export const Menu = forwardRef(({ noFocusTrap, ...props }: MenuProps, ref) => {
   return (
     <ContextProvider noFocusTrap={noFocusTrap}>
-      <MenuInner ref={ref} {...props} />
+      <menuListContext.Provider value={{ level: 0 }}>
+        <MenuInner ref={ref} {...props} />
+      </menuListContext.Provider>
     </ContextProvider>
   )
 })
@@ -197,18 +197,22 @@ export const Menu = forwardRef(({ noFocusTrap, ...props }: MenuProps, ref) => {
 interface SubmenuProps extends MenuInnerProps {}
 
 export const Submenu = forwardRef((props: SubmenuProps, ref) => {
-  return <MenuInner ref={ref} {...props} />
+  const { level } = useMenuListContext()
+  return (
+    <menuListContext.Provider value={{ level: level + 1 }}>
+      <MenuInner ref={ref} {...props} />
+    </menuListContext.Provider>
+  )
 })
 
 interface MenuInnerProps {
   id?: string
-  level: number
   trigger: any
   children: any
 }
 
 const MenuInner = forwardRef(
-  ({ id, level, trigger, children, ...props }: MenuInnerProps, ref) => {
+  ({ id, trigger, children, ...props }: MenuInnerProps, ref) => {
     const innerId = useId(id)
     const {
       focus,
@@ -219,6 +223,7 @@ const MenuInner = forwardRef(
       noFocusTrap,
       closeMenu,
     } = useMenuContext()
+    const { level } = useMenuListContext()
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
@@ -238,18 +243,22 @@ const MenuInner = forwardRef(
 
     return (
       <>
-        {trigger({
-          anchorRef: setReferenceElement,
-          stickyTriggerRef,
-          handleKeyDown: keyboardEventHandler,
-          open: () =>
-            setFocus((s) => {
-              const clone = _.clone(s)
-              clone[level] = 0
-              return clone
-            }),
-          ...props,
-        })}
+        <menuListContext.Provider
+          value={{ level: isSubmenu ? level - 1 : level }}
+        >
+          {trigger({
+            anchorRef: setReferenceElement,
+            stickyTriggerRef,
+            handleKeyDown: keyboardEventHandler,
+            open: () =>
+              setFocus((s) => {
+                const clone = _.clone(s)
+                clone[level] = 0
+                return clone
+              }),
+            ...props,
+          })}
+        </menuListContext.Provider>
         <Dialog id={innerId} isOpen={isOpen}>
           <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
             <div
@@ -283,37 +292,36 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
   const { focus, setFocus, listChildStateRef } = useMenuContext()
   const { level } = useMenuListContext()
   const levelMax = Children.count(children)
-  const thisLevel = level + 1
-  const thisLevelFocus = focus[thisLevel]
+  const thisLevelFocus = focus[level]
 
   // sync level child count
   useEffect(() => {
     const listChildCount = _.cloneDeep(listChildStateRef.current)
-    listChildCount[thisLevel] = {
-      ...listChildCount[thisLevel],
+    listChildCount[level] = {
+      ...listChildCount[level],
       count: levelMax,
     }
     listChildStateRef.current = listChildCount
 
     return () => {
       const listChildCount = _.clone(listChildStateRef.current)
-      listChildStateRef.current = listChildCount.slice(0, thisLevel)
+      listChildStateRef.current = listChildCount.slice(0, level)
     }
-  }, [levelMax, listChildStateRef, thisLevel])
+  }, [levelMax, listChildStateRef, level])
 
   // correct focus if out of bounds
   useLayoutEffect(() => {
     if (thisLevelFocus > levelMax - 1) {
       setFocus((s) => {
         const clone = _.clone(s)
-        clone[thisLevel] = levelMax - 1
+        clone[level] = levelMax - 1
         return clone
       })
     }
-  }, [thisLevelFocus, thisLevel, levelMax, setFocus])
+  }, [thisLevelFocus, level, levelMax, setFocus])
 
   return (
-    <menuListContext.Provider value={{ level: thisLevel }}>
+    <menuListContext.Provider value={{ level }}>
       <ul ref={ref}>
         {Children.map(children, (child, idx) =>
           cloneElement(child, { menuIdx: idx }),
