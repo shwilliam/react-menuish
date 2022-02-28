@@ -1,6 +1,7 @@
 import { useState, useRef, forwardRef } from 'react'
 // import styled from 'styled-components'
 import { Dialog, DialogContent } from './components/dialog'
+import { FocusTakeoverContextProvider } from './components/focus-takeover'
 import * as Menu from './components/menu'
 import { mergeRefs } from './util/merge-refs'
 
@@ -22,6 +23,25 @@ const fruits = ['apple', 'orange', 'banana', 'kiwi'],
     'cherry',
   ],
   allFruits = [...fruits, ...moreFruits]
+
+const SimpleMenu = () => {
+  const fruitItems: any = fruits.map((f) => <Menu.Item key={f}>{f}</Menu.Item>)
+
+  return (
+    <div>
+      <Menu.Menu
+        level={0}
+        trigger={({ anchorRef, open }) => (
+          <button ref={anchorRef} onClick={open}>
+            menu
+          </button>
+        )}
+      >
+        <Menu.List>{fruitItems}</Menu.List>
+      </Menu.Menu>
+    </div>
+  )
+}
 
 const MenuWithFilter = () => {
   const [filter, setFilter] = useState('')
@@ -333,26 +353,29 @@ const DropdownExample = () => {
 
 export const App = () => {
   return (
-    <section>
-      <h1>title</h1>
-      <h2>subtitle</h2>
-      <button>bla bla</button>
-      <MenuWithFilter />
-      <DialogExample />
-      <MenuExample />
-      <MenuPopoutExample />
-      <ComboboxExample />
-      <DropdownExample />
-      <ul>
-        <li>hihi</li>
-        <li>hoho</li>
-        <li>hehe</li>
-      </ul>
-      {/* <div>
+    <FocusTakeoverContextProvider>
+      <section>
+        <h1>title</h1>
+        <h2>subtitle</h2>
+        <button>bla bla</button>
+        <SimpleMenu />
+        <MenuWithFilter />
+        <DialogExample />
+        <MenuExample />
+        <MenuPopoutExample />
+        <ComboboxExample />
+        <DropdownExample />
+        <ul>
+          <li>hihi</li>
+          <li>hoho</li>
+          <li>hehe</li>
+        </ul>
+        {/* <div>
         {Array.from({ length: 200 }).map(() => (
           <p>scroll b</p>
         ))}
       </div> */}
-    </section>
+      </section>
+    </FocusTakeoverContextProvider>
   )
 }

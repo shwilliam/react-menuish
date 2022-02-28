@@ -17,8 +17,12 @@ import {
   forwardRef,
 } from 'react'
 import _ from 'lodash'
+import useOnClickOutside from 'use-onclickoutside'
+import { useId } from '@react-aria/utils'
 import { usePopper } from 'react-popper'
 import { Dialog, DialogContent } from './dialog'
+import { mergeRefs } from '../util/merge-refs'
+import { useFocusTakeoverContext } from './focus-takeover'
 
 // TODO: aria attrs
 
@@ -197,13 +201,15 @@ export const Submenu = forwardRef((props: SubmenuProps, ref) => {
 })
 
 interface MenuInnerProps {
+  id?: string
   level: number
   trigger: any
   children: any
 }
 
 const MenuInner = forwardRef(
-  ({ level, trigger, children, ...props }: MenuInnerProps, ref) => {
+  ({ id, level, trigger, children, ...props }: MenuInnerProps, ref) => {
+    const innerId = useId(id)
     const {
       focus,
       setFocus,
@@ -211,16 +217,24 @@ const MenuInner = forwardRef(
       stickyTriggerRef,
       focusTrapRef,
       noFocusTrap,
+      closeMenu,
     } = useMenuContext()
+    const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
     const [referenceElement, setReferenceElement] = useState<any>()
+    const innerRef = useRef<any>()
     const [popperElement, setPopperElement] = useState<any>()
     const [arrowElement, setArrowElement] = useState<any>()
     const { styles, attributes } = usePopper(referenceElement, popperElement, {
       placement: isSubmenu ? 'right-start' : 'bottom',
       modifiers: [{ name: 'arrow', options: { element: arrowElement } }],
     })
+
+    useOnClickOutside(
+      innerRef,
+      isActiveFocusBoundary(innerId) ? closeMenu : () => {},
+    )
 
     return (
       <>
@@ -236,10 +250,10 @@ const MenuInner = forwardRef(
             }),
           ...props,
         })}
-        <Dialog isOpen={isOpen}>
+        <Dialog id={innerId} isOpen={isOpen}>
           <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
             <div
-              ref={setPopperElement}
+              ref={mergeRefs(ref, innerRef, setPopperElement)}
               style={styles.popper}
               {...attributes.poppper}
             >

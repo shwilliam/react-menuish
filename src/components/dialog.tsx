@@ -1,5 +1,6 @@
 import { useEffect, useCallback, ReactNode } from 'react'
 import FocusLock from 'react-focus-lock'
+import { FocusTakeoverBoundary } from './focus-takeover'
 import { Portal } from './portal'
 
 // TODO: aria attrs
@@ -42,13 +43,18 @@ export const Dialog = (props: DialogProps) => {
 }
 
 interface DialogOverlayProps {
+  id?: string
   isOpen?: boolean
   children: ReactNode
 }
 
-const DialogOverlay = ({ isOpen, children }: DialogOverlayProps) => {
+const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
   if (!isOpen) return null
-  return <Portal>{children}</Portal>
+  return (
+    <Portal>
+      <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
+    </Portal>
+  )
 }
 
 const createAriaHider = () => {
