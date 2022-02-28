@@ -1,6 +1,6 @@
 import { useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useForceUpdate } from '../util/force-update'
+import { useForceUpdate } from '../hooks/force-update'
 
 export const Portal = ({ children }) => {
   const mountNode = useRef<any>(null)

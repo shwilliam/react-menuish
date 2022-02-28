@@ -1,8 +1,73 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, forwardRef } from 'react'
 // import styled from 'styled-components'
 import { Dialog, DialogContent } from './components/dialog'
 import * as Menu from './components/menu'
 import { mergeRefs } from './util/merge-refs'
+
+const fruits = ['apple', 'orange', 'banana', 'kiwi'],
+  moreFruits = [
+    'passionfruit',
+    'eggplant',
+    'lime',
+    'acai',
+    'blackberry',
+    'durian',
+    'grape',
+    'guava',
+    'peach',
+    'watermelown',
+    'pomelo',
+    'melon',
+    'mango',
+    'cherry',
+  ],
+  allFruits = [...fruits, ...moreFruits]
+
+const MenuWithFilter = () => {
+  const [filter, setFilter] = useState('')
+  const fruitItems: any = fruits
+    .filter((f) => !filter || f.toLowerCase().includes(filter.toLowerCase()))
+    .map((f) => <Menu.Item key={f}>{f}</Menu.Item>)
+
+  return (
+    <div>
+      <Menu.Menu
+        level={0}
+        trigger={({ open }) => <button onClick={open}>open</button>}
+      >
+        <Menu.List>
+          <Menu.FocusableItem>
+            {({ focusableRef, handleKeyDown }) => (
+              <input
+                ref={focusableRef}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            )}
+          </Menu.FocusableItem>
+          {fruitItems}
+          <Menu.Submenu
+            level={1}
+            trigger={({ menuIdx, open }) => (
+              <Menu.Item menuIdx={menuIdx} onClick={open}>
+                open
+              </Menu.Item>
+            )}
+          >
+            <Menu.List>
+              <Menu.Item>item 1</Menu.Item>
+              <Menu.Item>item 2</Menu.Item>
+              <Menu.Item>item 3</Menu.Item>
+              <Menu.Item>item 4</Menu.Item>
+              <Menu.Item>item 5</Menu.Item>
+            </Menu.List>
+          </Menu.Submenu>
+        </Menu.List>
+      </Menu.Menu>
+    </div>
+  )
+}
 
 const DialogExample = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -129,6 +194,15 @@ const MenuPopoutExample = () => {
   )
 }
 
+const ComboboxInput = forwardRef(({ buttonProps, ...props }: any, ref) => {
+  return (
+    <>
+      <input ref={ref} {...props} />
+      <button {...buttonProps}>v</button>
+    </>
+  )
+})
+
 const ComboboxExample = () => {
   const inputRef = useRef<any>(null)
   return (
@@ -137,20 +211,16 @@ const ComboboxExample = () => {
         noFocusTrap
         level={0}
         trigger={({ stickyTriggerRef, open, handleKeyDown }) => (
-          <>
-            <input
-              ref={mergeRefs(stickyTriggerRef, inputRef)}
-              onKeyDown={handleKeyDown}
-            />
-            <button
-              onClick={() => {
+          <ComboboxInput
+            ref={mergeRefs(stickyTriggerRef, inputRef)}
+            onKeyDown={handleKeyDown}
+            buttonProps={{
+              onClick: () => {
                 open()
                 inputRef.current.focus()
-              }}
-            >
-              v
-            </button>
-          </>
+              },
+            }}
+          />
         )}
       >
         <Menu.List>
@@ -253,6 +323,7 @@ export const App = () => {
       <h1>title</h1>
       <h2>subtitle</h2>
       <button>bla bla</button>
+      <MenuWithFilter />
       <DialogExample />
       <MenuExample />
       <MenuPopoutExample />

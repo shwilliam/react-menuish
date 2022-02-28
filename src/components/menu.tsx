@@ -3,6 +3,7 @@ import {
   useRef,
   useContext,
   useEffect,
+  useLayoutEffect,
   cloneElement,
   createContext,
   Children,
@@ -11,6 +12,9 @@ import {
   SetStateAction,
   MutableRefObject,
   MouseEventHandler,
+  ReactNode,
+  ReactElement,
+  forwardRef,
 } from 'react'
 import _ from 'lodash'
 import { Dialog, DialogContent } from './dialog'
@@ -25,6 +29,7 @@ interface ListChildState {
 interface MenuContext {
   focus: number[]
   setFocus: Dispatch<SetStateAction<number[]>>
+  closeMenu: () => void
   actionHandlerRef: MutableRefObject<(() => void) | null>
   keyboardEventHandler: KeyboardEventHandler
   listChildStateRef: MutableRefObject<ListChildState[]>
@@ -35,6 +40,7 @@ interface MenuContext {
 const menuContext = createContext<MenuContext>({
   focus: [],
   setFocus: () => {},
+  closeMenu: () => {},
   actionHandlerRef: { current: null },
   keyboardEventHandler: () => {},
   listChildStateRef: { current: [] },
@@ -42,7 +48,7 @@ const menuContext = createContext<MenuContext>({
   focusTrapRef: { current: null },
   noFocusTrap: false,
 })
-const useMenuContext = () => useContext(menuContext)
+export const useMenuContext = () => useContext(menuContext)
 
 interface MenuListContext {
   level: number
@@ -52,50 +58,74 @@ const menuListContext = createContext<MenuListContext>({
 })
 const useMenuListContext = () => useContext(menuListContext)
 
-export const ContextProvider = ({ noFocusTrap = false, children }) => {
+interface ContextProviderProps {
+  noFocusTrap?: boolean
+  children: ReactNode
+}
+
+export const ContextProvider = ({
+  noFocusTrap = false,
+  children,
+}: ContextProviderProps) => {
   const [focus, setFocus] = useState<number[]>([])
   const actionHandlerRef = useRef<(() => void) | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
   const stickyTriggerRef = useRef<any>()
   const focusTrapRef = useRef<any>()
+  const closeMenu = () => setFocus([])
   const keyboardEventHandler: KeyboardEventHandler = (e) => {
+    let handled = false
+
     if (!focus.length) {
+      if (['Escape', 'Tab'].includes(e.key)) return
       setFocus([0])
-      return
+      handled = true
+    } else {
+      const levelFocus = _.last(focus)
+      const levelMax = _.last(listChildStateRef.current).count
+
+      switch (e.key) {
+        case 'ArrowDown':
+          setFocus((s) => {
+            const clone = _.clone(s)
+            clone[clone.length - 1] = Math.min(levelFocus + 1, levelMax)
+            return clone
+          })
+          handled = true
+          break
+        case 'ArrowUp':
+          setFocus((s) => {
+            const clone = _.clone(s)
+            clone[clone.length - 1] = Math.max(0, levelFocus - 1)
+            return clone
+          })
+          handled = true
+          break
+        case 'ArrowLeft':
+          setFocus((s) => {
+            const clone = _.clone(s)
+            clone.pop()
+            return clone
+          })
+          handled = true
+          break
+        case 'ArrowRight':
+        case ' ':
+        case 'Enter':
+          actionHandlerRef.current?.()
+          handled = true
+          break
+        case 'Escape':
+          closeMenu()
+          break
+        default:
+          break
+      }
     }
 
-    const levelFocus = _.last(focus)
-    const levelMax = _.last(listChildStateRef.current).count
-
-    switch (e.key) {
-      case 'ArrowDown':
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone[clone.length - 1] = Math.min(levelFocus + 1, levelMax)
-          return clone
-        })
-        break
-      case 'ArrowUp':
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone[clone.length - 1] = Math.max(0, levelFocus - 1)
-          return clone
-        })
-        break
-      case 'ArrowLeft':
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone.pop()
-          return clone
-        })
-        break
-      case 'ArrowRight':
-      case ' ':
-      case 'Enter':
-        actionHandlerRef.current?.()
-        break
-      default:
-        break
+    if (handled) {
+      e.preventDefault()
+      e.stopPropagation()
     }
   }
 
@@ -104,8 +134,7 @@ export const ContextProvider = ({ noFocusTrap = false, children }) => {
     const level = focus.length - 1
     if (level < 0) return
 
-    const stuff = _.clone(listChildStateRef.current)
-      .reverse()
+    const childrenStickyEls = _.clone(listChildStateRef.current)
       .map((state) =>
         _.entries(state.stickyChildren)?.reduce((acc, [idx, ref]) => {
           const clone = _.clone(acc)
@@ -113,8 +142,11 @@ export const ContextProvider = ({ noFocusTrap = false, children }) => {
           return clone
         }, Array.from({ length: state.count })),
       )
-    const matchingLevel = stuff.find((stickyEls) => !!stickyEls.length)
-    const matchingStickyEl = matchingLevel?.reverse().find((stickyEl, idx) => {
+      .reverse()
+    const matchingLevel = childrenStickyEls.find(
+      (stickyEls) => !!_.compact(stickyEls).length,
+    )
+    const matchingStickyEl = matchingLevel?.reverse()?.find((stickyEl, idx) => {
       const actualIdx = matchingLevel.length - idx - 1
       return focus[level] >= actualIdx && !!stickyEl
     })
@@ -129,6 +161,7 @@ export const ContextProvider = ({ noFocusTrap = false, children }) => {
       value={{
         focus,
         setFocus,
+        closeMenu,
         actionHandlerRef,
         keyboardEventHandler,
         listChildStateRef,
@@ -148,17 +181,19 @@ interface MenuProps extends MenuInnerProps {
   noFocusTrap?: boolean
 }
 
-export const Menu = ({ noFocusTrap, ...props }: MenuProps) => {
+export const Menu = forwardRef(({ noFocusTrap, ...props }: MenuProps, ref) => {
   return (
     <ContextProvider noFocusTrap={noFocusTrap}>
-      <MenuInner {...props} />
+      <MenuInner ref={ref} {...props} />
     </ContextProvider>
   )
-}
+})
 
-export const Submenu = (props) => {
-  return <MenuInner {...props} />
-}
+interface SubmenuProps extends MenuInnerProps {}
+
+export const Submenu = forwardRef((props: SubmenuProps, ref) => {
+  return <MenuInner ref={ref} {...props} />
+})
 
 interface MenuInnerProps {
   level: number
@@ -166,59 +201,66 @@ interface MenuInnerProps {
   children: any
 }
 
-const MenuInner = ({ level, trigger, children, ...props }: MenuInnerProps) => {
-  const {
-    focus,
-    setFocus,
-    keyboardEventHandler,
-    stickyTriggerRef,
-    focusTrapRef,
-    noFocusTrap,
-  } = useMenuContext()
-  const isOpen = !_.isUndefined(focus[level])
+const MenuInner = forwardRef(
+  ({ level, trigger, children, ...props }: MenuInnerProps, ref) => {
+    const {
+      focus,
+      setFocus,
+      keyboardEventHandler,
+      stickyTriggerRef,
+      focusTrapRef,
+      noFocusTrap,
+    } = useMenuContext()
+    const isOpen = !_.isUndefined(focus[level])
 
-  return (
-    <>
-      {trigger({
-        stickyTriggerRef,
-        handleKeyDown: keyboardEventHandler,
-        open: () =>
-          setFocus((s) => {
-            const clone = _.clone(s)
-            clone[level] = 0
-            return clone
-          }),
-        ...props,
-      })}
-      <Dialog isOpen={isOpen}>
-        <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
-          {noFocusTrap || level > 0 ? null : (
-            <span
-              aria-hidden
-              tabIndex={0}
-              ref={focusTrapRef}
-              onKeyDown={keyboardEventHandler}
-            />
-          )}
-          {children}
-        </DialogContent>
-      </Dialog>
-    </>
-  )
+    return (
+      <>
+        {trigger({
+          stickyTriggerRef,
+          handleKeyDown: keyboardEventHandler,
+          open: () =>
+            setFocus((s) => {
+              const clone = _.clone(s)
+              clone[level] = 0
+              return clone
+            }),
+          ...props,
+        })}
+        <Dialog isOpen={isOpen}>
+          <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
+            {noFocusTrap || level > 0 ? null : (
+              <span
+                aria-hidden
+                tabIndex={0}
+                ref={focusTrapRef}
+                onKeyDown={keyboardEventHandler}
+              />
+            )}
+            {children}
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  },
+)
+
+interface ListProps {
+  children: ReactElement[]
 }
 
-export const List = ({ children }) => {
-  const { listChildStateRef } = useMenuContext()
+export const List = forwardRef(({ children }: ListProps, ref: any) => {
+  const { focus, setFocus, listChildStateRef } = useMenuContext()
   const { level } = useMenuListContext()
-  const levelMax = children.length
+  const levelMax = Children.count(children)
   const thisLevel = level + 1
+  const thisLevelFocus = focus[thisLevel]
 
   // sync level child count
   useEffect(() => {
-    const listChildCount = _.clone(listChildStateRef.current)
+    const listChildCount = _.cloneDeep(listChildStateRef.current)
     listChildCount[thisLevel] = {
       ...listChildCount[thisLevel],
-      count: levelMax - 1,
+      count: levelMax,
     }
     listChildStateRef.current = listChildCount
 
@@ -228,16 +270,27 @@ export const List = ({ children }) => {
     }
   }, [levelMax, listChildStateRef, thisLevel])
 
+  // correct focus if out of bounds
+  useLayoutEffect(() => {
+    if (thisLevelFocus > levelMax - 1) {
+      setFocus((s) => {
+        const clone = _.clone(s)
+        clone[thisLevel] = levelMax - 1
+        return clone
+      })
+    }
+  }, [thisLevelFocus, thisLevel, levelMax, setFocus])
+
   return (
     <menuListContext.Provider value={{ level: thisLevel }}>
-      <ul>
+      <ul ref={ref}>
         {Children.map(children, (child, idx) =>
           cloneElement(child, { menuIdx: idx }),
         )}
       </ul>
     </menuListContext.Provider>
   )
-}
+})
 
 interface ItemProps {
   onClick?: () => void
@@ -245,80 +298,93 @@ interface ItemProps {
   children: any
 }
 
-export const Item = ({ onClick, menuIdx = -1, children }: ItemProps) => {
-  const { focus, setFocus, actionHandlerRef } = useMenuContext()
-  const { level } = useMenuListContext()
-  const hasVirtualFocus = focus[level] === menuIdx
-  const handleHover: MouseEventHandler = () => {
-    setFocus((s) => {
-      const clone = _.clone(s)
-      const sliced = clone.slice(0, level + 1)
-      sliced[level] = menuIdx
-      return sliced
-    })
-  }
-
-  // register click handler on virtual focus
-  useEffect(() => {
-    if (hasVirtualFocus) {
-      actionHandlerRef.current = onClick || null
-      return () => {
-        actionHandlerRef.current = null
-      }
+export const Item = forwardRef(
+  ({ onClick, menuIdx = -1, children }: ItemProps, ref: any) => {
+    const { focus, setFocus, actionHandlerRef } = useMenuContext()
+    const { level } = useMenuListContext()
+    const hasVirtualFocus = focus[level] === menuIdx
+    const handleHover: MouseEventHandler = () => {
+      setFocus((s) => {
+        const clone = _.clone(s)
+        const sliced = clone.slice(0, level + 1)
+        sliced[level] = menuIdx
+        return sliced
+      })
     }
-  }, [hasVirtualFocus, onClick, actionHandlerRef])
 
-  return (
-    <li
-      onClick={onClick}
-      onMouseEnter={handleHover}
-      style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
-    >
-      [{menuIdx}]{children}
-    </li>
-  )
+    // register click handler on virtual focus
+    useEffect(() => {
+      if (hasVirtualFocus) {
+        actionHandlerRef.current = onClick || null
+        return () => {
+          actionHandlerRef.current = null
+        }
+      }
+    }, [hasVirtualFocus, onClick, actionHandlerRef])
+
+    return (
+      <li
+        ref={ref}
+        onClick={onClick}
+        onMouseEnter={handleHover}
+        style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
+      >
+        [{menuIdx}]{children}
+      </li>
+    )
+  },
+)
+
+interface FocusableItemProps {
+  onClick?: () => void
+  menuIdx?: number
+  children: (props: {
+    focusableRef: any
+    handleKeyDown: KeyboardEventHandler
+  }) => ReactNode
 }
 
-export const FocusableItem = ({
-  onClick = () => {},
-  menuIdx = -1,
-  children,
-}) => {
-  const focusableRef = useRef<any>(null)
-  const { keyboardEventHandler, listChildStateRef } = useMenuContext()
-  const { level } = useMenuListContext()
+export const FocusableItem = forwardRef(
+  (
+    { onClick = () => {}, menuIdx = -1, children }: FocusableItemProps,
+    ref: any,
+  ) => {
+    const focusableRef = useRef<any>(null)
+    const { keyboardEventHandler, listChildStateRef } = useMenuContext()
+    const { level } = useMenuListContext()
 
-  // register sticky focus item
-  useEffect(() => {
-    const clone = _.clone(listChildStateRef.current)
-    clone[level] = {
-      ...clone[level],
-      stickyChildren: {
-        ...(clone[level]?.stickyChildren || {}),
-        [menuIdx]: focusableRef,
-      },
-    }
-    listChildStateRef.current = clone
-
-    return () => {
+    // register sticky focus item
+    useEffect(() => {
       const clone = _.clone(listChildStateRef.current)
-      const stickyChildrenClone = _.clone(clone[level]?.stickyChildren)
-
-      if (!stickyChildrenClone) return
-
-      delete stickyChildrenClone[level]
-
       clone[level] = {
         ...clone[level],
-        stickyChildren: stickyChildrenClone,
+        stickyChildren: {
+          ...(clone[level]?.stickyChildren || {}),
+          [menuIdx]: focusableRef,
+        },
       }
       listChildStateRef.current = clone
-    }
-  }, [listChildStateRef, level, focusableRef, menuIdx])
 
-  return (
-    <Item onClick={onClick} menuIdx={menuIdx}>
-      {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
-    </Item>
-  )
-}
+      return () => {
+        const clone = _.clone(listChildStateRef.current)
+        const stickyChildrenClone = _.clone(clone[level]?.stickyChildren)
+
+        if (!stickyChildrenClone) return
+
+        delete stickyChildrenClone[level]
+
+        clone[level] = {
+          ...clone[level],
+          stickyChildren: stickyChildrenClone,
+        }
+        listChildStateRef.current = clone
+      }
+    })
+
+    return (
+      <Item ref={ref} onClick={onClick} menuIdx={menuIdx}>
+        {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
+      </Item>
+    )
+  },
+)

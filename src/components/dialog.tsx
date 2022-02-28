@@ -1,14 +1,20 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, ReactNode } from 'react'
 import FocusLock from 'react-focus-lock'
 import { Portal } from './portal'
 
 // TODO: aria attrs
 
+interface DialogContentProps {
+  noFocusLock?: boolean
+  initialFocusRef?: any
+  children: ReactNode
+}
+
 export const DialogContent = ({
   noFocusLock = false,
   initialFocusRef,
   children,
-}: any) => {
+}: DialogContentProps) => {
   const activateFocusLock = useCallback(() => {
     if (initialFocusRef?.current) initialFocusRef.current.focus?.()
   }, [initialFocusRef])
@@ -29,11 +35,18 @@ export const DialogContent = ({
   )
 }
 
-export const Dialog = (props: any) => {
+interface DialogProps extends DialogOverlayProps {}
+
+export const Dialog = (props: DialogProps) => {
   return <DialogOverlay {...props} />
 }
 
-const DialogOverlay = ({ isOpen, children }) => {
+interface DialogOverlayProps {
+  isOpen?: boolean
+  children: ReactNode
+}
+
+const DialogOverlay = ({ isOpen, children }: DialogOverlayProps) => {
   if (!isOpen) return null
   return <Portal>{children}</Portal>
 }
