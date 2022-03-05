@@ -1,6 +1,7 @@
 import { useState, useRef, forwardRef } from 'react'
 import styled from 'styled-components'
 import { Dialog, DialogContent } from './components/dialog'
+import { Modal, ModalContent } from './components/modal'
 import { FocusTakeoverContextProvider } from './components/focus-takeover'
 import * as Menu from './components/menu'
 import { Tray } from './components/tray'
@@ -131,6 +132,28 @@ const DialogExample = () => {
           <button onClick={() => setIsOpen(false)}>close</button>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+const ModalExample = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const initialFocusRef = useRef<any>(null)
+  return (
+    <div>
+      <button onClick={() => setIsOpen((s) => !s)}>
+        {isOpen ? 'close modal' : 'open modal'}
+      </button>
+      <Modal isOpen={isOpen}>
+        <ModalContent
+          initialFocusRef={initialFocusRef}
+          onClose={() => setIsOpen(false)}
+        >
+          <button>other</button>
+          <button ref={initialFocusRef}>initial</button>
+          <button onClick={() => setIsOpen(false)}>close</button>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
@@ -374,6 +397,7 @@ export const App = () => {
         <SimpleMenu />
         <MenuWithFilter />
         <DialogExample />
+        <ModalExample />
         <MenuExample />
         <MenuPopoutExample />
         <ComboboxExample />

@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, forwardRef } from 'react'
 import styled from 'styled-components'
-import { animated, useSpring } from 'react-spring'
+import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import useOnClickOutside from 'use-onclickoutside'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
+import { Overlay } from './overlay'
 import { mergeRefs } from '../util/merge-refs'
 
 interface TrayProps extends TrayContentProps {
@@ -75,19 +76,10 @@ const TrayContent = forwardRef(
   },
 )
 
-const Overlay = styled(animated.div)`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  overflow: hidden;
-`
-
 const StyledDialogContent = styled(DialogContent)`
   position: absolute;
+  left: 0;
+  right: 0;
   bottom: 0;
-  width: 100%;
   border: 1px solid blue;
-  overflow: hidden;
 `
