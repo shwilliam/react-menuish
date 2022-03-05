@@ -209,11 +209,12 @@ export const Submenu = forwardRef((props: SubmenuProps, ref) => {
 interface MenuInnerProps {
   id?: string
   trigger: any
+  menuIdx?: number
   children: any
 }
 
 const MenuInner = forwardRef(
-  ({ id, trigger, children, ...props }: MenuInnerProps, ref) => {
+  ({ id, trigger, menuIdx, children, ...props }: MenuInnerProps, ref) => {
     const innerId = useId(id)
     const {
       focus,
@@ -253,6 +254,7 @@ const MenuInner = forwardRef(
                 clone[level] = 0
                 return clone
               }),
+            menuIdx,
             ...props,
           })}
         </menuListContext.Provider>
@@ -322,7 +324,7 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
     <menuListContext.Provider value={{ level }}>
       <StyledUl ref={ref}>
         {Children.map(children, (child, idx) =>
-          cloneElement(child, { menuIdx: idx }),
+          cloneElement(child, { menuIdx: idx, 'data-beep': idx }),
         )}
       </StyledUl>
     </menuListContext.Provider>
