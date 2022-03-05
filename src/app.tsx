@@ -1,8 +1,9 @@
 import { useState, useRef, forwardRef } from 'react'
-// import styled from 'styled-components'
+import styled from 'styled-components'
 import { Dialog, DialogContent } from './components/dialog'
 import { FocusTakeoverContextProvider } from './components/focus-takeover'
 import * as Menu from './components/menu'
+import { Tray } from './components/tray'
 import { mergeRefs } from './util/merge-refs'
 
 const fruits = ['apple', 'orange', 'banana', 'kiwi'],
@@ -24,12 +25,18 @@ const fruits = ['apple', 'orange', 'banana', 'kiwi'],
   ],
   allFruits = [...fruits, ...moreFruits]
 
+const StyledMenu = styled(Menu.Menu)`
+  background: blue;
+`
+
 const SimpleMenu = () => {
-  const fruitItems: any = fruits.map((f) => <Menu.Item key={f}>{f}</Menu.Item>)
+  const fruitItems: any = fruits.map((f) => (
+    <Menu.DropdownItem key={f}>{f}</Menu.DropdownItem>
+  ))
 
   return (
     <div>
-      <Menu.Menu
+      <StyledMenu
         trigger={({ anchorRef, open }) => (
           <button ref={anchorRef} onClick={open}>
             menu
@@ -37,7 +44,7 @@ const SimpleMenu = () => {
         )}
       >
         <Menu.List>{fruitItems}</Menu.List>
-      </Menu.Menu>
+      </StyledMenu>
     </div>
   )
 }
@@ -86,6 +93,25 @@ const MenuWithFilter = () => {
           </Menu.Submenu>
         </Menu.List>
       </Menu.Menu>
+    </div>
+  )
+}
+
+const TrayExample = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const initialFocusRef = useRef<any>(null)
+  return (
+    <div>
+      <button onClick={() => setIsOpen((s) => !s)}>open tray</button>
+      <Tray
+        initialFocusRef={initialFocusRef}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      >
+        <button>other</button>
+        <button ref={initialFocusRef}>initial</button>
+        <button onClick={() => setIsOpen(false)}>close</button>
+      </Tray>
     </div>
   )
 }
@@ -352,6 +378,7 @@ export const App = () => {
         <MenuPopoutExample />
         <ComboboxExample />
         <DropdownExample />
+        <TrayExample />
         <ul>
           <li>hihi</li>
           <li>hoho</li>

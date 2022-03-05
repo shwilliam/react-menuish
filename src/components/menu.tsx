@@ -17,12 +17,13 @@ import {
   forwardRef,
 } from 'react'
 import _ from 'lodash'
+import styled from 'styled-components'
 import useOnClickOutside from 'use-onclickoutside'
 import { useId } from '@react-aria/utils'
-import { usePopper } from 'react-popper'
 import { Dialog, DialogContent } from './dialog'
 import { mergeRefs } from '../util/merge-refs'
 import { useFocusTakeoverContext } from './focus-takeover'
+import { usePopout } from '../hooks/popout'
 
 // TODO: aria attrs
 
@@ -227,13 +228,9 @@ const MenuInner = forwardRef(
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
-    const [referenceElement, setReferenceElement] = useState<any>()
     const innerRef = useRef<any>()
-    const [popperElement, setPopperElement] = useState<any>()
-    const [arrowElement, setArrowElement] = useState<any>()
-    const { styles, attributes } = usePopper(referenceElement, popperElement, {
+    const { popout, anchor, arrow } = usePopout({
       placement: isSubmenu ? 'right-start' : 'bottom',
-      modifiers: [{ name: 'arrow', options: { element: arrowElement } }],
     })
 
     useOnClickOutside(
@@ -247,7 +244,7 @@ const MenuInner = forwardRef(
           value={{ level: isSubmenu ? level - 1 : level }}
         >
           {trigger({
-            anchorRef: setReferenceElement,
+            anchorRef: anchor.set,
             stickyTriggerRef,
             handleKeyDown: keyboardEventHandler,
             open: () =>
@@ -260,23 +257,24 @@ const MenuInner = forwardRef(
           })}
         </menuListContext.Provider>
         <Dialog id={innerId} isOpen={isOpen}>
-          <DialogContent initialFocusRef={focusTrapRef} noFocusLock={level > 0}>
-            <div
-              ref={mergeRefs(ref, innerRef, setPopperElement)}
-              style={styles.popper}
-              {...attributes.poppper}
-            >
-              <span ref={setArrowElement} style={styles.arrow} />
-              {noFocusTrap || level > 0 ? null : (
-                <span
-                  aria-hidden
-                  tabIndex={0}
-                  ref={focusTrapRef}
-                  onKeyDown={keyboardEventHandler}
-                />
-              )}
-              {children}
-            </div>
+          <DialogContent
+            ref={mergeRefs(ref, innerRef, popout.set)}
+            style={popout.styles}
+            {...popout.attributes}
+            initialFocusRef={focusTrapRef}
+            noFocusLock={level > 0}
+            {...props}
+          >
+            <span ref={arrow.set} style={arrow.styles} />
+            {noFocusTrap || level > 0 ? null : (
+              <span
+                aria-hidden
+                tabIndex={0}
+                ref={focusTrapRef}
+                onKeyDown={keyboardEventHandler}
+              />
+            )}
+            {children}
           </DialogContent>
         </Dialog>
       </>
@@ -322,14 +320,19 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
 
   return (
     <menuListContext.Provider value={{ level }}>
-      <ul ref={ref}>
+      <StyledUl ref={ref}>
         {Children.map(children, (child, idx) =>
           cloneElement(child, { menuIdx: idx }),
         )}
-      </ul>
+      </StyledUl>
     </menuListContext.Provider>
   )
 })
+
+const StyledUl = styled.ul`
+  margin: 0;
+  padding: 0;
+`
 
 interface ItemProps {
   onClick?: () => void
@@ -338,7 +341,7 @@ interface ItemProps {
 }
 
 export const Item = forwardRef(
-  ({ onClick, menuIdx = -1, children }: ItemProps, ref: any) => {
+  ({ onClick, menuIdx = -1, children, ...props }: ItemProps, ref: any) => {
     const { focus, setFocus, actionHandlerRef } = useMenuContext()
     const { level } = useMenuListContext()
     const hasVirtualFocus = focus[level] === menuIdx
@@ -362,17 +365,23 @@ export const Item = forwardRef(
     }, [hasVirtualFocus, onClick, actionHandlerRef])
 
     return (
-      <li
+      <StyledLi
         ref={ref}
         onClick={onClick}
         onMouseEnter={handleHover}
         style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
+        {...props}
       >
         [{menuIdx}]{children}
-      </li>
+      </StyledLi>
     )
   },
 )
+
+const StyledLi = styled.li`
+  list-style-type: none;
+  cursor: pointer;
+`
 
 interface FocusableItemProps {
   onClick?: () => void
@@ -423,6 +432,28 @@ export const FocusableItem = forwardRef(
     return (
       <Item ref={ref} onClick={onClick} menuIdx={menuIdx}>
         {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
+      </Item>
+    )
+  },
+)
+
+interface DropdownItemProps {
+  onClick?: () => void
+  menuIdx?: number
+  children: any
+}
+
+export const DropdownItem = forwardRef(
+  ({ onClick, children, ...props }: DropdownItemProps, ref: any) => {
+    const { closeMenu } = useMenuContext()
+    const handleClick = () => {
+      onClick?.()
+      closeMenu()
+    }
+
+    return (
+      <Item ref={ref} onClick={handleClick} {...props}>
+        {children}
       </Item>
     )
   },

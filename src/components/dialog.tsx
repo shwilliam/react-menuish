@@ -1,40 +1,56 @@
-import { useEffect, useCallback, ReactNode } from 'react'
+import {
+  useEffect,
+  useCallback,
+  ReactNode,
+  forwardRef,
+  CSSProperties,
+} from 'react'
 import FocusLock from 'react-focus-lock'
+import { animated } from 'react-spring'
 import { FocusTakeoverBoundary } from './focus-takeover'
 import { Portal } from './portal'
 
 // TODO: aria attrs
 
-interface DialogContentProps {
+export interface DialogContentProps {
   noFocusLock?: boolean
   initialFocusRef?: any
+  style?: CSSProperties
   children: ReactNode
 }
 
-export const DialogContent = ({
-  noFocusLock = false,
-  initialFocusRef,
-  children,
-}: DialogContentProps) => {
-  const activateFocusLock = useCallback(() => {
-    if (initialFocusRef?.current) initialFocusRef.current.focus?.()
-  }, [initialFocusRef])
+export const DialogContent = forwardRef(
+  (
+    {
+      noFocusLock = false,
+      initialFocusRef,
+      children,
+      ...props
+    }: DialogContentProps,
+    ref: any,
+  ) => {
+    const activateFocusLock = useCallback(() => {
+      if (initialFocusRef?.current) initialFocusRef.current.focus?.()
+    }, [initialFocusRef])
 
-  useEffect(() => {
-    return createAriaHider()
-  }, [])
+    useEffect(() => {
+      return createAriaHider()
+    }, [])
 
-  return (
-    <FocusLock
-      autoFocus
-      returnFocus
-      onActivation={activateFocusLock}
-      disabled={noFocusLock}
-    >
-      {children}
-    </FocusLock>
-  )
-}
+    return (
+      <FocusLock
+        autoFocus
+        returnFocus
+        onActivation={activateFocusLock}
+        disabled={noFocusLock}
+      >
+        <animated.div ref={ref} {...props}>
+          {children}
+        </animated.div>
+      </FocusLock>
+    )
+  },
+)
 
 interface DialogProps extends DialogOverlayProps {}
 
