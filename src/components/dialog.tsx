@@ -8,9 +8,7 @@ import {
 import FocusLock from 'react-focus-lock'
 import { RemoveScroll } from 'react-remove-scroll'
 import { animated } from 'react-spring'
-import { StyledComponentPropsWithRef } from 'styled-components'
 import { FocusTakeoverBoundary } from './focus-takeover'
-import { Overlay } from './overlay'
 import { Portal } from './portal'
 
 // TODO: aria attrs
@@ -57,41 +55,29 @@ export const DialogContent = forwardRef(
 
 export interface DialogProps extends DialogOverlayProps {}
 
-export const Dialog = forwardRef(
-  ({ children, ...props }: DialogProps, ref: any) => {
-    return (
-      <DialogOverlay ref={ref} {...props}>
-        {children}
-      </DialogOverlay>
-    )
-  },
-)
+export const Dialog = ({ children, ...props }: DialogProps) => {
+  return <DialogOverlay {...props}>{children}</DialogOverlay>
+}
 
-interface DialogOverlayProps extends StyledComponentPropsWithRef<'div'> {
+interface DialogOverlayProps {
   id?: string
   isOpen?: boolean
   children: ReactNode
 }
 
-const DialogOverlay = forwardRef(
-  ({ id, isOpen, children, ...props }: DialogOverlayProps, ref: any) => {
-    if (!isOpen) return null
-    return (
-      <RemoveScroll
-      // allowPinchZoom
-      // enabled
-      >
-        <Portal>
-          <FocusTakeoverBoundary id={id}>
-            <Overlay ref={ref} {...props}>
-              {children}
-            </Overlay>
-          </FocusTakeoverBoundary>
-        </Portal>
-      </RemoveScroll>
-    )
-  },
-)
+const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
+  if (!isOpen) return null
+  return (
+    <RemoveScroll
+    // allowPinchZoom
+    // enabled
+    >
+      <Portal>
+        <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
+      </Portal>
+    </RemoveScroll>
+  )
+}
 
 const createAriaHider = () => {
   const originalValues: any[] = []

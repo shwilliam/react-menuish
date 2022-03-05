@@ -1,25 +1,30 @@
 import { useRef, forwardRef } from 'react'
 import styled from 'styled-components'
 import useOnClickOutside from 'use-onclickoutside'
-import { useSafeViewportHeightVar } from '../hooks/viewport-size'
-import { mergeRefs } from '../util/merge-refs'
 import {
   Dialog,
   DialogContent,
   DialogProps,
   DialogContentProps,
 } from './dialog'
+import { Overlay, OverlayProps } from './overlay'
+import { mergeRefs } from '../util/merge-refs'
 
-interface ModalProps extends DialogProps {}
-
-export const Modal = ({ children, ...props }: ModalProps) => {
-  const safeViewportHeightVar = useSafeViewportHeightVar()
-  return (
-    <Dialog style={safeViewportHeightVar} {...props}>
-      {children}
-    </Dialog>
-  )
+interface ModalProps extends DialogProps {
+  overlay?: OverlayProps
 }
+
+export const Modal = forwardRef(
+  ({ overlay = {}, children, ...props }: ModalProps, ref: any) => {
+    return (
+      <Dialog {...props}>
+        <Overlay ref={ref} {...overlay}>
+          {children}
+        </Overlay>
+      </Dialog>
+    )
+  },
+)
 
 interface ModalContentProps extends DialogContentProps {
   onClose?: () => void

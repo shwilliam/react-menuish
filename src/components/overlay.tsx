@@ -1,7 +1,10 @@
-import styled from 'styled-components'
+import styled, { StyledComponentPropsWithRef } from 'styled-components'
 import { animated } from 'react-spring'
 
-export const Overlay = styled(animated.div)`
+export interface OverlayProps
+  extends StyledComponentPropsWithRef<typeof animated.div> {}
+
+export const Overlay = styled(animated.div)<OverlayProps>`
   position: fixed;
   top: 0;
   right: 0;

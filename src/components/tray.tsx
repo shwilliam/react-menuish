@@ -4,16 +4,22 @@ import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import useOnClickOutside from 'use-onclickoutside'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { Overlay } from './overlay'
+import { Overlay, OverlayProps } from './overlay'
 import { mergeRefs } from '../util/merge-refs'
+import { useSafeViewportHeight } from '../hooks/viewport-size'
+import { useMounted } from '../hooks/mounted'
 
 interface TrayProps extends TrayContentProps {
   isOpen?: boolean
   onClose: () => void
+  overlay?: OverlayProps
 }
 
 export const Tray = forwardRef(
-  ({ isOpen, onClose, children, ...props }: TrayProps, ref: any) => {
+  (
+    { isOpen, onClose, overlay = {}, children, ...props }: TrayProps,
+    ref: any,
+  ) => {
     const innerRef = useRef<any>()
     const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
 
@@ -25,14 +31,16 @@ export const Tray = forwardRef(
 
     return (
       <Dialog isOpen={innerIsOpen}>
-        <TrayContent
-          ref={mergeRefs(ref, innerRef)}
-          isOpen={isOpen}
-          onRest={() => !isOpen && setInnerIsOpen(false)}
-          {...props}
-        >
-          {children}
-        </TrayContent>
+        <Overlay {...overlay}>
+          <TrayContent
+            ref={mergeRefs(ref, innerRef)}
+            isOpen={isOpen}
+            onRest={() => !isOpen && setInnerIsOpen(false)}
+            {...props}
+          >
+            {children}
+          </TrayContent>
+        </Overlay>
       </Dialog>
     )
   },
@@ -55,23 +63,23 @@ const TrayContent = forwardRef(
     }: TrayContentProps,
     ref,
   ) => {
-    const [wrapperRef, { height: wrapperHeight }] = useMeasure()
+    const hasMounted = useMounted()
+    const height = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
     const springStyle = useSpring({
-      height: isOpen
-        ? isFullscreen
-          ? wrapperHeight
-          : Math.min(contentHeight, wrapperHeight)
-        : 0,
+      height:
+        hasMounted && isOpen
+          ? isFullscreen
+            ? height
+            : Math.min(contentHeight, height)
+          : 0,
       onRest,
     })
 
     return (
-      <Overlay ref={wrapperRef}>
-        <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
-          <div ref={innerRef}>{children}</div>
-        </StyledDialogContent>
-      </Overlay>
+      <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
+        <div ref={innerRef}>{children}</div>
+      </StyledDialogContent>
     )
   },
 )

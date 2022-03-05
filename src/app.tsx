@@ -5,6 +5,7 @@ import { Modal, ModalContent } from './components/modal'
 import { FocusTakeoverContextProvider } from './components/focus-takeover'
 import * as Menu from './components/menu'
 import { Tray } from './components/tray'
+import { useSafeViewportHeightVar } from './hooks/viewport-size'
 import { mergeRefs } from './util/merge-refs'
 
 const fruits = ['apple', 'orange', 'banana', 'kiwi'],
@@ -105,6 +106,7 @@ const TrayExample = () => {
     <div>
       <button onClick={() => setIsOpen((s) => !s)}>open tray</button>
       <Tray
+        // isFullscreen
         initialFocusRef={initialFocusRef}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -388,9 +390,10 @@ const DropdownExample = () => {
 }
 
 export const App = () => {
+  const safeViewportHeightVar = useSafeViewportHeightVar()
   return (
     <FocusTakeoverContextProvider>
-      <section>
+      <section style={safeViewportHeightVar}>
         <h1>title</h1>
         <h2>subtitle</h2>
         <button>bla bla</button>
