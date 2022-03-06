@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Tray } from './tray'
+import { Tray, Subtray } from './tray'
 import { Lorem } from './lorem'
 
 export default {
@@ -68,6 +68,23 @@ export const FullscreenScrollable = () => {
       <button onClick={() => setIsOpen(true)}>open</button>
       <Tray isOpen={isOpen} onClose={() => setIsOpen(false)} isFullscreen>
         <Lorem paragraphs={5} />
+      </Tray>
+    </>
+  )
+}
+
+export const WithSubtray = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isSubtrayOpen, setIsSubtrayOpen] = useState(false)
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
+      <Tray isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Lorem paragraphs={2} />
+        <button onClick={() => setIsSubtrayOpen(true)}>open</button>
+        <Subtray isOpen={isSubtrayOpen} onClose={() => setIsSubtrayOpen(false)}>
+          <Lorem />
+        </Subtray>
       </Tray>
     </>
   )

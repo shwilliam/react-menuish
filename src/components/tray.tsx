@@ -1,6 +1,6 @@
-import { useState, useEffect, forwardRef } from 'react'
+import { useState, useEffect, forwardRef, ReactNode } from 'react'
 import styled from 'styled-components'
-import { useSpring } from 'react-spring'
+import { animated, useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import useOnClickOutside from 'use-onclickoutside'
 import { useId } from '@react-aria/utils'
@@ -18,7 +18,6 @@ import { mergeRefs } from '../util/merge-refs'
 
 interface TrayProps extends TrayContentProps {
   id?: string
-  isOpen?: boolean
   overlay?: OverlayProps
 }
 
@@ -109,4 +108,74 @@ const StyledDialogContent = styled(DialogContent)`
   right: 0;
   bottom: 0;
   border: 1px solid blue;
+`
+
+interface SubtrayProps extends SubtrayContentProps {}
+
+export const Subtray = forwardRef(
+  ({ isOpen, children, ...props }: SubtrayProps, ref: any) => {
+    const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
+
+    useEffect(() => {
+      if (isOpen) setInnerIsOpen(true)
+    }, [isOpen])
+
+    if (!innerIsOpen) return null
+    return (
+      <SubtrayContent
+        ref={ref}
+        isOpen={isOpen}
+        onRest={() => !isOpen && setInnerIsOpen(false)}
+        {...props}
+      >
+        {children}
+      </SubtrayContent>
+    )
+  },
+)
+
+interface SubtrayContentProps {
+  isOpen?: boolean
+  onRest?: () => void
+  onClose?: () => void
+  children: ReactNode
+}
+
+const SubtrayContent = forwardRef(
+  (
+    {
+      isOpen = false,
+      onRest,
+      onClose,
+      children,
+      ...props
+    }: SubtrayContentProps,
+    ref: any,
+  ) => {
+    const hasMounted = useMounted()
+    const springStyle = useSpring({
+      x: hasMounted && isOpen ? '0vw' : '100vw',
+      onRest,
+    })
+
+    return (
+      <SubtrayContentWrapper
+        ref={ref}
+        style={{ transform: springStyle.x.to((x) => `translateX(${x})`) }}
+        {...props}
+      >
+        <button onClick={onClose}>close</button>
+        {children}
+      </SubtrayContentWrapper>
+    )
+  },
+)
+
+const SubtrayContentWrapper = styled(animated.div)`
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: white;
 `
