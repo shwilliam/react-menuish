@@ -79,14 +79,14 @@ const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
   if (!isOpen) return null
   return (
     <dialogContext.Provider value={ctxt}>
-      <RemoveScroll
-      // allowPinchZoom
-      // enabled
-      >
-        <Portal>
+      <Portal>
+        <RemoveScroll
+        // allowPinchZoom
+        // enabled
+        >
           <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
-        </Portal>
-      </RemoveScroll>
+        </RemoveScroll>
+      </Portal>
     </dialogContext.Provider>
   )
 }
