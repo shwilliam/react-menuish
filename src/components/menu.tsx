@@ -21,7 +21,7 @@ import styled from 'styled-components'
 import useOnClickOutside from 'use-onclickoutside'
 import { useId } from '@react-aria/utils'
 import { Dialog, DialogContent } from './dialog'
-import { Tray } from './tray'
+import { Subtray, Tray } from './tray'
 import { mergeRefs } from '../util/merge-refs'
 import { useFocusTakeoverContext } from './focus-takeover'
 import { usePopout } from '../hooks/popout'
@@ -38,6 +38,7 @@ interface MenuContext {
   focus: number[]
   setFocus: Dispatch<SetStateAction<number[]>>
   closeMenu: () => void
+  closeTopLevel: () => void
   actionHandlerRef: MutableRefObject<(() => void) | null>
   keyboardEventHandler: KeyboardEventHandler
   listChildStateRef: MutableRefObject<ListChildState[]>
@@ -49,6 +50,7 @@ const menuContext = createContext<MenuContext>({
   focus: [],
   setFocus: () => {},
   closeMenu: () => {},
+  closeTopLevel: () => {},
   actionHandlerRef: { current: null },
   keyboardEventHandler: () => {},
   listChildStateRef: { current: [] },
@@ -82,6 +84,12 @@ export const ContextProvider = ({
   const stickyTriggerRef = useRef<any>()
   const focusTrapRef = useRef<any>()
   const closeMenu = () => setFocus([])
+  const closeTopLevel = () =>
+    setFocus((s) => {
+      const clone = _.clone(s)
+      clone.pop()
+      return clone
+    })
   const keyboardEventHandler: KeyboardEventHandler = (e) => {
     let handled = false
 
@@ -111,11 +119,7 @@ export const ContextProvider = ({
           handled = true
           break
         case 'ArrowLeft':
-          setFocus((s) => {
-            const clone = _.clone(s)
-            clone.pop()
-            return clone
-          })
+          closeTopLevel()
           handled = true
           break
         case 'ArrowRight':
@@ -172,6 +176,7 @@ export const ContextProvider = ({
         focus,
         setFocus,
         closeMenu,
+        closeTopLevel,
         actionHandlerRef,
         keyboardEventHandler,
         listChildStateRef,
@@ -229,12 +234,13 @@ interface MenuTrayProps extends MenuInnerProps {}
 const MenuTray = forwardRef(
   ({ id, trigger, menuIdx, children, ...props }: MenuTrayProps, ref) => {
     const innerId = useId(id)
-    const { focus, setFocus, closeMenu } = useMenuContext()
+    const { focus, setFocus, closeMenu, closeTopLevel } = useMenuContext()
     const { level } = useMenuListContext()
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
     const innerRef = useRef<any>()
+    const TrayComponent = isSubmenu ? Subtray : Tray
 
     useOnClickOutside(innerRef, () => {
       if (isActiveFocusBoundary(innerId)) closeMenu()
@@ -257,14 +263,15 @@ const MenuTray = forwardRef(
           })}
         </menuListContext.Provider>
 
-        <Tray
+        <TrayComponent
           id={innerId}
           ref={mergeRefs(ref, innerRef)}
           isOpen={isOpen}
+          onClose={closeTopLevel}
           {...props}
         >
           {children}
-        </Tray>
+        </TrayComponent>
       </>
     )
   },
