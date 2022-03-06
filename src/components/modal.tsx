@@ -11,6 +11,7 @@ import {
 } from './dialog'
 import { Overlay, OverlayProps } from './overlay'
 import { useFocusTakeoverContext } from './focus-takeover'
+import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 
 interface ModalProps extends DialogProps {
   overlay?: OverlayProps
@@ -54,6 +55,6 @@ export const ModalContent = forwardRef(
 const StyledModalContent = styled(DialogContent)`
   border: 1px solid blue;
   padding: 16px;
-  max-height: var(--menuish-visual-viewport-height);
+  max-height: var(${VISUAL_VIEWPORT_HEIGHT_VAR});
   overflow-y: auto;
 `

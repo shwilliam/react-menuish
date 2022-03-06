@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useGlobalStyleVar } from './global-style-var'
 
 interface ViewportSize {
   width: number
@@ -72,10 +73,8 @@ export const useSafeViewportHeight = () => {
   return height
 }
 
+export const VISUAL_VIEWPORT_HEIGHT_VAR = '--menuish-visual-viewport-height'
 export const useSafeViewportHeightVar = () => {
   const height = useSafeViewportHeight()
-  const styleVars: any = {
-    '--menuish-visual-viewport-height': `${height}px`,
-  }
-  return styleVars
+  useGlobalStyleVar(VISUAL_VIEWPORT_HEIGHT_VAR, `${height}px`)
 }
