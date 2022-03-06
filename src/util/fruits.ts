@@ -1,0 +1,18 @@
+export const fruits = ['apple', 'orange', 'banana', 'kiwi'],
+  moreFruits = [
+    'passionfruit',
+    'eggplant',
+    'lime',
+    'acai',
+    'blackberry',
+    'durian',
+    'grape',
+    'guava',
+    'peach',
+    'watermelown',
+    'pomelo',
+    'melon',
+    'mango',
+    'cherry',
+  ],
+  allFruits = [...fruits, ...moreFruits]

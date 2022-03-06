@@ -11,7 +11,7 @@ import { useMounted } from '../hooks/mounted'
 
 interface TrayProps extends TrayContentProps {
   isOpen?: boolean
-  onClose: () => void
+  onClose?: () => void
   overlay?: OverlayProps
 }
 
@@ -27,7 +27,7 @@ export const Tray = forwardRef(
       if (isOpen) setInnerIsOpen(true)
     }, [isOpen])
 
-    useOnClickOutside(innerRef, onClose)
+    useOnClickOutside(innerRef, () => onClose?.())
 
     return (
       <Dialog isOpen={innerIsOpen}>
@@ -64,21 +64,26 @@ const TrayContent = forwardRef(
     ref,
   ) => {
     const hasMounted = useMounted()
-    const height = useSafeViewportHeight()
+    const viewportHeight = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
     const springStyle = useSpring({
       height:
         hasMounted && isOpen
           ? isFullscreen
-            ? height
-            : Math.min(contentHeight, height)
+            ? viewportHeight
+            : Math.min(contentHeight, viewportHeight)
           : 0,
       onRest,
     })
 
     return (
       <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
-        <div ref={innerRef}>{children}</div>
+        <div
+          ref={innerRef}
+          style={{ maxHeight: `${viewportHeight}px`, overflowY: 'auto' }}
+        >
+          {children}
+        </div>
       </StyledDialogContent>
     )
   },
