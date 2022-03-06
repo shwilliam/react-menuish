@@ -13,8 +13,8 @@ import {
   MutableRefObject,
   MouseEventHandler,
   ReactNode,
-  ReactElement,
   forwardRef,
+  isValidElement,
 } from 'react'
 import _ from 'lodash'
 import styled from 'styled-components'
@@ -234,10 +234,9 @@ const MenuInner = forwardRef(
       placement: isSubmenu ? 'right-start' : 'bottom',
     })
 
-    useOnClickOutside(
-      innerRef,
-      isActiveFocusBoundary(innerId) ? closeMenu : () => {},
-    )
+    useOnClickOutside(innerRef, () => {
+      if (isActiveFocusBoundary(innerId)) closeMenu()
+    })
 
     return (
       <>
@@ -285,7 +284,7 @@ const MenuInner = forwardRef(
 )
 
 interface ListProps {
-  children: ReactElement[]
+  children: ReactNode[]
 }
 
 export const List = forwardRef(({ children }: ListProps, ref: any) => {
@@ -293,6 +292,9 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
   const { level } = useMenuListContext()
   const levelMax = Children.count(children)
   const thisLevelFocus = focus[level]
+  const validChildren = _.compact(
+    Children.map(children, (child) => (isValidElement(child) ? child : null)),
+  )
 
   // sync level child count
   useEffect(() => {
@@ -323,8 +325,8 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
   return (
     <menuListContext.Provider value={{ level }}>
       <StyledUl ref={ref}>
-        {Children.map(children, (child, idx) =>
-          cloneElement(child, { menuIdx: idx, 'data-beep': idx }),
+        {Children.map(validChildren, (child, idx) =>
+          cloneElement(child, { menuIdx: idx }),
         )}
       </StyledUl>
     </menuListContext.Provider>

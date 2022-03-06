@@ -1,39 +1,41 @@
-import { useState, useRef, useEffect, forwardRef } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import styled from 'styled-components'
 import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import useOnClickOutside from 'use-onclickoutside'
-import { Dialog, DialogContent, DialogContentProps } from './dialog'
+import { useId } from '@react-aria/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogContentProps,
+  useDialogContext,
+} from './dialog'
 import { Overlay, OverlayProps } from './overlay'
-import { mergeRefs } from '../util/merge-refs'
+import { useFocusTakeoverContext } from './focus-takeover'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
 import { useMounted } from '../hooks/mounted'
+import { mergeRefs } from '../util/merge-refs'
 
 interface TrayProps extends TrayContentProps {
+  id?: string
   isOpen?: boolean
-  onClose?: () => void
   overlay?: OverlayProps
 }
 
 export const Tray = forwardRef(
-  (
-    { isOpen, onClose, overlay = {}, children, ...props }: TrayProps,
-    ref: any,
-  ) => {
-    const innerRef = useRef<any>()
+  ({ id, isOpen, overlay = {}, children, ...props }: TrayProps, ref: any) => {
+    const innerId = useId(id)
     const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
 
     useEffect(() => {
       if (isOpen) setInnerIsOpen(true)
     }, [isOpen])
 
-    useOnClickOutside(innerRef, () => onClose?.())
-
     return (
-      <Dialog isOpen={innerIsOpen}>
+      <Dialog id={innerId} isOpen={innerIsOpen}>
         <Overlay {...overlay}>
           <TrayContent
-            ref={mergeRefs(ref, innerRef)}
+            ref={ref}
             isOpen={isOpen}
             onRest={() => !isOpen && setInnerIsOpen(false)}
             {...props}
@@ -50,6 +52,7 @@ interface TrayContentProps extends DialogContentProps {
   isOpen?: boolean
   isFullscreen?: boolean
   onRest?: () => void
+  onClose?: () => void
 }
 
 const TrayContent = forwardRef(
@@ -58,11 +61,14 @@ const TrayContent = forwardRef(
       isOpen = false,
       isFullscreen = false,
       onRest,
+      onClose,
       children,
       ...props
     }: TrayContentProps,
     ref,
   ) => {
+    const { isActiveFocusBoundary } = useFocusTakeoverContext()
+    const { contentRef, dialogId } = useDialogContext()
     const hasMounted = useMounted()
     const viewportHeight = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
@@ -76,8 +82,16 @@ const TrayContent = forwardRef(
       onRest,
     })
 
+    useOnClickOutside(contentRef, () => {
+      if (dialogId && isActiveFocusBoundary(dialogId)) onClose?.()
+    })
+
     return (
-      <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
+      <StyledDialogContent
+        ref={mergeRefs(contentRef, ref)}
+        style={springStyle as any}
+        {...props}
+      >
         <div
           ref={innerRef}
           style={{ maxHeight: `${viewportHeight}px`, overflowY: 'auto' }}

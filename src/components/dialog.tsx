@@ -1,13 +1,19 @@
 import {
   useEffect,
   useCallback,
-  ReactNode,
+  useRef,
+  useContext,
+  useMemo,
+  createContext,
   forwardRef,
+  ReactNode,
   CSSProperties,
+  MutableRefObject,
 } from 'react'
 import FocusLock from 'react-focus-lock'
 import { RemoveScroll } from 'react-remove-scroll'
 import { animated } from 'react-spring'
+import { mergeRefs } from '../util/merge-refs'
 import { FocusTakeoverBoundary } from './focus-takeover'
 import { Portal } from './portal'
 
@@ -30,6 +36,7 @@ export const DialogContent = forwardRef(
     }: DialogContentProps,
     ref: any,
   ) => {
+    const { contentRef } = useDialogContext()
     const activateFocusLock = useCallback(() => {
       if (initialFocusRef?.current) initialFocusRef.current.focus?.()
     }, [initialFocusRef])
@@ -45,7 +52,7 @@ export const DialogContent = forwardRef(
         onActivation={activateFocusLock}
         disabled={noFocusLock}
       >
-        <animated.div ref={ref} {...props}>
+        <animated.div ref={mergeRefs(ref, contentRef)} {...props}>
           {children}
         </animated.div>
       </FocusLock>
@@ -66,18 +73,35 @@ interface DialogOverlayProps {
 }
 
 const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
+  const contentRef = useRef<any>()
+  const ctxt = useMemo(() => ({ contentRef, dialogId: id }), [id])
+
   if (!isOpen) return null
   return (
-    <RemoveScroll
-    // allowPinchZoom
-    // enabled
-    >
-      <Portal>
-        <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
-      </Portal>
-    </RemoveScroll>
+    <dialogContext.Provider value={ctxt}>
+      <RemoveScroll
+      // allowPinchZoom
+      // enabled
+      >
+        <Portal>
+          <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
+        </Portal>
+      </RemoveScroll>
+    </dialogContext.Provider>
   )
 }
+
+interface DialogContext {
+  dialogId?: string
+  contentRef: MutableRefObject<any>
+}
+
+const dialogContext = createContext<DialogContext>({
+  dialogId: undefined,
+  contentRef: { current: null },
+})
+
+export const useDialogContext = () => useContext(dialogContext)
 
 const createAriaHider = () => {
   const originalValues: any[] = []
