@@ -1,9 +1,7 @@
 import { useId } from '@react-aria/utils'
 import {
-  useState,
   useContext,
   useMemo,
-  useCallback,
   useRef,
   forwardRef,
   createContext,
@@ -18,34 +16,34 @@ import { useFocusTakeoverContext } from './focus-takeover'
 
 interface PopoutTriggerContext {
   anchorRef: any
-  open: () => void
 }
 
 interface PopoutProps {
+  isOpen?: boolean
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
   children: ReactElement
 }
 
-export const Popout = ({ trigger, children, ...props }: PopoutProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+export const Popout = ({
+  isOpen = false,
+  trigger,
+  children,
+  ...props
+}: PopoutProps) => {
   const { popout, anchor, arrow } = usePopout({
     placement: 'bottom',
   })
-  const open = useCallback(() => setIsOpen(true), [setIsOpen])
-  const close = useCallback(() => setIsOpen(false), [setIsOpen])
   const ctxt = useMemo(
     () => ({
       isOpen,
-      open,
-      close,
       popout,
     }),
-    [isOpen, open, close, popout],
+    [isOpen, popout],
   )
 
   return (
     <popoutContext.Provider value={ctxt}>
-      {trigger({ open, anchorRef: anchor.set, ...props })}
+      {trigger({ anchorRef: anchor.set, ...props })}
       {children}
     </popoutContext.Provider>
   )
@@ -53,18 +51,19 @@ export const Popout = ({ trigger, children, ...props }: PopoutProps) => {
 
 interface PopoutContentProps extends DialogContentProps {
   id?: string
+  onClose?: () => void
   children: ReactNode
 }
 
 export const PopoutContent = forwardRef(
-  ({ id, children, ...props }: PopoutContentProps, ref: any) => {
+  ({ id, onClose, children, ...props }: PopoutContentProps, ref: any) => {
     const innerId = useId(id)
     const innerRef = useRef<any>()
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
-    const { isOpen, close, popout } = usePopoutContext()
+    const { isOpen, popout } = usePopoutContext()
 
     useOnClickOutside(innerRef, () => {
-      if (isActiveFocusBoundary(innerId)) close()
+      if (isActiveFocusBoundary(innerId)) onClose?.()
     })
 
     return (
@@ -84,15 +83,11 @@ export const PopoutContent = forwardRef(
 
 interface PopoutContext {
   isOpen: boolean
-  open: () => void
-  close: () => void
   popout: any // FIXME: type
 }
 
 const popoutContext = createContext<PopoutContext>({
   isOpen: false,
-  open: () => {},
-  close: () => {},
   popout: {},
 })
 

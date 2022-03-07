@@ -74,6 +74,7 @@ export const WithFilter = () => {
 }
 
 export const WithPopout = () => {
+  const [isPopoutOpen, setIsPopoutOpen] = useState(false)
   const initialPopoutFocusRef = useRef<any>()
   return (
     <>
@@ -105,16 +106,24 @@ export const WithPopout = () => {
               <Menu.Item>item 2</Menu.Item>
               <Menu.Item>item 3</Menu.Item>
               <Popout
-                trigger={({ open, anchorRef, ...forwardedProps }) => (
-                  <Menu.Item ref={anchorRef} onClick={open} {...forwardedProps}>
+                isOpen={isPopoutOpen}
+                trigger={({ anchorRef, ...forwardedProps }) => (
+                  <Menu.Item
+                    ref={anchorRef}
+                    onClick={() => setIsPopoutOpen(true)}
+                    {...forwardedProps}
+                  >
                     popout
                   </Menu.Item>
                 )}
               >
-                <PopoutContent initialFocusRef={initialPopoutFocusRef}>
+                <PopoutContent
+                  onClose={() => setIsPopoutOpen(false)}
+                  initialFocusRef={initialPopoutFocusRef}
+                >
                   <button>other</button>
                   <button ref={initialPopoutFocusRef}>initial</button>
-                  <button>other</button>
+                  <button onClick={() => setIsPopoutOpen(false)}>close</button>
                 </PopoutContent>
               </Popout>
             </Menu.List>

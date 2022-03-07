@@ -20,12 +20,11 @@ import _ from 'lodash'
 import styled from 'styled-components'
 import useOnClickOutside from 'use-onclickoutside'
 import { useId } from '@react-aria/utils'
-import { Dialog, DialogContent } from './dialog'
 import { Subtray, Tray } from './tray'
 import { mergeRefs } from '../util/merge-refs'
 import { useFocusTakeoverContext } from './focus-takeover'
-import { usePopout } from '../hooks/popout'
 import { useIsMobile } from '../hooks/is-mobile'
+import { Popout, PopoutContent } from './popout'
 
 // TODO: aria attrs
 
@@ -296,9 +295,6 @@ const MenuPopout = forwardRef(
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
     const innerRef = useRef<any>()
-    const { popout, anchor, arrow } = usePopout({
-      placement: isSubmenu ? 'right-start' : 'bottom',
-    })
 
     useOnClickOutside(innerRef, () => {
       if (isActiveFocusBoundary(innerId)) closeMenu()
@@ -306,33 +302,36 @@ const MenuPopout = forwardRef(
 
     return (
       <>
-        <menuListContext.Provider
-          value={{ level: isSubmenu ? level - 1 : level }}
+        <Popout
+          isOpen={isOpen}
+          trigger={({ anchorRef }) => (
+            <menuListContext.Provider
+              value={{ level: isSubmenu ? level - 1 : level }}
+            >
+              {trigger({
+                anchorRef,
+                stickyTriggerRef,
+                handleKeyDown: keyboardEventHandler,
+                open: () => {
+                  setFocus((s) => {
+                    const clone = _.clone(s)
+                    clone[level] = 0
+                    return clone
+                  })
+                },
+                menuIdx,
+              })}
+            </menuListContext.Provider>
+          )}
         >
-          {trigger({
-            anchorRef: anchor.set,
-            stickyTriggerRef,
-            handleKeyDown: keyboardEventHandler,
-            open: () =>
-              setFocus((s) => {
-                const clone = _.clone(s)
-                clone[level] = 0
-                return clone
-              }),
-            menuIdx,
-            ...props,
-          })}
-        </menuListContext.Provider>
-        <Dialog id={innerId} isOpen={isOpen}>
-          <DialogContent
-            ref={mergeRefs(ref, innerRef, popout.set)}
-            style={popout.styles}
-            {...popout.attributes}
+          <PopoutContent
+            id={innerId}
+            ref={mergeRefs(ref, innerRef)}
             initialFocusRef={focusTrapRef}
             noFocusLock={level > 0}
+            onClose={closeMenu}
             {...props}
           >
-            <span ref={arrow.set} style={arrow.styles} />
             {noFocusTrap || level > 0 ? null : (
               <span
                 aria-hidden
@@ -342,8 +341,8 @@ const MenuPopout = forwardRef(
               />
             )}
             {children}
-          </DialogContent>
-        </Dialog>
+          </PopoutContent>
+        </Popout>
       </>
     )
   },
