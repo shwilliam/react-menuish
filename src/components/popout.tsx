@@ -1,14 +1,11 @@
-import { useId } from '@react-aria/utils'
 import {
   useContext,
   useMemo,
-  useState,
   useRef,
   forwardRef,
   createContext,
   ReactNode,
   ReactElement,
-  cloneElement,
 } from 'react'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
 import { usePopout } from '../hooks/popout'
@@ -16,20 +13,6 @@ import { mergeRefs } from '../util/merge-refs'
 
 interface PopoutTriggerContext {
   anchorRef: any
-}
-
-interface PopoutContainerProps {
-  children: ReactElement
-}
-
-export const PopoutContainer = ({ children }: PopoutContainerProps) => {
-  const [isOpen, setIsOpen] = useState(false)
-  return cloneElement(children, {
-    isOpen,
-    onClose: () => setIsOpen(false),
-    trigger: (ctxt) =>
-      children.props.trigger({ ...ctxt, open: () => setIsOpen(true) }),
-  })
 }
 
 interface PopoutProps {
