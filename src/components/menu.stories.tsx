@@ -113,6 +113,7 @@ export const WithPopout = () => {
                   <Menu.Item
                     ref={anchorRef}
                     onClick={() => setIsPopoutOpen(true)}
+                    noClose
                     {...forwardedProps}
                   >
                     popout

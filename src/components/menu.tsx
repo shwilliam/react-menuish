@@ -15,6 +15,7 @@ import {
   ReactNode,
   forwardRef,
   isValidElement,
+  useCallback,
 } from 'react'
 import _ from 'lodash'
 import styled from 'styled-components'
@@ -30,12 +31,15 @@ interface ListChildState {
   stickyChildren: { [index: number]: MutableRefObject<any> }
 }
 
+type ShouldClose = boolean
+type ActionHandler = () => ShouldClose | void
+
 interface MenuContext {
   focus: number[]
   setFocus: Dispatch<SetStateAction<number[]>>
   closeMenu: () => void
   closeTopLevel: () => void
-  actionHandlerRef: MutableRefObject<(() => void) | null>
+  actionHandlerRef: MutableRefObject<ActionHandler | null>
   keyboardEventHandler: KeyboardEventHandler
   listChildStateRef: MutableRefObject<ListChildState[]>
   stickyTriggerRef: MutableRefObject<any>
@@ -75,7 +79,7 @@ export const ContextProvider = ({
 }: ContextProviderProps) => {
   const isMobile = useIsMobile()
   const [focus, setFocus] = useState<number[]>([])
-  const actionHandlerRef = useRef<(() => void) | null>(null)
+  const actionHandlerRef = useRef<ActionHandler | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
   const stickyTriggerRef = useRef<any>()
   const focusTrapRef = useRef<any>()
@@ -121,7 +125,8 @@ export const ContextProvider = ({
         case 'ArrowRight':
         case ' ':
         case 'Enter':
-          actionHandlerRef.current?.()
+          const shouldClose = actionHandlerRef.current?.()
+          if (shouldClose !== false) closeMenu()
           handled = true
           break
         case 'Escape':
@@ -241,12 +246,14 @@ const MenuTray = forwardRef(
           value={{ level: isSubmenu ? level - 1 : level }}
         >
           {trigger({
-            open: () =>
+            open: () => {
               setFocus((s) => {
                 const clone = _.clone(s)
                 clone[level] = 0
                 return clone
-              }),
+              })
+              return false // prevent close if passed to menu item
+            },
             menuIdx,
             ...props,
           })}
@@ -302,6 +309,7 @@ const MenuPopout = forwardRef(
                     clone[level] = 0
                     return clone
                   })
+                  return false // prevent close if passed to menu item
                 },
                 menuIdx,
               })}
@@ -387,20 +395,26 @@ const StyledUl = styled.ul`
 
 interface ItemProps {
   onClick?: () => void | boolean
+  noClose?: boolean
   menuIdx?: number
   children: any
 }
 
 export const Item = forwardRef(
-  ({ onClick, menuIdx = -1, children, ...props }: ItemProps, ref: any) => {
+  (
+    { onClick, noClose, menuIdx = -1, children, ...props }: ItemProps,
+    ref: any,
+  ) => {
     const isMobile = useIsMobile()
     const { closeMenu, focus, setFocus, actionHandlerRef } = useMenuContext()
     const { level } = useMenuListContext()
     const hasVirtualFocus = focus[level] === menuIdx
-    const handleClick = () => {
-      const noClose = onClick?.()
-      if (!onClick || noClose === false) closeMenu()
-    }
+    const handleClick = useCallback(() => {
+      const handlerDisabledClose = onClick?.()
+      const shouldClose = !noClose && handlerDisabledClose !== false
+      if (shouldClose) closeMenu()
+      return shouldClose
+    }, [onClick, closeMenu, noClose])
     const handleHover: MouseEventHandler = () => {
       if (isMobile) return
       setFocus((s) => {
@@ -414,12 +428,12 @@ export const Item = forwardRef(
     // register click handler on virtual focus
     useEffect(() => {
       if (hasVirtualFocus) {
-        actionHandlerRef.current = onClick || null
+        actionHandlerRef.current = handleClick || null
         return () => {
           actionHandlerRef.current = null
         }
       }
-    }, [hasVirtualFocus, onClick, actionHandlerRef, isMobile])
+    }, [hasVirtualFocus, handleClick, actionHandlerRef, isMobile])
 
     return (
       <StyledLi
@@ -441,7 +455,6 @@ const StyledLi = styled.li`
 `
 
 interface FocusableItemProps {
-  onClick?: () => void
   menuIdx?: number
   children: (props: {
     focusableRef: any
@@ -450,10 +463,7 @@ interface FocusableItemProps {
 }
 
 export const FocusableItem = forwardRef(
-  (
-    { onClick = () => {}, menuIdx = -1, children }: FocusableItemProps,
-    ref: any,
-  ) => {
+  ({ menuIdx = -1, children }: FocusableItemProps, ref: any) => {
     const focusableRef = useRef<any>(null)
     const { keyboardEventHandler, listChildStateRef } = useMenuContext()
     const { level } = useMenuListContext()
@@ -487,7 +497,7 @@ export const FocusableItem = forwardRef(
     })
 
     return (
-      <Item ref={ref} onClick={onClick} menuIdx={menuIdx}>
+      <Item ref={ref} onClick={() => false} menuIdx={menuIdx}>
         {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
       </Item>
     )
