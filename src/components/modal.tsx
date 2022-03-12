@@ -1,16 +1,12 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-import useOnClickOutside from 'use-onclickoutside'
-import { useId } from '@react-aria/utils'
 import {
   Dialog,
   DialogContent,
   DialogProps,
   DialogContentProps,
-  useDialogContext,
 } from './dialog'
 import { Overlay, OverlayProps } from './overlay'
-import { useFocusTakeoverContext } from './focus-takeover'
 import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 
 interface ModalProps extends DialogProps {
@@ -18,11 +14,9 @@ interface ModalProps extends DialogProps {
 }
 
 export const Modal = forwardRef(
-  ({ id, overlay = {}, children, ...props }: ModalProps, ref: any) => {
-    const innerId = useId(id)
-
+  ({ overlay = {}, children, ...props }: ModalProps, ref: any) => {
     return (
-      <Dialog id={innerId} {...props}>
+      <Dialog {...props}>
         <Overlay ref={ref} {...overlay}>
           {children}
         </Overlay>
@@ -31,19 +25,10 @@ export const Modal = forwardRef(
   },
 )
 
-interface ModalContentProps extends DialogContentProps {
-  onClose?: () => void
-}
+interface ModalContentProps extends DialogContentProps {}
 
 export const ModalContent = forwardRef(
-  ({ onClose, children, ...props }: ModalContentProps, ref) => {
-    const { isActiveFocusBoundary } = useFocusTakeoverContext()
-    const { contentRef, dialogId } = useDialogContext()
-
-    useOnClickOutside(contentRef, () => {
-      if (dialogId && isActiveFocusBoundary(dialogId)) onClose?.()
-    })
-
+  ({ children, ...props }: ModalContentProps, ref) => {
     return (
       <StyledModalContent ref={ref} {...props}>
         {children}

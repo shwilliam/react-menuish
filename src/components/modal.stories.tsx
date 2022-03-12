@@ -13,8 +13,8 @@ export const Default = () => {
   return (
     <div>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen}>
-        <ModalContent onClose={() => setIsOpen(false)}>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <ModalContent>
           <Lorem />
         </ModalContent>
       </Modal>
@@ -27,8 +27,8 @@ export const Scrollable = () => {
   return (
     <div>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen}>
-        <ModalContent onClose={() => setIsOpen(false)}>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <ModalContent>
           <Lorem paragraphs={5} />
         </ModalContent>
       </Modal>
@@ -42,11 +42,8 @@ export const InitialFocus = () => {
   return (
     <div>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen}>
-        <ModalContent
-          initialFocusRef={initialFocusRef}
-          onClose={() => setIsOpen(false)}
-        >
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <ModalContent initialFocusRef={initialFocusRef}>
           <button>not me</button>
           <button ref={initialFocusRef}>me</button>
           <button onClick={() => setIsOpen(false)}>close</button>
@@ -61,8 +58,8 @@ export const WithMenu = () => {
   return (
     <div>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen}>
-        <ModalContent onClose={() => setIsOpen(false)}>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <ModalContent>
           <Menu.Menu
             trigger={({ anchorRef, open }) => (
               <button ref={anchorRef} onClick={open}>
@@ -87,8 +84,8 @@ export const Nested = () => {
   return (
     <div>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen}>
-        <ModalContent onClose={() => setIsOpen(false)}>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <ModalContent>
           <Nested />
         </ModalContent>
       </Modal>

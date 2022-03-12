@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import * as Menu from './menu'
 import { fruits } from '../util/fruits'
 import { Popout, PopoutContent } from './popout'
+import { Lorem } from './lorem'
 
 export default {
   title: 'Menu',
@@ -107,6 +108,7 @@ export const WithPopout = () => {
               <Menu.Item>item 3</Menu.Item>
               <Popout
                 isOpen={isPopoutOpen}
+                onClose={() => setIsPopoutOpen(false)}
                 trigger={({ anchorRef, ...forwardedProps }) => (
                   <Menu.Item
                     ref={anchorRef}
@@ -117,10 +119,7 @@ export const WithPopout = () => {
                   </Menu.Item>
                 )}
               >
-                <PopoutContent
-                  onClose={() => setIsPopoutOpen(false)}
-                  initialFocusRef={initialPopoutFocusRef}
-                >
+                <PopoutContent initialFocusRef={initialPopoutFocusRef}>
                   <button>other</button>
                   <button ref={initialPopoutFocusRef}>initial</button>
                   <button onClick={() => setIsPopoutOpen(false)}>close</button>
@@ -130,6 +129,16 @@ export const WithPopout = () => {
           </Menu.Submenu>
         </Menu.List>
       </Menu.Menu>
+    </>
+  )
+}
+
+export const TwoMenus = () => {
+  return (
+    <>
+      <Default />
+      <Default />
+      <Lorem paragraphs={10} />
     </>
   )
 }

@@ -11,10 +11,15 @@ import {
   MutableRefObject,
 } from 'react'
 import FocusLock from 'react-focus-lock'
+import useOnClickOutside from 'use-onclickoutside'
 import { RemoveScroll } from 'react-remove-scroll'
 import { animated } from 'react-spring'
+import { useId } from '@react-aria/utils'
 import { mergeRefs } from '../util/merge-refs'
-import { FocusTakeoverBoundary } from './focus-takeover'
+import {
+  FocusTakeoverBoundary,
+  useFocusTakeoverContext,
+} from './focus-takeover'
 import { Portal } from './portal'
 
 // TODO: aria attrs
@@ -36,10 +41,15 @@ export const DialogContent = forwardRef(
     }: DialogContentProps,
     ref: any,
   ) => {
-    const { contentRef } = useDialogContext()
+    const { dialogId, contentRef, onClose } = useDialogContext()
+    const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
       if (initialFocusRef?.current) initialFocusRef.current.focus?.()
     }, [initialFocusRef])
+
+    useOnClickOutside(contentRef, () => {
+      if (isActiveFocusBoundary(dialogId)) onClose?.()
+    })
 
     useEffect(() => {
       return createAriaHider()
@@ -69,12 +79,22 @@ export const Dialog = ({ children, ...props }: DialogProps) => {
 interface DialogOverlayProps {
   id?: string
   isOpen?: boolean
+  onClose?: () => void
   children: ReactNode
 }
 
-const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
+const DialogOverlay = ({
+  id,
+  isOpen,
+  onClose,
+  children,
+}: DialogOverlayProps) => {
+  const dialogId = useId(id)
   const contentRef = useRef<any>()
-  const ctxt = useMemo(() => ({ contentRef, dialogId: id }), [id])
+  const ctxt = useMemo(
+    () => ({ contentRef, dialogId, onClose }),
+    [dialogId, onClose],
+  )
 
   if (!isOpen) return null
   return (
@@ -84,7 +104,9 @@ const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
         // allowPinchZoom
         // enabled
         >
-          <FocusTakeoverBoundary id={id}>{children}</FocusTakeoverBoundary>
+          <FocusTakeoverBoundary id={dialogId}>
+            {children}
+          </FocusTakeoverBoundary>
         </RemoveScroll>
       </Portal>
     </dialogContext.Provider>
@@ -92,12 +114,13 @@ const DialogOverlay = ({ id, isOpen, children }: DialogOverlayProps) => {
 }
 
 interface DialogContext {
-  dialogId?: string
+  dialogId: string
   contentRef: MutableRefObject<any>
+  onClose?: () => void
 }
 
 const dialogContext = createContext<DialogContext>({
-  dialogId: undefined,
+  dialogId: '',
   contentRef: { current: null },
 })
 

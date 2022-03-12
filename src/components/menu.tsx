@@ -18,11 +18,8 @@ import {
 } from 'react'
 import _ from 'lodash'
 import styled from 'styled-components'
-import useOnClickOutside from 'use-onclickoutside'
-import { useId } from '@react-aria/utils'
 import { Subtray, Tray } from './tray'
 import { mergeRefs } from '../util/merge-refs'
-import { useFocusTakeoverContext } from './focus-takeover'
 import { useIsMobile } from '../hooks/is-mobile'
 import { Popout, PopoutContent } from './popout'
 
@@ -215,7 +212,6 @@ export const Submenu = forwardRef((props: SubmenuProps, ref) => {
 })
 
 interface MenuInnerProps {
-  id?: string
   trigger: any
   menuIdx?: number
   children: any
@@ -231,19 +227,13 @@ const MenuInner = forwardRef((props: MenuInnerProps, ref: any) => {
 interface MenuTrayProps extends MenuInnerProps {}
 
 const MenuTray = forwardRef(
-  ({ id, trigger, menuIdx, children, ...props }: MenuTrayProps, ref) => {
-    const innerId = useId(id)
-    const { focus, setFocus, closeMenu, closeTopLevel } = useMenuContext()
+  ({ trigger, menuIdx, children, ...props }: MenuTrayProps, ref) => {
+    const { focus, setFocus, closeTopLevel } = useMenuContext()
     const { level } = useMenuListContext()
-    const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
     const innerRef = useRef<any>()
     const TrayComponent = isSubmenu ? Subtray : Tray
-
-    useOnClickOutside(innerRef, () => {
-      if (isActiveFocusBoundary(innerId)) closeMenu()
-    })
 
     return (
       <>
@@ -263,7 +253,6 @@ const MenuTray = forwardRef(
         </menuListContext.Provider>
 
         <TrayComponent
-          id={innerId}
           ref={mergeRefs(ref, innerRef)}
           isOpen={isOpen}
           onClose={closeTopLevel}
@@ -279,8 +268,7 @@ const MenuTray = forwardRef(
 interface MenuPopoutProps extends MenuInnerProps {}
 
 const MenuPopout = forwardRef(
-  ({ id, trigger, menuIdx, children, ...props }: MenuPopoutProps, ref) => {
-    const innerId = useId(id)
+  ({ trigger, menuIdx, children, ...props }: MenuPopoutProps, ref) => {
     const {
       focus,
       setFocus,
@@ -291,19 +279,15 @@ const MenuPopout = forwardRef(
       closeMenu,
     } = useMenuContext()
     const { level } = useMenuListContext()
-    const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
     const innerRef = useRef<any>()
-
-    useOnClickOutside(innerRef, () => {
-      if (isActiveFocusBoundary(innerId)) closeMenu()
-    })
 
     return (
       <>
         <Popout
           isOpen={isOpen}
+          onClose={closeMenu}
           trigger={({ anchorRef }) => (
             <menuListContext.Provider
               value={{ level: isSubmenu ? level - 1 : level }}
@@ -325,11 +309,9 @@ const MenuPopout = forwardRef(
           )}
         >
           <PopoutContent
-            id={innerId}
             ref={mergeRefs(ref, innerRef)}
             initialFocusRef={focusTrapRef}
             noFocusLock={level > 0}
-            onClose={closeMenu}
             {...props}
           >
             {noFocusTrap || level > 0 ? null : (
@@ -404,7 +386,7 @@ const StyledUl = styled.ul`
 `
 
 interface ItemProps {
-  onClick?: () => void
+  onClick?: () => void | boolean
   menuIdx?: number
   children: any
 }
@@ -412,9 +394,13 @@ interface ItemProps {
 export const Item = forwardRef(
   ({ onClick, menuIdx = -1, children, ...props }: ItemProps, ref: any) => {
     const isMobile = useIsMobile()
-    const { focus, setFocus, actionHandlerRef } = useMenuContext()
+    const { closeMenu, focus, setFocus, actionHandlerRef } = useMenuContext()
     const { level } = useMenuListContext()
     const hasVirtualFocus = focus[level] === menuIdx
+    const handleClick = () => {
+      const noClose = onClick?.()
+      if (!onClick || noClose === false) closeMenu()
+    }
     const handleHover: MouseEventHandler = () => {
       if (isMobile) return
       setFocus((s) => {
@@ -438,7 +424,7 @@ export const Item = forwardRef(
     return (
       <StyledLi
         ref={ref}
-        onClick={onClick}
+        onClick={handleClick}
         onMouseEnter={handleHover}
         style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
         {...props}
@@ -503,28 +489,6 @@ export const FocusableItem = forwardRef(
     return (
       <Item ref={ref} onClick={onClick} menuIdx={menuIdx}>
         {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
-      </Item>
-    )
-  },
-)
-
-interface DropdownItemProps {
-  onClick?: () => void
-  menuIdx?: number
-  children: any
-}
-
-export const DropdownItem = forwardRef(
-  ({ onClick, children, ...props }: DropdownItemProps, ref: any) => {
-    const { closeMenu } = useMenuContext()
-    const handleClick = () => {
-      onClick?.()
-      closeMenu()
-    }
-
-    return (
-      <Item ref={ref} onClick={handleClick} {...props}>
-        {children}
       </Item>
     )
   },

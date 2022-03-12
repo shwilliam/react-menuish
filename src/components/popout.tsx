@@ -2,30 +2,46 @@ import { useId } from '@react-aria/utils'
 import {
   useContext,
   useMemo,
+  useState,
   useRef,
   forwardRef,
   createContext,
   ReactNode,
   ReactElement,
+  cloneElement,
 } from 'react'
-import useOnClickOutside from 'use-onclickoutside'
+import { Dialog, DialogContent, DialogContentProps } from './dialog'
 import { usePopout } from '../hooks/popout'
 import { mergeRefs } from '../util/merge-refs'
-import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { useFocusTakeoverContext } from './focus-takeover'
 
 interface PopoutTriggerContext {
   anchorRef: any
 }
 
+interface PopoutContainerProps {
+  children: ReactElement
+}
+
+export const PopoutContainer = ({ children }: PopoutContainerProps) => {
+  const [isOpen, setIsOpen] = useState(false)
+  return cloneElement(children, {
+    isOpen,
+    onClose: () => setIsOpen(false),
+    trigger: (ctxt) =>
+      children.props.trigger({ ...ctxt, open: () => setIsOpen(true) }),
+  })
+}
+
 interface PopoutProps {
   isOpen?: boolean
+  onClose?: () => void
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
   children: ReactElement
 }
 
 export const Popout = ({
   isOpen = false,
+  onClose,
   trigger,
   children,
   ...props
@@ -36,9 +52,10 @@ export const Popout = ({
   const ctxt = useMemo(
     () => ({
       isOpen,
+      onClose,
       popout,
     }),
-    [isOpen, popout],
+    [isOpen, onClose, popout],
   )
 
   return (
@@ -50,24 +67,16 @@ export const Popout = ({
 }
 
 interface PopoutContentProps extends DialogContentProps {
-  id?: string
-  onClose?: () => void
   children: ReactNode
 }
 
 export const PopoutContent = forwardRef(
-  ({ id, onClose, children, ...props }: PopoutContentProps, ref: any) => {
-    const innerId = useId(id)
+  ({ children, ...props }: PopoutContentProps, ref: any) => {
     const innerRef = useRef<any>()
-    const { isActiveFocusBoundary } = useFocusTakeoverContext()
-    const { isOpen, popout } = usePopoutContext()
-
-    useOnClickOutside(innerRef, () => {
-      if (isActiveFocusBoundary(innerId)) onClose?.()
-    })
+    const { isOpen, onClose, popout } = usePopoutContext()
 
     return (
-      <Dialog id={innerId} isOpen={isOpen}>
+      <Dialog isOpen={isOpen} onClose={onClose}>
         <DialogContent
           ref={mergeRefs(popout.set, innerRef, ref)}
           style={popout.styles}
@@ -84,6 +93,7 @@ export const PopoutContent = forwardRef(
 interface PopoutContext {
   isOpen: boolean
   popout: any // FIXME: type
+  onClose?: () => void
 }
 
 const popoutContext = createContext<PopoutContext>({

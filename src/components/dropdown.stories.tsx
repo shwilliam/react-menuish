@@ -17,15 +17,9 @@ export const Default = () => {
         )}
       >
         <Menu.List>
-          <Menu.DropdownItem onClick={() => setValue('1')}>
-            item 1
-          </Menu.DropdownItem>
-          <Menu.DropdownItem onClick={() => setValue('2')}>
-            item 2
-          </Menu.DropdownItem>
-          <Menu.DropdownItem onClick={() => setValue('3')}>
-            item 3
-          </Menu.DropdownItem>
+          <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
+          <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+          <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
           <Menu.Submenu
             trigger={({ anchorRef, menuIdx, open }) => (
               <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
@@ -34,21 +28,11 @@ export const Default = () => {
             )}
           >
             <Menu.List>
-              <Menu.DropdownItem onClick={() => setValue('1')}>
-                item 1
-              </Menu.DropdownItem>
-              <Menu.DropdownItem onClick={() => setValue('2')}>
-                item 2
-              </Menu.DropdownItem>
-              <Menu.DropdownItem onClick={() => setValue('3')}>
-                item 3
-              </Menu.DropdownItem>
-              <Menu.DropdownItem onClick={() => setValue('4')}>
-                item 4
-              </Menu.DropdownItem>
-              <Menu.DropdownItem onClick={() => setValue('5')}>
-                item 5
-              </Menu.DropdownItem>
+              <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
+              <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+              <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
+              <Menu.Item onClick={() => setValue('4')}>item 4</Menu.Item>
+              <Menu.Item onClick={() => setValue('5')}>item 5</Menu.Item>
               <Menu.Submenu
                 trigger={({ anchorRef, menuIdx, open }) => (
                   <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
@@ -57,20 +41,14 @@ export const Default = () => {
                 )}
               >
                 <Menu.List>
-                  <Menu.DropdownItem onClick={() => setValue('1')}>
-                    item 1
-                  </Menu.DropdownItem>
+                  <Menu.Item onClick={() => setValue('1')}>item 1</Menu.Item>
                   <Menu.FocusableItem>
                     {({ focusableRef, handleKeyDown }) => (
                       <input ref={focusableRef} onKeyDown={handleKeyDown} />
                     )}
                   </Menu.FocusableItem>
-                  <Menu.DropdownItem onClick={() => setValue('2')}>
-                    item 2
-                  </Menu.DropdownItem>
-                  <Menu.DropdownItem onClick={() => setValue('3')}>
-                    item 3
-                  </Menu.DropdownItem>
+                  <Menu.Item onClick={() => setValue('2')}>item 2</Menu.Item>
+                  <Menu.Item onClick={() => setValue('3')}>item 3</Menu.Item>
                   <Menu.FocusableItem>
                     {({ focusableRef, handleKeyDown }) => (
                       <input ref={focusableRef} onKeyDown={handleKeyDown} />
