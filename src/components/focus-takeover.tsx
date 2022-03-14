@@ -7,7 +7,7 @@ import {
   ReactNode,
 } from 'react'
 import _ from 'lodash'
-import { useId } from '@react-aria/utils'
+import { useId } from '../hooks/id'
 
 export interface FocusTakeoverContext {
   isActiveFocusBoundary: (id: string) => boolean

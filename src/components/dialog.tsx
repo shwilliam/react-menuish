@@ -14,13 +14,13 @@ import FocusLock from 'react-focus-lock'
 import useOnClickOutside from 'use-onclickoutside'
 import { RemoveScroll } from 'react-remove-scroll'
 import { animated } from 'react-spring'
-import { useId } from '@react-aria/utils'
-import { mergeRefs } from '../util/merge-refs'
 import {
   FocusTakeoverBoundary,
   useFocusTakeoverContext,
 } from './focus-takeover'
 import { Portal } from './portal'
+import { useId } from '../hooks/id'
+import { mergeRefs } from '../util/merge-refs'
 
 // TODO: aria attrs
 
