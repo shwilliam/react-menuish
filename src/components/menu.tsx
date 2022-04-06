@@ -16,6 +16,7 @@ import {
   forwardRef,
   isValidElement,
   useCallback,
+  ReactElement,
 } from 'react'
 import _ from 'lodash'
 import styled, { css } from 'styled-components'
@@ -284,7 +285,7 @@ interface MenuTrayProps extends MenuInnerProps {}
 
 const MenuTray = forwardRef(
   ({ trigger, menuIdx, children, ...props }: MenuTrayProps, ref) => {
-    const { focus, setFocus, closeTopLevel } = useMenuContext()
+    const { focus, setFocus, closeTopLevel, closeMenu } = useMenuContext()
     const { level } = useMenuListContext()
     const isOpen = !_.isUndefined(focus[level])
     const isSubmenu = level > 0
@@ -297,6 +298,7 @@ const MenuTray = forwardRef(
           value={{ level: isSubmenu ? level - 1 : level }}
         >
           {trigger({
+            close: closeMenu,
             open: () => {
               setFocus((s) => {
                 const clone = _.clone(s)
@@ -355,6 +357,7 @@ const MenuPopout = forwardRef(
                 anchorRef,
                 stickyTriggerRef,
                 handleKeyDown: keyboardEventHandler,
+                close: closeMenu,
                 open: () => {
                   setFocus((s) => {
                     const clone = _.clone(s)
@@ -390,6 +393,18 @@ const MenuPopout = forwardRef(
   },
 )
 
+interface GroupProps {
+  label: ReactNode
+  children: ReactNode[]
+}
+
+export const Group = forwardRef(({ label, children }: GroupProps, ref: any) => (
+  <div ref={ref}>
+    <div>{label}</div>
+    {children}
+  </div>
+))
+
 interface ListProps {
   children: ReactNode[]
 }
@@ -398,11 +413,34 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
   const { focus, setFocus, listChildStateRef, getNextFocusableIdx } =
     useMenuContext()
   const { level } = useMenuListContext()
-  const levelMax = Children.count(children)
   const thisLevelFocus = focus[level]
   const validChildren = _.compact(
     Children.map(children, (child) => (isValidElement(child) ? child : null)),
   )
+
+  let renderedChildren: ReactElement[] = []
+  let runningChildrenIdx = 0
+  Children.forEach(validChildren, (child, idx) => {
+    if (child.type === Group) {
+      const groupChildren = Children.map(child.props.children, (child) => {
+        if (child.isDisabled) return child
+        else {
+          const el = cloneElement(child, { menuIdx: runningChildrenIdx })
+          runningChildrenIdx += 1
+          return el
+        }
+      })
+      renderedChildren.push(
+        cloneElement(child, {
+          children: groupChildren,
+        }),
+      )
+    } else if (child.props.isDisabled) renderedChildren.push(child)
+    else
+      renderedChildren.push(
+        cloneElement(child, { menuIdx: runningChildrenIdx++ }),
+      )
+  })
 
   useEffect(() => {
     setFocus((s) => {
@@ -417,7 +455,7 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
     const listChildCount = _.cloneDeep(listChildStateRef.current)
     listChildCount[level] = {
       ...listChildCount[level],
-      count: levelMax,
+      count: runningChildrenIdx,
     }
     listChildStateRef.current = listChildCount
 
@@ -425,26 +463,22 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
       const listChildCount = _.clone(listChildStateRef.current)
       listChildStateRef.current = listChildCount.slice(0, level)
     }
-  }, [levelMax, listChildStateRef, level])
+  }, [runningChildrenIdx, listChildStateRef, level])
 
   // correct focus if out of bounds
   useLayoutEffect(() => {
-    if (thisLevelFocus > levelMax - 1) {
+    if (thisLevelFocus > runningChildrenIdx - 1) {
       setFocus((s) => {
         const clone = _.clone(s)
-        clone[level] = levelMax - 1
+        clone[level] = runningChildrenIdx - 1
         return clone
       })
     }
-  }, [thisLevelFocus, level, levelMax, setFocus])
+  }, [thisLevelFocus, level, runningChildrenIdx, setFocus])
 
   return (
     <menuListContext.Provider value={{ level }}>
-      <StyledUl ref={ref}>
-        {Children.map(validChildren, (child, idx) =>
-          cloneElement(child, { menuIdx: idx }),
-        )}
-      </StyledUl>
+      <StyledUl ref={ref}>{renderedChildren}</StyledUl>
     </menuListContext.Provider>
   )
 })
@@ -460,6 +494,7 @@ const StyledUl = styled.ul`
 
 interface ItemProps {
   onClick?: () => void | boolean
+  isDisabled?: boolean
   noClose?: boolean
   menuIdx?: number
   children: any
@@ -467,19 +502,32 @@ interface ItemProps {
 
 export const Item = forwardRef(
   (
-    { onClick, noClose, menuIdx = -1, children, ...props }: ItemProps,
+    {
+      onClick,
+      noClose,
+      isDisabled,
+      menuIdx = -1,
+      children,
+      ...props
+    }: ItemProps,
     ref: any,
   ) => {
     const isMobile = useIsMobile()
     const { closeMenu, focus, setFocus, actionHandlerRef } = useMenuContext()
     const { level } = useMenuListContext()
     const hasVirtualFocus = focus[level] === menuIdx
-    const handleClick = useCallback(() => {
-      const handlerDisabledClose = onClick?.()
-      const shouldClose = !noClose && handlerDisabledClose !== false
-      if (shouldClose) closeMenu()
-      return shouldClose
-    }, [onClick, closeMenu, noClose])
+    const handleClick = useCallback(
+      (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const handlerDisabledClose = onClick?.()
+        const shouldClose = !noClose && handlerDisabledClose !== false
+        if (shouldClose) closeMenu()
+        return shouldClose
+      },
+      [onClick, closeMenu, noClose],
+    )
     const handleHover: MouseEventHandler = () => {
       if (isMobile) return
       setFocus((s) => {
@@ -503,8 +551,13 @@ export const Item = forwardRef(
     return (
       <StyledLi
         ref={ref}
-        onClick={handleClick}
-        onMouseEnter={handleHover}
+        {...(isDisabled
+          ? {}
+          : {
+              // onClick: handleClick,
+              onMouseDown: handleClick,
+              onMouseEnter: handleHover,
+            })}
         hasVirtualFocus={!isMobile && hasVirtualFocus}
         {...props}
       >
@@ -575,7 +628,7 @@ export const FocusableItem = forwardRef(
     })
 
     return (
-      <Item ref={ref} onClick={() => false} menuIdx={menuIdx}>
+      <Item ref={ref} onClick={() => false} menuIdx={menuIdx} isDisabled>
         {children({ focusableRef, handleKeyDown: keyboardEventHandler })}
       </Item>
     )
