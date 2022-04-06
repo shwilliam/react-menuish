@@ -18,7 +18,7 @@ import {
   useCallback,
 } from 'react'
 import _ from 'lodash'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Subtray, Tray } from './tray'
 import { mergeRefs } from '../util/merge-refs'
 import { useIsMobile } from '../hooks/is-mobile'
@@ -90,6 +90,36 @@ export const ContextProvider = ({
       clone.pop()
       return clone
     })
+
+  const getNextFocusableIdx = (start: number, level: number) => {
+    const levelChildStateRef = listChildStateRef.current[level]
+    const levelMax = levelChildStateRef?.count
+    const thisLevelState = listChildStateRef.current[level]
+
+    if (!thisLevelState) return 0
+
+    if (start > levelMax) return levelMax
+    if (thisLevelState.stickyChildren?.[start])
+      return getNextFocusableIdx(start + 1, level)
+    return start
+  }
+  const getPrevFocusableIdx = (start: number, level: number) => {
+    const thisLevelState = listChildStateRef.current[level]
+
+    if (!thisLevelState) return 0
+
+    if (start <= 0) {
+      if (thisLevelState.stickyChildren?.[0])
+        return getNextFocusableIdx(0, level)
+      return 0
+    }
+
+    if (thisLevelState.stickyChildren?.[start])
+      return getPrevFocusableIdx(start - 1, level)
+
+    return start
+  }
+
   const keyboardEventHandler: KeyboardEventHandler = (e) => {
     let handled = false
 
@@ -99,13 +129,15 @@ export const ContextProvider = ({
       handled = true
     } else {
       const levelFocus = _.last(focus)
-      const levelMax = _.last(listChildStateRef.current).count
 
       switch (e.key) {
         case 'ArrowDown':
           setFocus((s) => {
             const clone = _.clone(s)
-            clone[clone.length - 1] = Math.min(levelFocus + 1, levelMax)
+            clone[clone.length - 1] = getNextFocusableIdx(
+              levelFocus + 1,
+              focus.length - 1,
+            )
             return clone
           })
           handled = true
@@ -113,7 +145,10 @@ export const ContextProvider = ({
         case 'ArrowUp':
           setFocus((s) => {
             const clone = _.clone(s)
-            clone[clone.length - 1] = Math.max(0, levelFocus - 1)
+            clone[clone.length - 1] = getPrevFocusableIdx(
+              levelFocus - 1,
+              focus.length - 1,
+            )
             return clone
           })
           handled = true
@@ -157,12 +192,27 @@ export const ContextProvider = ({
         }, Array.from({ length: state.count })),
       )
       .reverse()
-    const matchingLevel = childrenStickyEls.find(
-      (stickyEls) => !!_.compact(stickyEls).length,
+    const [matchingLevelIdx, matchingLevel] = childrenStickyEls.reduce(
+      (acc, stickyEls, idx) => {
+        if (acc.some(Boolean)) return acc
+
+        const actualIdx = childrenStickyEls.length - idx - 1
+        const passedStickyEls =
+          actualIdx === focus.length - 1
+            ? stickyEls.slice(0, focus[actualIdx])
+            : stickyEls
+
+        if (!!_.compact(passedStickyEls).length) return [actualIdx, stickyEls]
+        return acc
+      },
+      [null, null],
     )
+
     const matchingStickyEl = matchingLevel?.reverse()?.find((stickyEl, idx) => {
       const actualIdx = matchingLevel.length - idx - 1
-      return focus[level] >= actualIdx && !!stickyEl
+      return (
+        (matchingLevelIdx < level || focus[level] >= actualIdx) && !!stickyEl
+      )
     })
 
     if (matchingStickyEl) matchingStickyEl.current?.focus()
@@ -184,6 +234,7 @@ export const ContextProvider = ({
         stickyTriggerRef,
         focusTrapRef,
         noFocusTrap,
+        getNextFocusableIdx,
       }}
     >
       {children}
@@ -295,6 +346,7 @@ const MenuPopout = forwardRef(
         <Popout
           isOpen={isOpen}
           onClose={closeMenu}
+          placement={isSubmenu ? 'right-start' : 'bottom-end'}
           trigger={({ anchorRef }) => (
             <menuListContext.Provider
               value={{ level: isSubmenu ? level - 1 : level }}
@@ -343,13 +395,22 @@ interface ListProps {
 }
 
 export const List = forwardRef(({ children }: ListProps, ref: any) => {
-  const { focus, setFocus, listChildStateRef } = useMenuContext()
+  const { focus, setFocus, listChildStateRef, getNextFocusableIdx } =
+    useMenuContext()
   const { level } = useMenuListContext()
   const levelMax = Children.count(children)
   const thisLevelFocus = focus[level]
   const validChildren = _.compact(
     Children.map(children, (child) => (isValidElement(child) ? child : null)),
   )
+
+  useEffect(() => {
+    setFocus((s) => {
+      const clone = _.clone(s)
+      clone[clone.length - 1] = getNextFocusableIdx(0, focus.length - 1)
+      return clone
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // sync level child count
   useEffect(() => {
@@ -389,6 +450,10 @@ export const List = forwardRef(({ children }: ListProps, ref: any) => {
 })
 
 const StyledUl = styled.ul`
+  box-shadow: rgba(22, 23, 24, 0.35) 0px 10px 38px -10px,
+    rgba(22, 23, 24, 0.2) 0px 10px 20px -15px;
+  background-color: white;
+  border-radius: 3px;
   margin: 0;
   padding: 0;
 `
@@ -440,7 +505,7 @@ export const Item = forwardRef(
         ref={ref}
         onClick={handleClick}
         onMouseEnter={handleHover}
-        style={{ backgroundColor: hasVirtualFocus ? 'pink' : 'white' }}
+        hasVirtualFocus={!isMobile && hasVirtualFocus}
         {...props}
       >
         [{menuIdx}]{children}
@@ -449,7 +514,20 @@ export const Item = forwardRef(
   },
 )
 
-const StyledLi = styled.li`
+interface StyledLiProps {
+  hasVirtualFocus?: boolean
+}
+
+const StyledLi = styled.li<StyledLiProps>`
+  ${({ hasVirtualFocus }) =>
+    hasVirtualFocus
+      ? css`
+          background-color: blue;
+          color: white;
+        `
+      : ''}
+  padding: 3px 10px;
+  border-radius: 3px;
   list-style-type: none;
   cursor: pointer;
 `

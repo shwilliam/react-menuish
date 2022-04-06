@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { usePopper } from 'react-popper'
 import { Modifier, Placement } from '@popperjs/core'
 
-interface UsePopoutOptions {
+export interface UsePopoutOptions {
   placement: Placement
   modifiers?: Partial<Modifier<unknown, object>>[]
 }

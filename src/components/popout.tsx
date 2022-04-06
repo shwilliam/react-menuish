@@ -8,14 +8,16 @@ import {
   ReactElement,
 } from 'react'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { usePopout } from '../hooks/popout'
+import { usePopout, UsePopoutOptions } from '../hooks/popout'
 import { mergeRefs } from '../util/merge-refs'
+
+// TODO: mobile-friendly variant as modal or tray
 
 interface PopoutTriggerContext {
   anchorRef: any
 }
 
-interface PopoutProps {
+interface PopoutProps extends UsePopoutOptions {
   isOpen?: boolean
   onClose?: () => void
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
@@ -25,12 +27,15 @@ interface PopoutProps {
 export const Popout = ({
   isOpen = false,
   onClose,
+  placement = 'bottom',
+  modifiers,
   trigger,
   children,
   ...props
 }: PopoutProps) => {
   const { popout, anchor, arrow } = usePopout({
-    placement: 'bottom',
+    placement,
+    modifiers,
   })
   const ctxt = useMemo(
     () => ({
@@ -59,7 +64,7 @@ export const PopoutContent = forwardRef(
     const { isOpen, onClose, popout } = usePopoutContext()
 
     return (
-      <Dialog isOpen={isOpen} onClose={onClose}>
+      <Dialog isOpen={isOpen} onClose={onClose} isScrollDisabled={false}>
         <DialogContent
           ref={mergeRefs(popout.set, innerRef, ref)}
           style={popout.styles}
