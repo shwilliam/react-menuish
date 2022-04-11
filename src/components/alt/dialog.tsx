@@ -17,10 +17,10 @@ import { animated } from 'react-spring'
 import {
   FocusTakeoverBoundary,
   useFocusTakeoverContext,
-} from './focus-takeover'
-import { Portal } from './portal'
-import { useId } from '../hooks/id'
-import { mergeRefs } from '../util/merge-refs'
+} from '../focus-takeover'
+import { Portal } from '../portal'
+import { useId } from '../../hooks/id'
+import { mergeRefs } from '../../util/merge-refs'
 
 // TODO: aria attrs
 
@@ -41,13 +41,18 @@ export const DialogContent = forwardRef(
     }: DialogContentProps,
     ref: any,
   ) => {
-    const { dialogId, contentRef, onClose } = useDialogContext()
+    const innerRef = useRef<any>()
+    const { dialogId, onClose } = useDialogContext()
+    const stableContentRef = useMemo(
+      () => mergeRefs(ref, innerRef),
+      [ref, innerRef],
+    )
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
       if (initialFocusRef?.current) initialFocusRef.current.focus?.()
     }, [initialFocusRef])
 
-    useOnClickOutside(contentRef, () => {
+    useOnClickOutside(innerRef, () => {
       if (isActiveFocusBoundary(dialogId)) onClose?.()
     })
 
@@ -62,7 +67,7 @@ export const DialogContent = forwardRef(
         onActivation={activateFocusLock}
         disabled={noFocusLock}
       >
-        <animated.div ref={mergeRefs(ref, contentRef)} {...props}>
+        <animated.div ref={stableContentRef} {...props}>
           {children}
         </animated.div>
       </FocusLock>
@@ -94,11 +99,7 @@ const DialogOverlay = ({
   children,
 }: DialogOverlayProps) => {
   const dialogId = useId(id)
-  const contentRef = useRef<any>()
-  const ctxt = useMemo(
-    () => ({ contentRef, dialogId, onClose }),
-    [dialogId, onClose],
-  )
+  const ctxt = useMemo(() => ({ dialogId, onClose }), [dialogId, onClose])
 
   if (!isOpen) return null
   return (
@@ -119,13 +120,11 @@ const DialogOverlay = ({
 
 interface DialogContext {
   dialogId: string
-  contentRef: MutableRefObject<any>
   onClose?: () => void
 }
 
 const dialogContext = createContext<DialogContext>({
   dialogId: '',
-  contentRef: { current: null },
 })
 
 export const useDialogContext = () => useContext(dialogContext)

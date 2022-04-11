@@ -218,8 +218,13 @@ export const ContextProvider = ({
 
     if (matchingStickyEl) matchingStickyEl.current?.focus()
     else if (isMobile) return
-    else if (noFocusTrap) stickyTriggerRef.current.focus?.()
-    else focusTrapRef.current?.focus?.()
+    else if (noFocusTrap) {
+      console.log('focus sticky trigger')
+      stickyTriggerRef.current.focus?.()
+    } else {
+      console.log('focus trap: ', focusTrapRef.current)
+      focusTrapRef.current?.focus?.()
+    }
   }, [focus, noFocusTrap, isMobile])
 
   return (

@@ -18,8 +18,10 @@ export const Default = () => {
       )}
     >
       <Menu.List>
-        {fruits.map((f) => (
-          <Menu.Item key={f}>{f}</Menu.Item>
+        {fruits.map((f, idx) => (
+          <Menu.Item key={f} isDisabled={idx === 2}>
+            {f}
+          </Menu.Item>
         ))}
       </Menu.List>
     </Menu.Menu>
@@ -47,13 +49,34 @@ export const WithFilter = () => {
             />
           )}
         </Menu.FocusableItem>
-        {fruits
-          .filter(
-            (f) => !filter || f.toLowerCase().includes(filter.toLowerCase()),
-          )
-          .map((f) => (
-            <Menu.Item key={f}>{f}</Menu.Item>
-          ))}
+        <Menu.Group label="group label">
+          {fruits
+            .filter(
+              (f) => !filter || f.toLowerCase().includes(filter.toLowerCase()),
+            )
+            .map((f) => (
+              <Menu.Item key={f}>{f}</Menu.Item>
+            ))}
+        </Menu.Group>
+        <Menu.Group label="another group label">
+          {fruits
+            .filter(
+              (f) => !filter || f.toLowerCase().includes(filter.toLowerCase()),
+            )
+            .map((f) => (
+              <Menu.Item key={f}>{f}</Menu.Item>
+            ))}
+        </Menu.Group>
+        <Menu.FocusableItem>
+          {({ focusableRef, handleKeyDown }) => (
+            <input
+              ref={focusableRef}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          )}
+        </Menu.FocusableItem>
         <Menu.Submenu
           trigger={({ anchorRef, menuIdx, open }) => (
             <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
@@ -65,6 +88,16 @@ export const WithFilter = () => {
             <Menu.Item>item 1</Menu.Item>
             <Menu.Item>item 2</Menu.Item>
             <Menu.Item>item 3</Menu.Item>
+            <Menu.FocusableItem>
+              {({ focusableRef, handleKeyDown }) => (
+                <input
+                  ref={focusableRef}
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              )}
+            </Menu.FocusableItem>
             <Menu.Item>item 4</Menu.Item>
             <Menu.Item>item 5</Menu.Item>
           </Menu.List>
@@ -140,6 +173,35 @@ export const TwoMenus = () => {
       <Default />
       <Default />
       <Lorem paragraphs={10} />
+      <Default />
+      <Lorem paragraphs={10} />
     </>
+  )
+}
+
+export const Picker = () => {
+  const [value, setValue] = useState<string | null>(null)
+  return (
+    <Menu.Menu
+      trigger={({ anchorRef, open }) => (
+        <button ref={anchorRef} onClick={open}>
+          {value || 'select fruit'}
+        </button>
+      )}
+    >
+      <Menu.List>
+        {fruits.map((f) => (
+          <Menu.Item
+            key={f}
+            onClick={() => {
+              setValue(f)
+              return false
+            }}
+          >
+            {f}
+          </Menu.Item>
+        ))}
+      </Menu.List>
+    </Menu.Menu>
   )
 }
