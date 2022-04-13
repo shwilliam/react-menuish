@@ -19,14 +19,11 @@ import {
   useContext,
   useCallback,
   MouseEventHandler,
-  RefCallback,
 } from 'react'
 import _ from 'lodash'
 import { Popout, PopoutTriggerContext } from './popout'
 import { useIsMobile } from '../../hooks/is-mobile'
 import { Subtray } from './tray'
-import { useScrolledToBottom } from '../../hooks/scrolled-to-bottom'
-import { mergeRefs } from '../../util/merge-refs'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -74,11 +71,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     setFocus([-1])
   }
   const getNextFocusableIdx = (start: number, level: number) => {
-    const levelChildStateRef = listChildStateRef.current[level]
-    const levelMax = levelChildStateRef?.count
-    const thisLevelState = listChildStateRef.current[level]
+    const levelChildState = listChildStateRef.current[level]
+    const levelMax = levelChildState?.count
 
-    if (!thisLevelState) {
+    if (levelChildState === undefined) {
       console.log('return 0')
       return 0
     }
@@ -87,7 +83,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       console.log('return levelMax')
       return levelMax
     }
-    if (thisLevelState.stickyChildren?.[start]) {
+    if (levelChildState.stickyChildren?.[start] !== undefined) {
       console.log('get again')
       return getNextFocusableIdx(start + 1, level)
     }
@@ -97,7 +93,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const getPrevFocusableIdx = (start: number, level: number) => {
     const thisLevelState = listChildStateRef.current[level]
 
-    if (!thisLevelState) return 0
+    if (thisLevelState === undefined) return 0
 
     if (start <= 0) {
       if (thisLevelState.stickyChildren?.[0])
@@ -105,7 +101,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       return 0
     }
 
-    if (thisLevelState.stickyChildren?.[start])
+    if (thisLevelState.stickyChildren?.[start] !== undefined)
       return getPrevFocusableIdx(start - 1, level)
 
     return start
@@ -114,10 +110,11 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     setFocus((s) => {
       const lastLevelFocus = _.last(s)
       const clone = _.clone(s)
-      clone[clone.length - 1] = getNextFocusableIdx(
+      const nextFocusableIdx = getNextFocusableIdx(
         lastLevelFocus + 1,
         focus.length - 1,
       )
+      clone[clone.length - 1] = nextFocusableIdx
       return clone
     })
   }
@@ -408,10 +405,11 @@ export const ListBoxBase = forwardRef(
       }
       listChildStateRef.current = listChildCount
 
-      return () => {
-        const listChildCount = _.clone(listChildStateRef.current)
-        listChildStateRef.current = listChildCount.slice(0, level)
-      }
+      // return () => {
+      //   const levelChildState = _.clone(listChildStateRef.current)
+      //   levelChildState[level] = null
+      //   listChildStateRef.current = levelChildState.slice(0, level)
+      // }
     }, [runningChildrenIdx, listChildStateRef, level])
 
     // correct focus if out of bounds
@@ -515,6 +513,20 @@ export const ListBoxItem = forwardRef(
       e.preventDefault()
       e.stopPropagation()
     }
+
+    // persist listIdx changing while virtually focused
+    const hadVirtualFocus = useRef(hasVirtualFocus)
+    useEffect(() => {
+      if (hadVirtualFocus.current)
+        setFocus((s) => {
+          const clone = _.clone(s)
+          clone[level] = listIdx
+          return clone
+        })
+    }, [level, listIdx, setFocus])
+    useEffect(() => {
+      hadVirtualFocus.current = hasVirtualFocus
+    }, [hasVirtualFocus])
 
     return (
       <div
