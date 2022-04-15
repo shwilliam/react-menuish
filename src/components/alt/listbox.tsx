@@ -24,6 +24,7 @@ import _ from 'lodash'
 import { Popout, PopoutTriggerContext } from './popout'
 import { useIsMobile } from '../../hooks/is-mobile'
 import { Subtray } from './tray'
+import { useId } from '../../hooks/id'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -45,6 +46,7 @@ interface ListBoxState {
   closeLevel: (level: number) => void
   focusTrapRef: MutableRefObject<any>
   activeOptionId?: string
+  isMultiSelectable: boolean
 }
 interface ListChildState {
   count: number
@@ -54,6 +56,7 @@ interface ListChildState {
 interface UseListBoxStateOptions {
   activeOptionId?: string
   onChange?: ChangeHandler
+  isMultiSelectable?: boolean
 }
 
 interface Action {
@@ -62,7 +65,7 @@ interface Action {
 }
 
 export const useListBoxState = (options?: UseListBoxStateOptions) => {
-  const { onChange, activeOptionId } = options || {}
+  const { onChange, activeOptionId, isMultiSelectable = false } = options || {}
   const [focus, setFocus] = useState<Focus>([])
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
@@ -208,6 +211,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     closeLevel,
     focusTrapRef,
     activeOptionId,
+    isMultiSelectable,
   }
 
   return { state }
@@ -320,19 +324,21 @@ const listBoxContext = createContext<ListBoxState>({
   triggerAction: () => {},
   closeLevel: () => {},
   focusTrapRef: { current: null },
+  isMultiSelectable: false,
 })
 
 const useListBoxContext = () => useContext(listBoxContext)
 
-interface ListBoxBaseProps extends ComponentProps<'div'> {
+interface ListBoxBaseProps extends ComponentProps<'ul'> {
   state: ListBoxState
   level?: number
+  labelId?: string
   children: ReactNode
 }
 
 export const ListBoxBase = forwardRef(
   (
-    { state, level = 0, children, ...props }: ListBoxBaseProps,
+    { state, level = 0, labelId, children, ...props }: ListBoxBaseProps,
     ref: ForwardedRef<any>,
   ) => {
     const {
@@ -341,6 +347,7 @@ export const ListBoxBase = forwardRef(
       listChildStateRef,
       getNextFocusableIdx,
       activeOptionId,
+      isMultiSelectable,
     } = state
     const thisLevelFocus = focus[level]
 
@@ -426,16 +433,22 @@ export const ListBoxBase = forwardRef(
     return (
       <listBoxContext.Provider value={state}>
         <listLevelContext.Provider value={{ level }}>
-          <div ref={ref} {...props}>
+          <ul
+            ref={ref}
+            role="listbox"
+            {...(isMultiSelectable ? { 'aria-multiselectable': 'true' } : {})}
+            {...(labelId ? { 'aria-labelledby': labelId } : {})}
+            {...props}
+          >
             {renderedChildren}
-          </div>
+          </ul>
         </listLevelContext.Provider>
       </listBoxContext.Provider>
     )
   },
 )
 
-interface ListBoxItemProps {
+interface ListBoxItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
   listIdx?: number
   onClick?: ActionHandler
   isDisabled?: boolean
@@ -447,19 +460,20 @@ interface ListBoxItemProps {
 export const ListBoxItem = forwardRef(
   (
     {
+      id,
       listIdx = -1,
       onClick,
       isDisabled,
       value,
-      activeOptionId,
       children,
       ...props
     }: ListBoxItemProps,
     ref: ForwardedRef<any>,
   ) => {
     const isMobile = useIsMobile()
-    const { focus, setFocus, actionRef, onChange, resetFocus } =
+    const { focus, setFocus, actionRef, onChange, resetFocus, activeOptionId } =
       useListBoxContext()
+    const isSelected = activeOptionId === id
     const { level } = useListLevelContext()
     const hasVirtualFocus = focus[level] === listIdx
     const textValue = !_.isUndefined(value)
@@ -529,14 +543,17 @@ export const ListBoxItem = forwardRef(
     }, [hasVirtualFocus])
 
     return (
-      <div
+      <li
         ref={ref}
+        role="option"
+        aria-selected={isSelected ? 'true' : 'false'}
+        aria-disabled={isDisabled ? 'true' : 'false'}
         onMouseOver={handleHover}
         onMouseDown={handleMouseDown}
         {...props}
       >
         {hasVirtualFocus ? '-' : ''}({listIdx}){children}
-      </div>
+      </li>
     )
   },
 )
@@ -605,12 +622,19 @@ interface ListBoxGroupProps {
 }
 
 export const ListBoxGroup = forwardRef(
-  ({ label, children }: ListBoxGroupProps, ref: ForwardedRef<any>) => (
-    <div ref={ref}>
-      <div>{label}</div>
-      {children}
-    </div>
-  ),
+  ({ label, children }: ListBoxGroupProps, ref: ForwardedRef<any>) => {
+    const groupLabelId = useId()
+    return (
+      <div ref={ref} role="presentation">
+        <div id={groupLabelId} role="presentation" aria-hidden="true">
+          {label}
+        </div>
+        <div role="group" aria-labelledby={groupLabelId}>
+          {children}
+        </div>
+      </div>
+    )
+  },
 )
 
 // TODO: move to menu
