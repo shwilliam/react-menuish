@@ -151,6 +151,23 @@ export const MultilevelPicker = () => {
         <ListBoxItem>c</ListBoxItem>
         <ListBoxItem>d</ListBoxItem>
       </SubList>
+      <SubList
+        trigger={({ id, listIdx, anchorRef, onClick }) => (
+          <ListBoxItem
+            ref={anchorRef}
+            id={id}
+            listIdx={listIdx}
+            onClick={onClick}
+          >
+            more letters
+          </ListBoxItem>
+        )}
+      >
+        <ListBoxItem>e</ListBoxItem>
+        <ListBoxItem>f</ListBoxItem>
+        <ListBoxItem>g</ListBoxItem>
+        <ListBoxItem>h</ListBoxItem>
+      </SubList>
     </Menu>
   )
 }
