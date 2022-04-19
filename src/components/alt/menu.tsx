@@ -20,15 +20,27 @@ interface MenuProps {
   onChange?: ChangeHandler
   activeOptionId?: string
   onLoadMore?: () => void
+  focusResetTrigger?: any
   children: ReactNode[]
 }
 
 export const Menu = forwardRef(
   (
-    { value, onChange, activeOptionId, onLoadMore, ...props }: MenuProps,
+    {
+      value,
+      onChange,
+      activeOptionId,
+      onLoadMore,
+      focusResetTrigger,
+      ...props
+    }: MenuProps,
     ref: ForwardedRef<any>,
   ) => {
-    const { state } = useListBoxState({ onChange, activeOptionId })
+    const { state } = useListBoxState({
+      onChange,
+      activeOptionId,
+      focusResetTrigger,
+    })
     const {
       focus,
       setFocus,

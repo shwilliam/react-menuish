@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { fruits } from '../../util/fruits'
+import { fruits, moreFruits } from '../../util/fruits'
 import {
   ListBoxItemFocusable,
   ListBoxGroup,
@@ -135,8 +135,13 @@ export const MultilevelPicker = () => {
         <ListBoxItem>{fruit}</ListBoxItem>
       ))}
       <SubList
-        trigger={({ listIdx, anchorRef, onClick }) => (
-          <ListBoxItem ref={anchorRef} listIdx={listIdx} onClick={onClick}>
+        trigger={({ id, listIdx, anchorRef, onClick }) => (
+          <ListBoxItem
+            ref={anchorRef}
+            id={id}
+            listIdx={listIdx}
+            onClick={onClick}
+          >
             letters
           </ListBoxItem>
         )}
@@ -154,7 +159,11 @@ export const WithFilter = () => {
   const [filter, setFilter] = useState('')
   const [value, setValue] = useState<number | string | null>(null)
   return (
-    <Menu value={value} onChange={(value) => setValue(value)}>
+    <Menu
+      value={value}
+      onChange={(value) => setValue(value)}
+      focusResetTrigger={filter}
+    >
       <ListBoxItemFocusable>
         {({ focusableRef, handleKeyDown }) => (
           <input
@@ -171,8 +180,13 @@ export const WithFilter = () => {
           <ListBoxItem>{fruit}</ListBoxItem>
         ))}
       <SubList
-        trigger={({ listIdx, anchorRef, onClick }) => (
-          <ListBoxItem ref={anchorRef} listIdx={listIdx} onClick={onClick}>
+        trigger={({ id, listIdx, anchorRef, onClick }) => (
+          <ListBoxItem
+            id={id}
+            ref={anchorRef}
+            listIdx={listIdx}
+            onClick={onClick}
+          >
             letters
           </ListBoxItem>
         )}
@@ -182,6 +196,11 @@ export const WithFilter = () => {
         <ListBoxItem>c</ListBoxItem>
         <ListBoxItem>d</ListBoxItem>
       </SubList>
+      {moreFruits
+        .filter((fruit) => fruit.includes(filter.toLowerCase()))
+        .map((fruit) => (
+          <ListBoxItem>{fruit}</ListBoxItem>
+        ))}
     </Menu>
   )
 }
@@ -213,11 +232,11 @@ export const WithMultipleFilter = () => {
           <ListBoxItem>{fruit}</ListBoxItem>
         ))}
       <SubList
-        trigger={({ listIdx, anchorRef, onAction, onClick }) => (
+        trigger={({ id, listIdx, anchorRef, onClick }) => (
           <ListBoxItem
             ref={anchorRef}
+            id={id}
             listIdx={listIdx}
-            onAction={onAction}
             onClick={onClick}
           >
             fruits again

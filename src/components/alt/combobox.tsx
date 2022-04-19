@@ -9,8 +9,8 @@ import {
 } from 'react'
 import { Popout } from './popout'
 import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
-import { useIsMobile } from '../../hooks/is-mobile'
 import { Tray } from './tray'
+import { useIsMobile } from '../../hooks/is-mobile'
 
 interface ComboboxProps {
   value?: string
@@ -30,14 +30,14 @@ export const Combobox = forwardRef(
       focus,
       setFocus,
       triggerAction,
-      resetFocus,
+      close,
       focusNext,
       focusPrev,
       closeLevel,
     } = state
     const handleAction = (value?: string) => {
       const shouldClose = triggerAction(value)
-      if (shouldClose !== false) resetFocus()
+      if (shouldClose !== false) close()
     }
     const handleKeyDown: KeyboardEventHandler = (e) => {
       let handled = false
@@ -80,7 +80,7 @@ export const Combobox = forwardRef(
           }
           break
         case 'Escape':
-          resetFocus()
+          close()
           handled = true
           break
         default:
@@ -101,7 +101,7 @@ export const Combobox = forwardRef(
     }
     const handleBlur = () => {
       if (value) onInputChange?.((value && String(value)) || '')
-      resetFocus()
+      close()
     }
 
     const isOpen = !!focus.length

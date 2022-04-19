@@ -40,7 +40,7 @@ interface ListBoxState {
   open: () => void
   focusNext: () => void
   focusPrev: () => void
-  resetFocus: () => void
+  close: () => void
   onChange?: ChangeHandler
   triggerAction: () => ShouldClose | void
   closeLevel: (level: number) => void
@@ -57,6 +57,7 @@ interface UseListBoxStateOptions {
   activeOptionId?: string
   onChange?: ChangeHandler
   isMultiSelectable?: boolean
+  focusResetTrigger?: any
 }
 
 interface Action {
@@ -65,7 +66,12 @@ interface Action {
 }
 
 export const useListBoxState = (options?: UseListBoxStateOptions) => {
-  const { onChange, activeOptionId, isMultiSelectable = false } = options || {}
+  const {
+    onChange,
+    activeOptionId,
+    isMultiSelectable = false,
+    focusResetTrigger,
+  } = options || {}
   const [focus, setFocus] = useState<Focus>([])
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
@@ -73,7 +79,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const open = () => {
     setFocus([-1])
   }
-  const getNextFocusableIdx = (start: number, level: number) => {
+  const getNextFocusableIdx = useCallback((start: number, level: number) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
 
@@ -92,7 +98,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     }
     console.log('return start')
     return start
-  }
+  }, [])
   const getPrevFocusableIdx = (start: number, level: number) => {
     const thisLevelState = listChildStateRef.current[level]
 
@@ -138,7 +144,11 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       _.isUndefined(value) ? actionRef.current?.value : value,
     )
   }
-  const resetFocus = () => setFocus([])
+  const close = () => setFocus([])
+  const resetFocus = useCallback(
+    () => setFocus([getNextFocusableIdx(0, 0)]),
+    [getNextFocusableIdx],
+  )
   const closeLevel = (level: number) =>
     setFocus((s) => {
       const clone = _.clone(s)
@@ -152,11 +162,11 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
 
     const childrenStickyEls = _.clone(listChildStateRef.current)
       .map((state) =>
-        _.entries(state.stickyChildren)?.reduce((acc, [idx, ref]) => {
+        _.entries(state?.stickyChildren)?.reduce((acc, [idx, ref]) => {
           const clone = _.clone(acc)
           clone[idx] = ref
           return clone
-        }, Array.from({ length: state.count })),
+        }, Array.from({ length: state?.count || 0 })),
       )
       .reverse()
     const [matchingLevelIdx, matchingLevel] = childrenStickyEls.reduce(
@@ -205,7 +215,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     open,
     focusNext,
     focusPrev,
-    resetFocus,
+    close,
     onChange,
     triggerAction,
     closeLevel,
@@ -213,6 +223,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     activeOptionId,
     isMultiSelectable,
   }
+
+  useEffect(() => {
+    resetFocus()
+  }, [resetFocus, focusResetTrigger])
 
   return { state }
 }
@@ -236,8 +250,7 @@ export const getListBoxKeyboardEventHandler = (
   const { state, isFixed } = options
   const {
     focus,
-    setFocus,
-    resetFocus,
+    close,
     focusNext,
     focusPrev,
     closeLevel,
@@ -271,7 +284,7 @@ export const getListBoxKeyboardEventHandler = (
         break
       case 'Escape':
         if (!isFixed) {
-          resetFocus()
+          close()
           handled = true
         }
         break
@@ -320,7 +333,7 @@ const listBoxContext = createContext<ListBoxState>({
   open: () => {},
   focusNext: () => {},
   focusPrev: () => {},
-  resetFocus: () => {},
+  close: () => {},
   triggerAction: () => {},
   closeLevel: () => {},
   focusTrapRef: { current: null },
@@ -412,11 +425,11 @@ export const ListBoxBase = forwardRef(
       }
       listChildStateRef.current = listChildCount
 
-      // return () => {
-      //   const levelChildState = _.clone(listChildStateRef.current)
-      //   levelChildState[level] = null
-      //   listChildStateRef.current = levelChildState.slice(0, level)
-      // }
+      return () => {
+        const levelChildState = _.clone(listChildStateRef.current)
+        levelChildState[level] = null
+        listChildStateRef.current = levelChildState.slice(0, level)
+      }
     }, [runningChildrenIdx, listChildStateRef, level])
 
     // correct focus if out of bounds
@@ -470,27 +483,27 @@ export const ListBoxItem = forwardRef(
     }: ListBoxItemProps,
     ref: ForwardedRef<any>,
   ) => {
+    const innerId = useId(id)
     const isMobile = useIsMobile()
-    const { focus, setFocus, actionRef, onChange, resetFocus, activeOptionId } =
+    const { focus, setFocus, actionRef, onChange, close, activeOptionId } =
       useListBoxContext()
-    const isSelected = activeOptionId === id
+    const isSelected = activeOptionId === innerId
     const { level } = useListLevelContext()
-    const hasVirtualFocus = focus[level] === listIdx
+    const hasVirtualFocus = [listIdx, innerId].includes(focus[level])
     const textValue = !_.isUndefined(value)
       ? value
       : _.isString(children)
       ? children
       : null
     const handleAction = useCallback(() => {
-      console.log('handle')
       if (isDisabled) return
 
       let shouldClose: boolean | undefined
       if (onClick) shouldClose = onClick?.(textValue) ?? true
       else shouldClose = onChange?.(textValue) ?? true
 
-      if (shouldClose !== false) resetFocus()
-    }, [isDisabled, onClick, onChange, textValue, resetFocus])
+      if (shouldClose !== false) close()
+    }, [isDisabled, onClick, onChange, textValue, close])
     const handleHover: MouseEventHandler = () => {
       if (isMobile) return
       if (isDisabled) return
@@ -527,20 +540,6 @@ export const ListBoxItem = forwardRef(
       e.preventDefault()
       e.stopPropagation()
     }
-
-    // persist listIdx changing while virtually focused
-    const hadVirtualFocus = useRef(hasVirtualFocus)
-    useEffect(() => {
-      if (hadVirtualFocus.current)
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone[level] = listIdx
-          return clone
-        })
-    }, [level, listIdx, setFocus])
-    useEffect(() => {
-      hadVirtualFocus.current = hasVirtualFocus
-    }, [hasVirtualFocus])
 
     return (
       <li
@@ -637,10 +636,11 @@ export const ListBoxGroup = forwardRef(
   },
 )
 
-// TODO: move to menu
 interface SubListProps {
+  id?: string
   trigger: (
     triggerContext: PopoutTriggerContext & {
+      id?: string
       listIdx: number
       onClick?: ActionHandler
     },
@@ -652,25 +652,40 @@ interface SubListProps {
 
 export const SubList = forwardRef(
   (
-    { listIdx = -1, trigger, children, ...props }: SubListProps,
+    { id, listIdx = -1, trigger, children, ...props }: SubListProps,
     ref: ForwardedRef<any>,
   ) => {
+    const innerId = useId(id)
     const isMobile = useIsMobile()
     const state = useListBoxContext()
     const { focus, setFocus, closeLevel, focusTrapRef } = state
     const { level } = useListLevelContext()
     const thisLevel = level + 1
-    const isOpen = !_.isUndefined(focus[thisLevel])
+    const isOpen = focus[level] === innerId
     const openSubList = () => {
-      console.log('open sub list')
-      setFocus((s) => [...s, 0])
+      setFocus((s) => {
+        const clone = _.clone(s)
+        clone[level] = innerId
+        clone[thisLevel] = 0
+        return clone
+      })
       return false
     }
+
+    useEffect(() => {
+      if (_.last(focus) === innerId)
+        setFocus((s) => {
+          const clone = _.clone(s)
+          clone[clone.length - 1] = listIdx
+          return clone
+        })
+    }, [focus, setFocus, listIdx, innerId])
 
     if (isMobile)
       return (
         <>
           {trigger({
+            id,
             anchorRef: null,
             listIdx,
             onClick: openSubList,
@@ -694,6 +709,7 @@ export const SubList = forwardRef(
         trigger={(props) =>
           trigger({
             ...props,
+            id: innerId,
             listIdx,
             onClick: openSubList,
           })
