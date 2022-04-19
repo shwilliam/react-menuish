@@ -76,9 +76,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
-  const open = () => {
-    setFocus([-1])
-  }
+  const open = () => setFocus([-1])
   const getNextFocusableIdx = useCallback((start: number, level: number) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
@@ -224,9 +222,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     isMultiSelectable,
   }
 
+  // reset focus on `focusResetTrigger` change
   useEffect(() => {
-    resetFocus()
-  }, [resetFocus, focusResetTrigger])
+    if (!!focus.length) resetFocus()
+  }, [resetFocus, focusResetTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { state }
 }
