@@ -1,13 +1,6 @@
-import {
-  useState,
-  useEffect,
-  forwardRef,
-  ReactNode,
-  useRef,
-  useCallback,
-} from 'react'
+import { useState, useEffect, forwardRef, ReactNode, useRef } from 'react'
 import styled from 'styled-components'
-import { animated, useSpring } from 'react-spring'
+import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
 import { Overlay } from './overlay'
@@ -15,8 +8,6 @@ import { useSafeViewportHeight } from '../../hooks/viewport-size'
 import { useMounted } from '../../hooks/mounted'
 import { TrayProps } from './popout'
 import { useScrolledToBottom } from '../../hooks/scrolled-to-bottom'
-import { mergeRefs } from '../../util/merge-refs'
-import { useListLevelContext } from './listbox'
 
 export const Tray = forwardRef(
   ({ isOpen, onClose, content, children, ...props }: TrayProps, ref: any) => {
@@ -178,7 +169,9 @@ const SubtrayContent = forwardRef(
     return (
       <SubtrayContentWrapper
         ref={ref}
-        style={{ transform: springStyle.x.to((x) => `translateX(${x})`) }}
+        style={{
+          transform: springStyle.x.to((x) => `translateX(${x})`) as any,
+        }}
         {...props}
       >
         <button onClick={onClose}>close</button>
@@ -188,7 +181,7 @@ const SubtrayContent = forwardRef(
   },
 )
 
-const SubtrayContentWrapper = styled(animated.div)`
+const SubtrayContentWrapper = styled(DialogContent)`
   position: absolute;
   top: 0;
   right: 0;
