@@ -19,12 +19,15 @@ import {
   useContext,
   useCallback,
   MouseEventHandler,
+  useMemo,
 } from 'react'
 import _ from 'lodash'
 import { Popout, PopoutTriggerContext } from './popout'
 import { useIsMobile } from '../../hooks/is-mobile'
 import { Subtray } from './tray'
 import { useId } from '../../hooks/id'
+import { usePrevious } from '../../hooks/previous'
+import { mergeRefs } from '../../util/merge-refs'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -487,6 +490,8 @@ export const ListBoxItem = forwardRef(
     }: ListBoxItemProps,
     ref: ForwardedRef<any>,
   ) => {
+    const innerRef = useRef<any>()
+    const stableRef = useMemo(() => mergeRefs(ref, innerRef), [ref, innerRef])
     const innerId = useId(id)
     const isMobile = useIsMobile()
     const { focus, setFocus, actionRef, onChange, close, activeOptionId } =
@@ -544,18 +549,39 @@ export const ListBoxItem = forwardRef(
       e.preventDefault()
       e.stopPropagation()
     }
+    const scrollIntoView = () =>
+      innerRef.current.scrollIntoView?.({
+        block: 'nearest',
+      })
+
+    const hadVirtualFocus = usePrevious(hasVirtualFocus)
+    useEffect(() => {
+      if (!hadVirtualFocus && hasVirtualFocus) {
+        scrollIntoView()
+      }
+    }, [
+      hadVirtualFocus,
+      hasVirtualFocus,
+    ])
 
     return (
       <li
-        ref={ref}
+        ref={stableRef}
         role="option"
         aria-selected={isSelected ? 'true' : 'false'}
         aria-disabled={isDisabled ? 'true' : 'false'}
         onMouseOver={handleHover}
         onMouseDown={handleMouseDown}
+        style={{
+          background: hasVirtualFocus
+            ? 'lightblue'
+            : isDisabled
+            ? 'gray'
+            : 'white',
+        }}
         {...props}
       >
-        {hasVirtualFocus ? '-' : ''}({listIdx}){children}
+        {children}
       </li>
     )
   },
