@@ -446,6 +446,11 @@ export const ListBoxBase = forwardRef(
       <listBoxContext.Provider value={state}>
         <listLevelContext.Provider value={{ level }}>
           <ul
+            style={{
+              border: '1px solid blue',
+              padding: 0,
+              margin: 0,
+            }}
             ref={ref}
             role="listbox"
             {...(isMultiSelectable ? { 'aria-multiselectable': 'true' } : {})}

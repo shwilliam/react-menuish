@@ -30,6 +30,7 @@ interface PopoutOptions {
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
   placement?: Placement
   content?: Omit<PopoutContentProps, 'children'>
+  dialog?: Omit<DialogProps, 'children'>
   maxHeight?: number
 }
 export interface PopoutProps extends DialogBaseProps, PopoutOptions {}
@@ -67,6 +68,7 @@ export const Popout = ({
   trigger,
   placement = 'bottom',
   maxHeight,
+  dialog,
   content,
   children,
   ...props
@@ -75,7 +77,7 @@ export const Popout = ({
   const { x, y, reference, floating, strategy, refs, update } = useFloating({
     placement,
     middleware: [
-      offset(10),
+      // offset(10),
       shift({
         limiter: limitShift({
           offset: ({ reference, floating, placement }) => ({
@@ -101,7 +103,12 @@ export const Popout = ({
   return (
     <>
       {trigger({ anchorRef: reference, ...props })}
-      <Dialog isOpen={isOpen} onClose={onClose} isScrollDisabled={false}>
+      <Dialog
+        isOpen={isOpen}
+        onClose={onClose}
+        isScrollDisabled={false}
+        {...dialog}
+      >
         <PopoutContent
           ref={floating}
           style={{

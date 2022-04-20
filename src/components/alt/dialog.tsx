@@ -74,29 +74,25 @@ export const DialogContent = forwardRef(
   },
 )
 
-export interface DialogProps extends DialogOverlayProps {}
-
-export const Dialog = ({ children, ...props }: DialogProps) => {
-  return <DialogOverlay {...props}>{children}</DialogOverlay>
-}
-
-interface DialogOverlayProps {
+export interface DialogProps {
   id?: string
   isOpen?: boolean
   onClose?: () => void
-  children: ReactNode
   allowPinchZoom?: boolean
   isScrollDisabled?: boolean
+  isFocusTakeoverDisabled?: boolean
+  children: ReactNode
 }
 
-const DialogOverlay = ({
+export const Dialog = ({
   id,
   isOpen,
   onClose,
   allowPinchZoom = false,
   isScrollDisabled = true,
+  isFocusTakeoverDisabled = false,
   children,
-}: DialogOverlayProps) => {
+}: DialogProps) => {
   const dialogId = useId(id)
   const ctxt = useMemo(() => ({ dialogId, onClose }), [dialogId, onClose])
 
@@ -108,7 +104,10 @@ const DialogOverlay = ({
           allowPinchZoom={allowPinchZoom}
           enabled={isScrollDisabled}
         >
-          <FocusTakeoverBoundary id={dialogId}>
+          <FocusTakeoverBoundary
+            id={dialogId}
+            isDisabled={isFocusTakeoverDisabled}
+          >
             {children}
           </FocusTakeoverBoundary>
         </RemoveScroll>

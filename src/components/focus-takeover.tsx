@@ -49,18 +49,21 @@ export const FocusTakeoverContextProvider = ({ children }) => {
 
 export const FocusTakeoverBoundary = ({
   id,
+  isDisabled = false,
   children,
 }: {
   id?: string
+  isDisabled?: boolean
   children: ReactNode
 }) => {
   const innerId = useId(id),
     { takeFocus, restoreFocus } = useFocusTakeoverContext()
 
   useEffect(() => {
+    if (isDisabled) return
     takeFocus(innerId)
     return () => restoreFocus(innerId)
-  }, [takeFocus, restoreFocus, innerId])
+  }, [takeFocus, restoreFocus, innerId, isDisabled])
 
   return <>{children}</>
 }

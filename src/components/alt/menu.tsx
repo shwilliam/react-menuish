@@ -1,16 +1,10 @@
-import {
-  ForwardedRef,
-  forwardRef,
-  ReactNode,
-  KeyboardEventHandler,
-} from 'react'
+import { ForwardedRef, forwardRef, ReactNode } from 'react'
 import { Popout } from './popout'
 import {
   ChangeHandler,
   getListBoxKeyboardEventHandler,
   ListBoxBase,
   useListBoxState,
-  useListLevelContext,
 } from './listbox'
 import { useIsMobile } from '../../hooks/is-mobile'
 import { Tray } from './tray'
@@ -41,9 +35,7 @@ export const Menu = forwardRef(
       activeOptionId,
       focusResetTrigger,
     })
-    const { focus, setFocus, focusTrapRef, open } = state
-    const { level } = useListLevelContext()
-    const thisLevel = level + 1
+    const { focus, focusTrapRef, open, close } = state
     const handleKeyDown = getListBoxKeyboardEventHandler({
       state,
       isFixed: false,
@@ -58,7 +50,7 @@ export const Menu = forwardRef(
           <button onClick={open}>{value || 'open'}</button>
           <Tray
             isOpen={isOpen}
-            onClose={() => setFocus([])}
+            onClose={close}
             content={{ onScrolledToBottom: onLoadMore }}
           >
             {listbox}
@@ -69,21 +61,19 @@ export const Menu = forwardRef(
     return (
       <Popout
         isOpen={isOpen}
-        onClose={() => setFocus([])}
+        onClose={close}
         trigger={({ anchorRef }) => (
           <button ref={anchorRef} onClick={open} onKeyDown={handleKeyDown}>
             {value || 'open'}
           </button>
         )}
       >
-        {thisLevel > 0 ? null : (
-          <span
-            aria-hidden
-            tabIndex={0}
-            ref={focusTrapRef}
-            onKeyDown={handleKeyDown}
-          />
-        )}
+        <span
+          aria-hidden
+          tabIndex={0}
+          ref={focusTrapRef}
+          onKeyDown={handleKeyDown}
+        />
         {listbox}
       </Popout>
     )
