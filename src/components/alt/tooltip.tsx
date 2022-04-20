@@ -5,6 +5,8 @@ import { useHover } from '../../hooks/hover'
 
 interface TooltipTriggerContext extends PopoutTriggerContext {
   hoverProps: HTMLAttributes<any>
+  onVirtualFocusStart: () => void
+  onVirtualFocusEnd: () => void
 }
 
 interface TooltipProps {
@@ -20,8 +22,8 @@ export const Tooltip = forwardRef(
   ) => {
     const { isOpen, open, close } = useTooltip({})
     const { hoverProps } = useHover({
-      onHoverStart: () => open(),
-      onHoverEnd: () => close(),
+      onHoverStart: open,
+      onHoverEnd: close,
     })
 
     return (
@@ -29,8 +31,16 @@ export const Tooltip = forwardRef(
         isOpen={isOpen}
         onClose={() => close()}
         trigger={(triggerProps) =>
-          trigger({ ...triggerProps, hoverProps, ...props })
+          trigger({
+            ...triggerProps,
+            hoverProps,
+            onVirtualFocusStart: open,
+            onVirtualFocusEnd: () => close(true),
+            ...props,
+          })
         }
+        dialog={{ isFocusTakeoverDisabled: true }}
+        content={{ noFocusLock: true }}
         {...popout}
       >
         {children}

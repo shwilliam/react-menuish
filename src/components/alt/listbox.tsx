@@ -28,6 +28,7 @@ import { Subtray } from './tray'
 import { useId } from '../../hooks/id'
 import { usePrevious } from '../../hooks/previous'
 import { mergeRefs } from '../../util/merge-refs'
+import { useOnUnmount } from '../../hooks/on-unmount'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -474,6 +475,8 @@ interface ListBoxItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
   isDisabled?: boolean
   value?: any
   activeOptionId?: string
+  onVirtualFocusStart?: () => void
+  onVirtualFocusEnd?: () => void
   children: ReactNode
 }
 
@@ -485,6 +488,8 @@ export const ListBoxItem = forwardRef(
       onClick,
       isDisabled,
       value,
+      onVirtualFocusStart,
+      onVirtualFocusEnd,
       children,
       ...props
     }: ListBoxItemProps,
@@ -557,12 +562,21 @@ export const ListBoxItem = forwardRef(
     const hadVirtualFocus = usePrevious(hasVirtualFocus)
     useEffect(() => {
       if (!hadVirtualFocus && hasVirtualFocus) {
+        onVirtualFocusStart?.()
         scrollIntoView()
       }
+      if (hadVirtualFocus && (!hasVirtualFocus || !focus.length))
+        onVirtualFocusEnd?.()
     }, [
+      focus,
       hadVirtualFocus,
       hasVirtualFocus,
+      onVirtualFocusStart,
+      onVirtualFocusEnd,
     ])
+    useOnUnmount(() => {
+      if (hadVirtualFocus) onVirtualFocusEnd?.()
+    }, [hadVirtualFocus, onVirtualFocusEnd])
 
     return (
       <li
@@ -744,6 +758,7 @@ export const SubList = forwardRef(
             onClick: openSubList,
           })
         }
+        placement="right"
         content={{
           initialFocusRef: focusTrapRef,
           noFocusLock: thisLevel > 0,

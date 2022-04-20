@@ -19,39 +19,42 @@ export const useHover = ({
   onHoverEnd,
 }: UseHoverOptions) => {
   const [isHovered, setIsHovered] = useState(false)
+  const triggerHoverStart = useCallback(() => {
+    if (isDisabled || isHovered) return
+    onHoverStart?.()
+    setIsHovered(true)
+  }, [onHoverStart, isDisabled, isHovered])
   const triggerHoverEnd = useCallback(() => {
+    if (isDisabled || !isHovered) return
     onHoverEnd?.()
     setIsHovered(false)
-  }, [onHoverEnd])
+  }, [onHoverEnd, isDisabled, isHovered])
   const hoverProps = useMemo(() => {
     if (_.isUndefined(typeof PointerEvent)) return {}
 
     const hoverProps: HTMLAttributes<HTMLElement> = {
       onPointerEnter: (e) => {
         if (
-          isDisabled ||
           e.pointerType === 'touch' ||
-          isHovered ||
           !e.currentTarget.contains(e.target as HTMLElement)
         )
           return
 
-        onHoverStart?.()
-        setIsHovered(true)
+        triggerHoverStart()
       },
       onPointerLeave: (e) => {
         if (
-          e.currentTarget.contains(e.target as HTMLElement) &&
-          e.pointerType !== 'touch' &&
-          !isDisabled &&
-          isHovered
+          !e.currentTarget.contains(e.target as HTMLElement) ||
+          e.pointerType === 'touch'
         )
-          triggerHoverEnd()
+          return
+
+        triggerHoverEnd()
       },
     }
 
     return hoverProps
-  }, [isDisabled, isHovered, onHoverStart, triggerHoverEnd])
+  }, [triggerHoverStart, triggerHoverEnd])
 
   useEffect(() => {
     if (isDisabled) triggerHoverEnd()
@@ -59,6 +62,8 @@ export const useHover = ({
 
   return {
     isHovered,
+    triggerHoverStart,
+    triggerHoverEnd,
     hoverProps,
   }
 }

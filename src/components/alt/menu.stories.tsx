@@ -42,6 +42,16 @@ export const Default = () => {
   return (
     <Menu onChange={(value) => console.log(value)}>
       {fruits.map((fruit) => (
+        <ListBoxItem>{fruit}</ListBoxItem>
+      ))}
+    </Menu>
+  )
+}
+
+export const WithTooltips = () => {
+  return (
+    <Menu onChange={(value) => console.log(value)}>
+      {fruits.map((fruit) => (
         <Tooltip
           popout={{ placement: 'right' }}
           trigger={({ anchorRef, hoverProps, ...props }) => (
@@ -53,6 +63,31 @@ export const Default = () => {
           more info about {fruit}
         </Tooltip>
       ))}
+      <SubList
+        trigger={({ id, listIdx, anchorRef, onClick }) => (
+          <ListBoxItem
+            ref={anchorRef}
+            id={id}
+            listIdx={listIdx}
+            onClick={onClick}
+          >
+            more fruits
+          </ListBoxItem>
+        )}
+      >
+        {moreFruits.map((fruit) => (
+          <Tooltip
+            popout={{ placement: 'right' }}
+            trigger={({ anchorRef, hoverProps, ...props }) => (
+              <ListBoxItem ref={anchorRef} {...hoverProps} {...props}>
+                {fruit}
+              </ListBoxItem>
+            )}
+          >
+            more info about {fruit}
+          </Tooltip>
+        ))}
+      </SubList>
     </Menu>
   )
 }
@@ -167,6 +202,23 @@ export const MultilevelPicker = () => {
         <ListBoxItem>f</ListBoxItem>
         <ListBoxItem>g</ListBoxItem>
         <ListBoxItem>h</ListBoxItem>
+        <SubList
+          trigger={({ id, listIdx, anchorRef, onClick }) => (
+            <ListBoxItem
+              ref={anchorRef}
+              id={id}
+              listIdx={listIdx}
+              onClick={onClick}
+            >
+              even more letters
+            </ListBoxItem>
+          )}
+        >
+          <ListBoxItem>i</ListBoxItem>
+          <ListBoxItem>j</ListBoxItem>
+          <ListBoxItem>k</ListBoxItem>
+          <ListBoxItem>l</ListBoxItem>
+        </SubList>
       </SubList>
     </Menu>
   )
