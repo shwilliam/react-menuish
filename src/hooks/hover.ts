@@ -25,10 +25,10 @@ export const useHover = ({
     setIsHovered(true)
   }, [onHoverStart, isDisabled, isHovered])
   const triggerHoverEnd = useCallback(() => {
-    if (isDisabled || !isHovered) return
+    if (!isHovered) return
     onHoverEnd?.()
     setIsHovered(false)
-  }, [onHoverEnd, isDisabled, isHovered])
+  }, [onHoverEnd, isHovered])
   const hoverProps = useMemo(() => {
     if (_.isUndefined(typeof PointerEvent)) return {}
 
@@ -45,7 +45,8 @@ export const useHover = ({
       onPointerLeave: (e) => {
         if (
           !e.currentTarget.contains(e.target as HTMLElement) ||
-          e.pointerType === 'touch'
+          e.pointerType === 'touch' ||
+          isDisabled
         )
           return
 
@@ -54,7 +55,7 @@ export const useHover = ({
     }
 
     return hoverProps
-  }, [triggerHoverStart, triggerHoverEnd])
+  }, [triggerHoverStart, triggerHoverEnd, isDisabled])
 
   useEffect(() => {
     if (isDisabled) triggerHoverEnd()
