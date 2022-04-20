@@ -41,16 +41,7 @@ export const Menu = forwardRef(
       activeOptionId,
       focusResetTrigger,
     })
-    const {
-      focus,
-      setFocus,
-      triggerAction,
-      focusNext,
-      focusPrev,
-      focusTrapRef,
-      closeLevel,
-      open,
-    } = state
+    const { focus, setFocus, focusTrapRef, open } = state
     const { level } = useListLevelContext()
     const thisLevel = level + 1
     const handleKeyDown = getListBoxKeyboardEventHandler({
@@ -58,9 +49,7 @@ export const Menu = forwardRef(
       isFixed: false,
     })
     const isOpen = !!focus.length
-
     const isMobile = useIsMobile()
-
     const listbox = <ListBoxBase state={state} {...props} />
 
     if (isMobile)

@@ -35,10 +35,6 @@ export const Combobox = forwardRef(
       focusPrev,
       closeLevel,
     } = state
-    const handleAction = (value?: string) => {
-      const shouldClose = triggerAction(value)
-      if (shouldClose !== false) close()
-    }
     const handleKeyDown: KeyboardEventHandler = (e) => {
       let handled = false
       switch (e.key) {
@@ -111,9 +107,7 @@ export const Combobox = forwardRef(
       onInputChange?.((value && String(value)) || '')
     }, [value, onInputChange])
 
-    const listbox = (
-      <ListBoxBase state={state} onAction={handleAction} {...props} />
-    )
+    const listbox = <ListBoxBase state={state} {...props} />
 
     const inputTriggerRef = useRef<any>()
 

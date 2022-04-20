@@ -8,7 +8,6 @@ import {
   forwardRef,
   ReactNode,
   CSSProperties,
-  MutableRefObject,
 } from 'react'
 import FocusLock from 'react-focus-lock'
 import useOnClickOutside from 'use-onclickoutside'
@@ -130,30 +129,29 @@ const dialogContext = createContext<DialogContext>({
 export const useDialogContext = () => useContext(dialogContext)
 
 const createAriaHider = () => {
-  const originalValues: any[] = []
-  const rootNodes: HTMLElement[] = []
+  const prevAriaHiddenVals: any[] = []
+  const nodes: HTMLElement[] = []
 
   Array.prototype.forEach.call(
     document.querySelectorAll('body > *'),
     (node) => {
       if (node.dataset.portal) return
+
       const attr = node.getAttribute('aria-hidden')
-      const alreadyHidden = attr !== null && attr !== 'false'
-      if (alreadyHidden) return
-      originalValues.push(attr)
-      rootNodes.push(node)
+      const previouslyHidden = attr !== null && attr !== 'false'
+
+      if (previouslyHidden) return
+      prevAriaHiddenVals.push(attr)
+      nodes.push(node)
       node.setAttribute('aria-hidden', 'true')
     },
   )
 
   return () => {
-    rootNodes.forEach((node, index) => {
-      const originalValue = originalValues[index]
-      if (originalValue === null) {
-        node.removeAttribute('aria-hidden')
-      } else {
-        node.setAttribute('aria-hidden', originalValue)
-      }
+    nodes.forEach((node, index) => {
+      const prevAriaHiddenVal = prevAriaHiddenVals[index]
+      if (prevAriaHiddenVal === null) node.removeAttribute('aria-hidden')
+      else node.setAttribute('aria-hidden', prevAriaHiddenVal)
     })
   }
 }
