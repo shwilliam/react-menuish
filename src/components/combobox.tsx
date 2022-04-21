@@ -84,6 +84,7 @@ export const Combobox = forwardRef(
       }
 
       if (handled) {
+        console.log('prevent default')
         e.preventDefault()
         e.stopPropagation()
       }
@@ -109,7 +110,6 @@ export const Combobox = forwardRef(
 
     const listbox = <ListBoxBase state={state} {...props} />
     const inputTriggerRef = useRef<any>()
-    // FIXME:
     const focusInputTrigger = () => inputTriggerRef.current?.focus?.()
 
     if (isMobile)
@@ -139,12 +139,12 @@ export const Combobox = forwardRef(
       <Popout
         isOpen={isOpen}
         onClose={() => setFocus([])}
-        onOpen={focusInputTrigger}
-        trigger={(props) => (
         content={{ isolateDialog: false }}
+        trigger={({ ref, ...props }) => (
           <span>
             <input
               {...props}
+              ref={ref}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -153,7 +153,7 @@ export const Combobox = forwardRef(
             <button
               onClick={() => {
                 setFocus([0])
-                props.ref.current?.focus?.()
+                ref.current?.focus?.()
               }}
             >
               ⬇

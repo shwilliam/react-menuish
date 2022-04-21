@@ -77,7 +77,7 @@ export const Popout = ({
   ...props
 }: PopoutProps) => {
   const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
-  const { x, y, reference, floating, strategy, refs, update } = useFloating({
+  const { x, y, floating, strategy, refs, update } = useFloating({
     placement,
     middleware: [
       // offset(10),
@@ -110,7 +110,7 @@ export const Popout = ({
 
   return (
     <>
-      {trigger({ ref: reference })}
+      {trigger({ ref: refs.reference })}
       <Dialog
         isOpen={isOpen}
         isScrollDisabled={false}
