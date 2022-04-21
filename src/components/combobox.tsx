@@ -25,7 +25,10 @@ export const Combobox = forwardRef(
     { value, onChange, inputValue, onInputChange, ...props }: ComboboxProps,
     ref: ForwardedRef<any>,
   ) => {
-    const { state } = useListBoxState({ onChange })
+    const { state } = useListBoxState({
+      onChange,
+      focusResetTrigger: inputValue,
+    })
     const {
       focus,
       setFocus,
