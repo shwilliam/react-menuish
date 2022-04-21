@@ -502,6 +502,8 @@ export const ListBoxItem = forwardRef(
     const isMobile = useIsMobile()
     const { focus, setFocus, actionRef, onChange, close, activeOptionId } =
       useListBoxContext()
+    const isOpen = !!focus.length
+    const wasOpen = usePrevious(isOpen)
     const isSelected = activeOptionId === innerId
     const { level } = useListLevelContext()
     const hasVirtualFocus = [listIdx, innerId].includes(focus[level])
@@ -555,10 +557,12 @@ export const ListBoxItem = forwardRef(
       e.preventDefault()
       e.stopPropagation()
     }
-    const scrollIntoView = () =>
+    const scrollIntoView = useCallback(() => {
+      if (!wasOpen) return
       innerRef.current.scrollIntoView?.({
         block: 'nearest',
       })
+    }, [wasOpen])
 
     const hadVirtualFocus = usePrevious(hasVirtualFocus)
     useEffect(() => {
@@ -574,6 +578,7 @@ export const ListBoxItem = forwardRef(
       hasVirtualFocus,
       onVirtualFocusStart,
       onVirtualFocusEnd,
+      scrollIntoView,
     ])
     useOnUnmount(() => {
       if (hadVirtualFocus) onVirtualFocusEnd?.()

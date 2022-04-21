@@ -13,3 +13,11 @@ export const Lorem = ({ paragraphs = 1 }) => (
     ))}
   </>
 )
+
+export const LoremWrap = ({ leading = 10, trailing = 10, children }) => (
+  <>
+    <Lorem paragraphs={leading} />
+    {children}
+    <Lorem paragraphs={trailing} />
+  </>
+)

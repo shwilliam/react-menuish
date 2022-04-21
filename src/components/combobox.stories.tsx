@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { fruits, moreFruits } from '../util/fruits'
 import { ListBoxGroup, ListBoxItem, SubList } from './listbox'
 import { Combobox } from './combobox'
+import { LoremWrap } from './lorem'
 
 export default {
   title: 'Combobox',
@@ -31,6 +32,12 @@ export const Default = () => {
   )
 }
 
+export const InScollArea = () => (
+  <LoremWrap>
+    <Default />
+  </LoremWrap>
+)
+
 export const MultiLevel = () => {
   const [inputValue, setInputValue] = useState('')
   const [value, setValue] = useState<string | null>()
@@ -45,7 +52,7 @@ export const MultiLevel = () => {
       onInputChange={setInputValue}
     >
       {filteredFruits.map((fruit, idx) => (
-        <ListBoxItem>{fruit}</ListBoxItem>
+        <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
       ))}
       <SubList
         trigger={(props) => <ListBoxItem {...props}>more fruits</ListBoxItem>}
@@ -73,7 +80,9 @@ export const AltValue = () => {
     >
       {filteredFruits.length ? (
         filteredFruits.map((fruit, idx) => (
-          <ListBoxItem value={idx}>{fruit}</ListBoxItem>
+          <ListBoxItem value={idx} key={fruit}>
+            {fruit}
+          </ListBoxItem>
         ))
       ) : (
         <ListBoxItem>no results</ListBoxItem>
@@ -101,7 +110,9 @@ export const Grouped = () => {
     >
       <ListBoxGroup label={<div>fruits</div>}>
         {filteredFruits.length ? (
-          filteredFruits.map((fruit, idx) => <ListBoxItem>{fruit}</ListBoxItem>)
+          filteredFruits.map((fruit) => (
+            <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+          ))
         ) : (
           <ListBoxItem isDisabled>no results</ListBoxItem>
         )}
@@ -109,7 +120,7 @@ export const Grouped = () => {
       <ListBoxGroup label={<div>more fruits</div>}>
         {moreFilteredFruits.length ? (
           moreFilteredFruits.map((fruit, idx) => (
-            <ListBoxItem>{fruit}</ListBoxItem>
+            <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
           ))
         ) : (
           <ListBoxItem isDisabled>no results</ListBoxItem>
