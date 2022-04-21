@@ -9,7 +9,6 @@ export const useKeyPress = (
 ) => {
   const onPress = useCallback(
     (e: KeyboardEvent) => {
-      console.log(e.key)
       if (_.isNull(key) || e.key === key) {
         fn()
         if (preventDefault) e.preventDefault()

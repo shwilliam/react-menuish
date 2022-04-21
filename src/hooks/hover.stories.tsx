@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { action } from '@storybook/addon-actions'
 import { useHover } from './hover'
 
 export default {
@@ -7,8 +8,8 @@ export default {
 
 export const Default = () => {
   const { hoverProps, isHovered } = useHover({
-    onHoverStart: () => console.log('hover start'),
-    onHoverEnd: () => console.log('hover end'),
+    onHoverStart: action('hover start'),
+    onHoverEnd: action('hover end'),
   })
 
   return (
@@ -23,8 +24,8 @@ export const Disableable = () => {
   const [isDisabled, setIsDisabled] = useState(false)
   const { hoverProps, isHovered } = useHover({
     isDisabled,
-    onHoverStart: () => console.log('hover start'),
-    onHoverEnd: () => console.log('hover end'),
+    onHoverStart: action('hover start'),
+    onHoverEnd: action('hover end'),
   })
 
   return (

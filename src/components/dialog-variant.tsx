@@ -1,8 +1,8 @@
 import { ForwardedRef, forwardRef } from 'react'
-import { useIsMobile } from '../../hooks/is-mobile'
 import { Modal } from './modal'
 import { DialogVariantProps, Popout } from './popout'
 import { Tray } from './tray'
+import { useIsMobile } from '../hooks/is-mobile'
 
 export const DialogVariant = forwardRef(
   (

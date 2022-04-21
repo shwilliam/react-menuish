@@ -1,15 +1,14 @@
-import { useRef, forwardRef, useState } from 'react'
-import { mergeRefs } from '../../util/merge-refs'
-import { fruits } from '../../util/fruits'
+import { useState } from 'react'
 import {
   ListBoxItemFocusable,
   ListBox,
   ListBoxGroup,
   ListBoxItem,
 } from './listbox'
+import { fruits } from '../util/fruits'
 
 export default {
-  title: 'Alt/ListBox',
+  title: 'ListBox',
 }
 
 export const Default = () => {

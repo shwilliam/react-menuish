@@ -10,7 +10,7 @@ import {
 import { Popout } from './popout'
 import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
 import { Tray } from './tray'
-import { useIsMobile } from '../../hooks/is-mobile'
+import { useIsMobile } from '../hooks/is-mobile'
 
 interface ComboboxProps {
   value?: string
@@ -108,8 +108,9 @@ export const Combobox = forwardRef(
     }, [value, onInputChange])
 
     const listbox = <ListBoxBase state={state} {...props} />
-
     const inputTriggerRef = useRef<any>()
+    // FIXME:
+    const focusInputTrigger = () => inputTriggerRef.current?.focus?.()
 
     if (isMobile)
       return (
@@ -117,6 +118,7 @@ export const Combobox = forwardRef(
           <button onClick={() => setFocus([0])}>{value || 'open'}</button>
           <Tray
             isOpen={isOpen}
+            onOpen={focusInputTrigger}
             onClose={() => setFocus([])}
             content={{
               header: (
@@ -137,10 +139,11 @@ export const Combobox = forwardRef(
       <Popout
         isOpen={isOpen}
         onClose={() => setFocus([])}
-        trigger={({ anchorRef }) => (
+        onOpen={focusInputTrigger}
+        trigger={(props) => (
           <span>
             <input
-              ref={anchorRef}
+              {...props}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -149,7 +152,7 @@ export const Combobox = forwardRef(
             <button
               onClick={() => {
                 setFocus([0])
-                anchorRef.current?.focus?.()
+                props.ref.current?.focus?.()
               }}
             >
               ⬇

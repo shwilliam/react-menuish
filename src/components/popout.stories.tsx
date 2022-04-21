@@ -1,6 +1,6 @@
-import { Popout, PopoutContent } from './popout'
-import { Lorem } from './lorem'
 import { useState } from 'react'
+import { Popout } from './popout'
+import { Lorem } from './lorem'
 
 export default {
   title: 'Popout',
@@ -13,17 +13,15 @@ export const Default = () => {
       <Popout
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        trigger={({ anchorRef }) => (
-          <button ref={anchorRef} onClick={() => setIsOpen(true)}>
+        trigger={(props) => (
+          <button {...props} onClick={() => setIsOpen(true)}>
             open
           </button>
         )}
       >
-        <PopoutContent>
-          <Lorem />
-        </PopoutContent>
+        <Lorem paragraphs={5} />
       </Popout>
-      <Lorem paragraphs={5} />
+      <Lorem paragraphs={50} />
     </>
   )
 }

@@ -8,7 +8,6 @@ import {
   forwardRef,
   ReactNode,
   CSSProperties,
-  MutableRefObject,
 } from 'react'
 import FocusLock from 'react-focus-lock'
 import useOnClickOutside from 'use-onclickoutside'
@@ -28,7 +27,7 @@ export interface DialogContentProps {
   noFocusLock?: boolean
   initialFocusRef?: any
   style?: CSSProperties
-  children: ReactNode
+  children: ReactNode // expected to have focusable child
 }
 
 export const DialogContent = forwardRef(
@@ -41,13 +40,18 @@ export const DialogContent = forwardRef(
     }: DialogContentProps,
     ref: any,
   ) => {
-    const { dialogId, contentRef, onClose } = useDialogContext()
+    const innerRef = useRef<any>()
+    const { dialogId, onClose } = useDialogContext()
+    const stableContentRef = useMemo(
+      () => mergeRefs(ref, innerRef),
+      [ref, innerRef],
+    )
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
       if (initialFocusRef?.current) initialFocusRef.current.focus?.()
     }, [initialFocusRef])
 
-    useOnClickOutside(contentRef, () => {
+    useOnClickOutside(innerRef, () => {
       if (isActiveFocusBoundary(dialogId)) onClose?.()
     })
 
@@ -62,7 +66,7 @@ export const DialogContent = forwardRef(
         onActivation={activateFocusLock}
         disabled={noFocusLock}
       >
-        <animated.div ref={mergeRefs(ref, contentRef)} {...props}>
+        <animated.div ref={stableContentRef} {...props}>
           {children}
         </animated.div>
       </FocusLock>
@@ -70,35 +74,27 @@ export const DialogContent = forwardRef(
   },
 )
 
-export interface DialogProps extends DialogOverlayProps {}
-
-export const Dialog = ({ children, ...props }: DialogProps) => {
-  return <DialogOverlay {...props}>{children}</DialogOverlay>
-}
-
-interface DialogOverlayProps {
+export interface DialogProps {
   id?: string
   isOpen?: boolean
   onClose?: () => void
-  children: ReactNode
   allowPinchZoom?: boolean
   isScrollDisabled?: boolean
+  isFocusTakeoverDisabled?: boolean
+  children: ReactNode
 }
 
-const DialogOverlay = ({
+export const Dialog = ({
   id,
   isOpen,
   onClose,
   allowPinchZoom = false,
   isScrollDisabled = true,
+  isFocusTakeoverDisabled = false,
   children,
-}: DialogOverlayProps) => {
+}: DialogProps) => {
   const dialogId = useId(id)
-  const contentRef = useRef<any>()
-  const ctxt = useMemo(
-    () => ({ contentRef, dialogId, onClose }),
-    [dialogId, onClose],
-  )
+  const ctxt = useMemo(() => ({ dialogId, onClose }), [dialogId, onClose])
 
   if (!isOpen) return null
   return (
@@ -108,7 +104,10 @@ const DialogOverlay = ({
           allowPinchZoom={allowPinchZoom}
           enabled={isScrollDisabled}
         >
-          <FocusTakeoverBoundary id={dialogId}>
+          <FocusTakeoverBoundary
+            id={dialogId}
+            isDisabled={isFocusTakeoverDisabled}
+          >
             {children}
           </FocusTakeoverBoundary>
         </RemoveScroll>
@@ -119,42 +118,39 @@ const DialogOverlay = ({
 
 interface DialogContext {
   dialogId: string
-  contentRef: MutableRefObject<any>
   onClose?: () => void
 }
 
 const dialogContext = createContext<DialogContext>({
   dialogId: '',
-  contentRef: { current: null },
 })
 
 export const useDialogContext = () => useContext(dialogContext)
 
 const createAriaHider = () => {
-  const originalValues: any[] = []
-  const rootNodes: HTMLElement[] = []
+  const prevAriaHiddenVals: any[] = []
+  const nodes: HTMLElement[] = []
 
   Array.prototype.forEach.call(
     document.querySelectorAll('body > *'),
     (node) => {
       if (node.dataset.portal) return
+
       const attr = node.getAttribute('aria-hidden')
-      const alreadyHidden = attr !== null && attr !== 'false'
-      if (alreadyHidden) return
-      originalValues.push(attr)
-      rootNodes.push(node)
+      const previouslyHidden = attr !== null && attr !== 'false'
+
+      if (previouslyHidden) return
+      prevAriaHiddenVals.push(attr)
+      nodes.push(node)
       node.setAttribute('aria-hidden', 'true')
     },
   )
 
   return () => {
-    rootNodes.forEach((node, index) => {
-      const originalValue = originalValues[index]
-      if (originalValue === null) {
-        node.removeAttribute('aria-hidden')
-      } else {
-        node.setAttribute('aria-hidden', originalValue)
-      }
+    nodes.forEach((node, index) => {
+      const prevAriaHiddenVal = prevAriaHiddenVals[index]
+      if (prevAriaHiddenVal === null) node.removeAttribute('aria-hidden')
+      else node.setAttribute('aria-hidden', prevAriaHiddenVal)
     })
   }
 }

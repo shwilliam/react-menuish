@@ -22,17 +22,18 @@ import {
   useMemo,
 } from 'react'
 import _ from 'lodash'
-import { Popout, PopoutTriggerContext } from './popout'
-import { useIsMobile } from '../../hooks/is-mobile'
 import { Subtray } from './tray'
-import { useId } from '../../hooks/id'
-import { usePrevious } from '../../hooks/previous'
-import { mergeRefs } from '../../util/merge-refs'
-import { useOnUnmount } from '../../hooks/on-unmount'
+import { Popout, PopoutTriggerContext } from './popout'
+import { useId } from '../hooks/id'
+import { mergeRefs } from '../util/merge-refs'
+import { usePrevious } from '../hooks/previous'
+import { useIsMobile } from '../hooks/is-mobile'
+import { useOnUnmount } from '../hooks/on-unmount'
+import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
-type Focus = number[]
+type Focus = (number | string)[]
 export type ChangeHandler = (value?: any) => ShouldClose | void
 interface ListBoxState {
   focus: Focus
@@ -85,20 +86,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
 
-    if (levelChildState === undefined) {
-      console.log('return 0')
-      return 0
-    }
-
-    if (start > levelMax) {
-      console.log('return levelMax')
-      return levelMax
-    }
-    if (levelChildState.stickyChildren?.[start] !== undefined) {
-      console.log('get again')
+    if (levelChildState === undefined) return 0
+    if (start > levelMax) return levelMax
+    if (levelChildState.stickyChildren?.[start] !== undefined)
       return getNextFocusableIdx(start + 1, level)
-    }
-    console.log('return start')
     return start
   }, [])
   const getPrevFocusableIdx = (start: number, level: number) => {
@@ -141,7 +132,6 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
     })
   }
   const triggerAction = (value?: string) => {
-    console.log('list action')
     actionRef.current?.handler?.(
       _.isUndefined(value) ? actionRef.current?.value : value,
     )
@@ -194,10 +184,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       )
     })
 
-    if (matchingStickyEl) {
-      console.log('focus matching sticky')
-      matchingStickyEl.current?.focus()
-    }
+    if (matchingStickyEl) matchingStickyEl.current?.focus()
     // else if (isMobile) return
     // else if (noFocusTrap) stickyTriggerRef.current.focus?.()
     else focusTrapRef.current?.focus?.()
@@ -349,12 +336,20 @@ interface ListBoxBaseProps extends ComponentProps<'ul'> {
   state: ListBoxState
   level?: number
   labelId?: string
+  onScrolledToBottom?: () => void
   children: ReactNode
 }
 
 export const ListBoxBase = forwardRef(
   (
-    { state, level = 0, labelId, children, ...props }: ListBoxBaseProps,
+    {
+      state,
+      level = 0,
+      labelId,
+      onScrolledToBottom,
+      children,
+      ...props
+    }: ListBoxBaseProps,
     ref: ForwardedRef<any>,
   ) => {
     const {
@@ -407,8 +402,6 @@ export const ListBoxBase = forwardRef(
         level === 0 && nextRootActiveOptionFocusIdx !== undefined
           ? nextRootActiveOptionFocusIdx
           : null
-      console.log('nextRoot: ', nextRootActiveOptionFocusIdx)
-      console.log('actualSet: ', activeOptionIdx)
       setFocus((s) => {
         const clone = _.clone(s)
         clone[clone.length - 1] =
@@ -446,6 +439,9 @@ export const ListBoxBase = forwardRef(
       }
     }, [thisLevelFocus, level, runningChildrenIdx, setFocus])
 
+    const bottomRef = useRef<any>()
+    useScrolledToBottom(bottomRef, onScrolledToBottom)
+
     return (
       <listBoxContext.Provider value={state}>
         <listLevelContext.Provider value={{ level }}>
@@ -463,6 +459,11 @@ export const ListBoxBase = forwardRef(
           >
             {renderedChildren}
           </ul>
+          <div
+            ref={bottomRef}
+            style={{ transform: 'translateY(-20px)' }} // scrolled to bottom trigger offset
+            aria-hidden
+          />
         </listLevelContext.Provider>
       </listBoxContext.Provider>
     )
@@ -661,7 +662,7 @@ export const ListBoxItemFocusable = forwardRef(
 
 interface ListBoxGroupProps {
   label: ReactNode
-  children: ReactNode[]
+  children: ReactNode
 }
 
 export const ListBoxGroup = forwardRef(
@@ -729,8 +730,8 @@ export const SubList = forwardRef(
       return (
         <>
           {trigger({
+            ref: null,
             id,
-            anchorRef: null,
             listIdx,
             onClick: openSubList,
           })}

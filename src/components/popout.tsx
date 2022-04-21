@@ -1,92 +1,149 @@
+import { useState, useEffect, forwardRef, ReactNode } from 'react'
 import {
-  useContext,
-  useMemo,
-  useRef,
-  forwardRef,
-  createContext,
-  ReactNode,
-  ReactElement,
-} from 'react'
-import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { usePopout, UsePopoutOptions } from '../hooks/popout'
-import { mergeRefs } from '../util/merge-refs'
+  useFloating,
+  shift,
+  flip,
+  size,
+  limitShift,
+  Dimensions,
+  ElementRects,
+  Placement,
+  autoUpdate,
+} from '@floating-ui/react-dom'
+import {
+  Dialog,
+  DialogContent,
+  DialogContentProps,
+  DialogProps,
+} from './dialog'
+import { TrayContentProps } from './tray'
+import { ModalContentProps } from './modal'
+import { useSyncedRef } from '../hooks/synced-ref'
 
-// TODO: mobile-friendly variant as modal or tray
-
-interface PopoutTriggerContext {
-  anchorRef: any
+export interface PopoutTriggerContext {
+  ref: any
 }
 
-interface PopoutProps extends UsePopoutOptions {
-  isOpen?: boolean
-  onClose?: () => void
+interface DialogBaseProps extends DialogProps {
+  onOpen?: () => void
+}
+
+interface PopoutOptions {
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
-  children: ReactElement
+  placement?: Placement
+  content?: Omit<PopoutContentProps, 'children'>
+  dialog?: Omit<DialogProps, 'children'>
+  maxHeight?: number
+}
+export interface PopoutProps extends DialogBaseProps, PopoutOptions {}
+interface PopoutVariantProps extends PopoutProps {
+  type: 'popout'
+}
+
+interface TrayOptions {
+  content?: Omit<TrayContentProps, 'children'>
+}
+export interface TrayProps extends DialogBaseProps, TrayOptions {}
+interface TrayVariantProps extends TrayProps {
+  type: 'tray'
+}
+
+interface ModalOptions {
+  content?: Omit<ModalContentProps, 'children'>
+}
+export interface ModalProps extends DialogBaseProps, ModalOptions {}
+interface ModalVariantProps extends ModalProps {
+  type: 'modal'
+}
+
+type AnyDialogVariantProps =
+  | PopoutVariantProps
+  | TrayVariantProps
+  | ModalVariantProps
+export type DialogVariantProps = AnyDialogVariantProps & {
+  mobile?: AnyDialogVariantProps
 }
 
 export const Popout = ({
   isOpen = false,
+  onOpen,
   onClose,
-  placement = 'bottom',
-  modifiers,
   trigger,
+  placement = 'bottom',
+  maxHeight,
+  dialog,
+  content,
   children,
   ...props
 }: PopoutProps) => {
-  const { popout, anchor, arrow } = usePopout({
+  const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
+  const { x, y, reference, floating, strategy, refs, update } = useFloating({
     placement,
-    modifiers,
+    middleware: [
+      // offset(10),
+      shift({
+        limiter: limitShift({
+          offset: ({ reference, floating, placement }) => ({
+            mainAxis: reference.height,
+          }),
+        }),
+      }),
+      flip(),
+      size({ apply: (data) => setSizeData(data) }),
+    ],
   })
-  const ctxt = useMemo(
-    () => ({
-      isOpen,
-      onClose,
-      popout,
-    }),
-    [isOpen, onClose, popout],
-  )
+  const popoutMaxHeight =
+    sizeData?.height || maxHeight
+      ? Math.min(sizeData?.height || Infinity, maxHeight || Infinity)
+      : 0
+
+  const floatingEl = refs.floating.current
+  useEffect(() => {
+    if (!refs.reference.current || !refs.floating.current) return
+    return autoUpdate(refs.reference.current, refs.floating.current, update)
+  }, [refs.reference, refs.floating, floatingEl, update, isOpen])
+
+  const onOpenRef = useSyncedRef(onOpen)
+  useEffect(() => {
+    if (isOpen) onOpenRef.current?.()
+  }, [isOpen])
 
   return (
-    <popoutContext.Provider value={ctxt}>
-      {trigger({ anchorRef: anchor.set, ...props })}
-      {children}
-    </popoutContext.Provider>
+    <>
+      {trigger({ ref: reference })}
+      <Dialog
+        isOpen={isOpen}
+        isScrollDisabled={false}
+        onClose={onClose}
+        {...dialog}
+      >
+        <PopoutContent
+          ref={floating}
+          style={{
+            position: strategy,
+            top: y ?? '',
+            left: x ?? '',
+            maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
+            maxWidth: sizeData?.width ? `${sizeData.width}px` : '',
+            overflow: 'auto',
+          }}
+          {...content}
+        >
+          {children}
+        </PopoutContent>
+      </Dialog>
+    </>
   )
 }
 
-interface PopoutContentProps extends DialogContentProps {
-  children: ReactNode
-}
+interface PopoutContentProps extends DialogContentProps {}
 
-export const PopoutContent = forwardRef(
+const PopoutContent = forwardRef(
   ({ children, ...props }: PopoutContentProps, ref: any) => {
-    const innerRef = useRef<any>()
-    const { isOpen, onClose, popout } = usePopoutContext()
-
     return (
-      <Dialog isOpen={isOpen} onClose={onClose} isScrollDisabled={false}>
-        <DialogContent
-          ref={mergeRefs(popout.set, innerRef, ref)}
-          style={popout.styles}
-          {...popout.attributes}
-          {...props}
-        >
-          {children}
-        </DialogContent>
-      </Dialog>
+      <DialogContent ref={ref} {...props}>
+        {children}
+      </DialogContent>
     )
   },
 )
-
-interface PopoutContext {
-  isOpen: boolean
-  popout: any // FIXME: type
-  onClose?: () => void
-}
-
-const popoutContext = createContext<PopoutContext>({
-  isOpen: false,
-  popout: {},
-})
-
-const usePopoutContext = () => useContext<PopoutContext>(popoutContext)

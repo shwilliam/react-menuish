@@ -1,10 +1,9 @@
-import { ForwardedRef, forwardRef, HTMLAttributes, ReactNode } from 'react'
+import { ForwardedRef, forwardRef, ReactNode } from 'react'
 import { Popout, PopoutProps, PopoutTriggerContext } from './popout'
-import { useTooltip } from '../../hooks/tooltip'
-import { useHover } from '../../hooks/hover'
+import { useTooltip } from '../hooks/tooltip'
+import { useHover } from '../hooks/hover'
 
 interface TooltipTriggerContext extends PopoutTriggerContext {
-  hoverProps: HTMLAttributes<any>
   onVirtualFocusStart: () => void
   onVirtualFocusEnd: () => void
 }
@@ -33,10 +32,10 @@ export const Tooltip = forwardRef(
         trigger={(triggerProps) =>
           trigger({
             ...triggerProps,
-            hoverProps,
+            ...hoverProps,
+            ...props,
             onVirtualFocusStart: open,
             onVirtualFocusEnd: () => close(true),
-            ...props,
           })
         }
         dialog={{ isFocusTakeoverDisabled: true }}

@@ -1,85 +1,120 @@
-import { useRef, forwardRef, useState } from 'react'
-import * as Menu from './menu'
-import { mergeRefs } from '../util/merge-refs'
-import { fruits } from '../util/fruits'
+import { useState } from 'react'
+import { fruits, moreFruits } from '../util/fruits'
+import { ListBoxGroup, ListBoxItem, SubList } from './listbox'
+import { Combobox } from './combobox'
 
 export default {
   title: 'Combobox',
 }
 
-const ComboboxInput = forwardRef(({ buttonProps, ...props }: any, ref) => {
-  return (
-    <>
-      <input ref={ref} {...props} />
-      <button {...buttonProps}>v</button>
-    </>
-  )
-})
-
 export const Default = () => {
-  const [value, setValue] = useState<string | null>()
   const [inputValue, setInputValue] = useState('')
-  const inputRef = useRef<any>(null)
-  const handleSetValue = (value: string | null) => {
-    setValue(value)
-    setInputValue(value || '')
-  }
-  const handleChangeInputValue = (value: string) => {
-    setInputValue(value)
-    if (!value) setValue(null)
-  }
+  const [value, setValue] = useState<string | null>()
+  const filteredFruits = moreFruits.filter((fruit) =>
+    fruit.includes(inputValue.toLowerCase()),
+  )
   return (
-    <div>
-      <Menu.Menu
-        noFocusTrap
-        trigger={({
-          anchorRef,
-          stickyTriggerRef,
-          open,
-          close,
-          handleKeyDown,
-        }) => (
-          <ComboboxInput
-            ref={mergeRefs(anchorRef, stickyTriggerRef, inputRef)}
-            value={inputValue}
-            onChange={(e) => handleChangeInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={() => {
-              setInputValue(value || '')
-              close()
-            }}
-            buttonProps={{
-              onClick: () => {
-                open()
-                inputRef.current.focus()
-              },
-            }}
-          />
-        )}
+    <Combobox
+      value={value}
+      onChange={(value) => setValue(value)}
+      inputValue={inputValue}
+      onInputChange={setInputValue}
+    >
+      {filteredFruits.length ? (
+        filteredFruits.map((fruit, idx) => (
+          <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+        ))
+      ) : (
+        <ListBoxItem>no results</ListBoxItem>
+      )}
+    </Combobox>
+  )
+}
+
+export const MultiLevel = () => {
+  const [inputValue, setInputValue] = useState('')
+  const [value, setValue] = useState<string | null>()
+  const filteredFruits = fruits.filter((fruit) =>
+    fruit.includes(inputValue.toLowerCase()),
+  )
+  return (
+    <Combobox
+      value={value}
+      onChange={(value) => setValue(value)}
+      inputValue={inputValue}
+      onInputChange={setInputValue}
+    >
+      {filteredFruits.map((fruit, idx) => (
+        <ListBoxItem>{fruit}</ListBoxItem>
+      ))}
+      <SubList
+        trigger={(props) => <ListBoxItem {...props}>more fruits</ListBoxItem>}
       >
-        <Menu.List>
-          {fruits
-            .filter((fruit) => fruit.includes(inputValue.toLowerCase()))
-            .map((fruit) => (
-              <Menu.Item key={fruit} onClick={() => handleSetValue(fruit)}>
-                {fruit}
-              </Menu.Item>
-            ))}
-          <Menu.Submenu
-            trigger={({ anchorRef, menuIdx, open }) => (
-              <Menu.Item ref={anchorRef} menuIdx={menuIdx} onClick={open}>
-                open
-              </Menu.Item>
-            )}
-          >
-            <Menu.List>
-              <Menu.Item>item 1</Menu.Item>
-              <Menu.Item>item 2</Menu.Item>
-              <Menu.Item>item 3</Menu.Item>
-            </Menu.List>
-          </Menu.Submenu>
-        </Menu.List>
-      </Menu.Menu>
-    </div>
+        {moreFruits.map((fruit) => (
+          <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+        ))}
+      </SubList>
+    </Combobox>
+  )
+}
+
+export const AltValue = () => {
+  const [inputValue, setInputValue] = useState('')
+  const [value, setValue] = useState<string | null>()
+  const filteredFruits = moreFruits.filter((fruit) =>
+    fruit.includes(inputValue.toLowerCase()),
+  )
+  return (
+    <Combobox
+      value={value}
+      onChange={(value) => setValue(value)}
+      inputValue={inputValue}
+      onInputChange={setInputValue}
+    >
+      {filteredFruits.length ? (
+        filteredFruits.map((fruit, idx) => (
+          <ListBoxItem value={idx}>{fruit}</ListBoxItem>
+        ))
+      ) : (
+        <ListBoxItem>no results</ListBoxItem>
+      )}
+    </Combobox>
+  )
+}
+
+export const Grouped = () => {
+  const [inputValue, setInputValue] = useState('')
+  const [value, setValue] = useState<string | null>()
+  const filteredFruits = fruits.filter((fruit) =>
+    fruit.includes(inputValue.toLowerCase()),
+  )
+  const moreFilteredFruits = moreFruits.filter((fruit) =>
+    fruit.includes(inputValue.toLowerCase()),
+  )
+
+  return (
+    <Combobox
+      value={value}
+      onChange={(value) => setValue(value)}
+      inputValue={inputValue}
+      onInputChange={setInputValue}
+    >
+      <ListBoxGroup label={<div>fruits</div>}>
+        {filteredFruits.length ? (
+          filteredFruits.map((fruit, idx) => <ListBoxItem>{fruit}</ListBoxItem>)
+        ) : (
+          <ListBoxItem isDisabled>no results</ListBoxItem>
+        )}
+      </ListBoxGroup>
+      <ListBoxGroup label={<div>more fruits</div>}>
+        {moreFilteredFruits.length ? (
+          moreFilteredFruits.map((fruit, idx) => (
+            <ListBoxItem>{fruit}</ListBoxItem>
+          ))
+        ) : (
+          <ListBoxItem isDisabled>no results</ListBoxItem>
+        )}
+      </ListBoxGroup>
+    </Combobox>
   )
 }

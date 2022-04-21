@@ -39,7 +39,7 @@ export const InitialFocus = () => {
       <Tray
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        initialFocusRef={initialFocusRef}
+        // initialFocusRef={initialFocusRef} // FIXME:
       >
         <button>not me</button>
         <button ref={initialFocusRef}>me</button>
@@ -54,7 +54,11 @@ export const Fullscreen = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Tray isOpen={isOpen} onClose={() => setIsOpen(false)} isFullscreen>
+      <Tray
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        content={{ isFullscreen: true }}
+      >
         <Lorem />
       </Tray>
     </>
@@ -66,8 +70,12 @@ export const FullscreenScrollable = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Tray isOpen={isOpen} onClose={() => setIsOpen(false)} isFullscreen>
-        <Lorem paragraphs={5} />
+      <Tray
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        content={{ isFullscreen: true }}
+      >
+        <Lorem paragraphs={50} />
       </Tray>
     </>
   )

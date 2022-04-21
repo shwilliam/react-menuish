@@ -1,22 +1,23 @@
-import { useState, useEffect, forwardRef, ReactNode } from 'react'
+import {
+  useState,
+  useEffect,
+  forwardRef,
+  ReactNode,
+  useRef,
+  useCallback,
+} from 'react'
 import styled from 'styled-components'
-import { animated, useSpring } from 'react-spring'
+import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { Overlay, OverlayProps } from './overlay'
+import { Overlay } from './overlay'
+import { TrayProps } from './popout'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
 import { useMounted } from '../hooks/mounted'
-
-interface TrayProps extends TrayContentProps {
-  onClose?: () => void
-  overlay?: OverlayProps
-}
+import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
 
 export const Tray = forwardRef(
-  (
-    { isOpen, onClose, overlay = {}, children, ...props }: TrayProps,
-    ref: any,
-  ) => {
+  ({ isOpen, onClose, content, children, ...props }: TrayProps, ref: any) => {
     const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
 
     useEffect(() => {
@@ -24,13 +25,13 @@ export const Tray = forwardRef(
     }, [isOpen])
 
     return (
-      <Dialog isOpen={innerIsOpen} onClose={onClose}>
-        <Overlay {...overlay}>
+      <Dialog isOpen={innerIsOpen} onClose={onClose} {...props}>
+        <Overlay>
           <TrayContent
             ref={ref}
             isOpen={isOpen}
             onRest={() => !isOpen && setInnerIsOpen(false)}
-            {...props}
+            {...content}
           >
             {children}
           </TrayContent>
@@ -40,10 +41,12 @@ export const Tray = forwardRef(
   },
 )
 
-interface TrayContentProps extends DialogContentProps {
+export interface TrayContentProps extends DialogContentProps {
+  header?: ReactNode
   isOpen?: boolean
   isFullscreen?: boolean
   onRest?: () => void
+  onScrolledToBottom?: () => void
 }
 
 const TrayContent = forwardRef(
@@ -52,6 +55,8 @@ const TrayContent = forwardRef(
       isOpen = false,
       isFullscreen = false,
       onRest,
+      header,
+      onScrolledToBottom,
       children,
       ...props
     }: TrayContentProps,
@@ -60,6 +65,11 @@ const TrayContent = forwardRef(
     const hasMounted = useMounted()
     const viewportHeight = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
+    const [trayHeight, setTrayHeight] = useState(0)
+    const measureTray = useCallback(() => {
+      if (isFullscreen) return
+      setTrayHeight(contentHeight)
+    }, [isFullscreen, contentHeight])
     const springStyle = useSpring({
       height:
         hasMounted && isOpen
@@ -67,16 +77,40 @@ const TrayContent = forwardRef(
             ? viewportHeight
             : Math.min(contentHeight, viewportHeight)
           : 0,
-      onRest,
+      onRest: () => {
+        onRest?.()
+        measureTray()
+      },
     })
+
+    useEffect(() => {
+      if (!isOpen) return
+      window.addEventListener('resize', measureTray)
+      return () => window.removeEventListener('resize', measureTray)
+    }, [isOpen, measureTray])
+
+    const bottomRef = useRef<any>()
+    useScrolledToBottom(bottomRef, onScrolledToBottom)
 
     return (
       <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
         <div
           ref={innerRef}
-          style={{ maxHeight: `${viewportHeight}px`, overflowY: 'auto' }}
+          style={{
+            maxHeight: `${viewportHeight}px`,
+            overflowY: 'auto',
+            ...(isFullscreen
+              ? {}
+              : {
+                  minHeight: `${trayHeight}px`,
+                }),
+          }}
         >
+          {header ? (
+            <div style={{ position: 'sticky', top: 0 }}>{header}</div>
+          ) : null}
           {children}
+          <div ref={bottomRef} />
         </div>
       </StyledDialogContent>
     )
@@ -142,7 +176,9 @@ const SubtrayContent = forwardRef(
     return (
       <SubtrayContentWrapper
         ref={ref}
-        style={{ transform: springStyle.x.to((x) => `translateX(${x})`) }}
+        style={{
+          transform: springStyle.x.to((x) => `translateX(${x})`) as any,
+        }}
         {...props}
       >
         <button onClick={onClose}>close</button>
@@ -152,7 +188,7 @@ const SubtrayContent = forwardRef(
   },
 )
 
-const SubtrayContentWrapper = styled(animated.div)`
+const SubtrayContentWrapper = styled(DialogContent)`
   position: absolute;
   top: 0;
   right: 0;

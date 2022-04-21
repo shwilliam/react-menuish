@@ -6,6 +6,21 @@ export default {
   title: 'Dialog',
 }
 
+const Stuff = () => (
+  <>
+    <div>
+      <Lorem />
+    </div>
+    <div>
+      <div>
+        <div>
+          <button>hello</button>
+        </div>
+      </div>
+    </div>
+  </>
+)
+
 export const Default = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
@@ -18,6 +33,7 @@ export const Default = () => {
           <Lorem />
         </DialogContent>
       </Dialog>
+      <Stuff />
     </div>
   )
 }
@@ -30,6 +46,7 @@ export const InitialFocus = () => {
       <button onClick={() => setIsOpen((s) => !s)}>
         {isOpen ? 'close' : 'open'}
       </button>
+      <Stuff />
       <Dialog isOpen={isOpen}>
         <DialogContent initialFocusRef={initialFocusRef}>
           <button>other</button>

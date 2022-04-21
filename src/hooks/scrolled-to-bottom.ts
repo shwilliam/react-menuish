@@ -10,6 +10,7 @@ export const useScrolledToBottom = (
     if (elRef.current?.parentElement) {
       const observer = new IntersectionObserver(
         ([entry]) => {
+          console.log('entry: ', entry)
           const isBottom = entry.isIntersecting
           setIsScrolledToBottom(isBottom)
           if (isBottom) cb?.()
