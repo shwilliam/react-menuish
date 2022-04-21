@@ -28,6 +28,7 @@ import { mergeRefs } from '../util/merge-refs'
 
 export interface DialogContentProps {
   noFocusLock?: boolean
+  isolateDialog?: boolean
   initialFocusRef?: any
   style?: CSSProperties
   children: ReactNode // expected to have focusable child
@@ -37,6 +38,7 @@ export const DialogContent = forwardRef(
   (
     {
       noFocusLock = false,
+      isolateDialog = true,
       initialFocusRef,
       children,
       ...props
@@ -60,13 +62,14 @@ export const DialogContent = forwardRef(
     })
 
     useEffect(() => {
+      if (!isolateDialog) return
       return wrapperRef.current
         ? createAriaHider(
             wrapperRef.current,
             overlay ? 1 : 0, // number of wrappers between wrapper el and portal
           )
         : () => {}
-    }, [overlay])
+    }, [overlay, isolateDialog])
 
     return (
       <FocusLock

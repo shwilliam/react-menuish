@@ -77,6 +77,7 @@ export const Menu = forwardRef(
         isOpen={isOpen}
         onClose={close}
         onOpen={onOpen}
+        content={{ isolateDialog: false }}
         trigger={(props) => (
           <button {...props} onClick={open} onKeyDown={handleKeyDown}>
             {value || 'open'}

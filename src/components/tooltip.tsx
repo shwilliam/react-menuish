@@ -39,7 +39,7 @@ export const Tooltip = forwardRef(
           })
         }
         dialog={{ isFocusTakeoverDisabled: true }}
-        content={{ noFocusLock: true }}
+        content={{ noFocusLock: true, isolateDialog: false }}
         {...popout}
       >
         {children}

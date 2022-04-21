@@ -141,6 +141,7 @@ export const Combobox = forwardRef(
         onClose={() => setFocus([])}
         onOpen={focusInputTrigger}
         trigger={(props) => (
+        content={{ isolateDialog: false }}
           <span>
             <input
               {...props}
