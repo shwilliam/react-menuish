@@ -4,37 +4,49 @@ import { Lorem } from './lorem'
 
 export default {
   title: 'Dialog',
+  parameters: {
+    docs: {
+      description: {
+        component: `The \`Dialog\` and \`DialogContent\` components are used to
+        hide all content outside itself from the a11y tree on mount and
+        restores them on unmount. It is typically only used as part of other
+        abstractions, such as modals or trays, ensuring only the top-most dialog
+        is accessible. The \`Dialog\` component expects a single child of
+        \`DialogContent\`; they are separated for easier styling. Because
+        dialogs hide all content outside itself to screen readers, they expect
+        to have a focusable child to focus on open and trap focus.`,
+      },
+    },
+  },
 }
-
-const Stuff = () => (
-  <>
-    <div>
-      <Lorem />
-    </div>
-    <div>
-      <div>
-        <div>
-          <button>hello</button>
-        </div>
-      </div>
-    </div>
-  </>
-)
 
 export const Default = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div>
-      <button onClick={() => setIsOpen((s) => !s)}>
-        {isOpen ? 'close' : 'open'}
-      </button>
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
       <Dialog isOpen={isOpen}>
         <DialogContent>
+          <button onClick={() => setIsOpen(false)}>close</button>
           <Lorem />
         </DialogContent>
       </Dialog>
-      <Stuff />
-    </div>
+    </>
+  )
+}
+
+export const NoFocusLock = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
+      <Dialog isOpen={isOpen}>
+        <DialogContent noFocusLock>
+          <button onClick={() => setIsOpen(false)}>close</button>
+          <Lorem />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -42,11 +54,10 @@ export const InitialFocus = () => {
   const [isOpen, setIsOpen] = useState(false)
   const initialFocusRef = useRef<any>()
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen((s) => !s)}>
         {isOpen ? 'close' : 'open'}
       </button>
-      <Stuff />
       <Dialog isOpen={isOpen}>
         <DialogContent initialFocusRef={initialFocusRef}>
           <button>other</button>
@@ -54,6 +65,6 @@ export const InitialFocus = () => {
           <button onClick={() => setIsOpen(false)}>close</button>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

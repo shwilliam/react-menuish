@@ -8,7 +8,9 @@ import {
   forwardRef,
   ReactNode,
   CSSProperties,
+  Fragment,
 } from 'react'
+import _ from 'lodash'
 import FocusLock from 'react-focus-lock'
 import useOnClickOutside from 'use-onclickoutside'
 import { RemoveScroll } from 'react-remove-scroll'
@@ -18,6 +20,7 @@ import {
   useFocusTakeoverContext,
 } from './focus-takeover'
 import { Portal } from './portal'
+import { Overlay } from './overlay'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 
@@ -41,7 +44,8 @@ export const DialogContent = forwardRef(
     ref: any,
   ) => {
     const innerRef = useRef<any>()
-    const { dialogId, onClose } = useDialogContext()
+    const wrapperRef = useRef<any>()
+    const { dialogId, onClose, overlay } = useDialogContext()
     const stableContentRef = useMemo(
       () => mergeRefs(ref, innerRef),
       [ref, innerRef],
@@ -56,15 +60,21 @@ export const DialogContent = forwardRef(
     })
 
     useEffect(() => {
-      return createAriaHider()
-    }, [])
+      return wrapperRef.current
+        ? createAriaHider(
+            wrapperRef.current,
+            overlay ? 1 : 0, // number of wrappers between wrapper el and portal
+          )
+        : () => {}
+    }, [overlay])
 
     return (
       <FocusLock
-        autoFocus
-        returnFocus
-        onActivation={activateFocusLock}
+        ref={wrapperRef}
         disabled={noFocusLock}
+        onActivation={activateFocusLock}
+        returnFocus
+        autoFocus
       >
         <animated.div ref={stableContentRef} {...props}>
           {children}
@@ -81,37 +91,40 @@ export interface DialogProps {
   allowPinchZoom?: boolean
   isScrollDisabled?: boolean
   isFocusTakeoverDisabled?: boolean
+  overlay?: boolean
   children: ReactNode
 }
 
 export const Dialog = ({
   id,
-  isOpen,
+  isOpen = false,
   onClose,
   allowPinchZoom = false,
   isScrollDisabled = true,
   isFocusTakeoverDisabled = false,
+  overlay = false,
   children,
 }: DialogProps) => {
   const dialogId = useId(id)
-  const ctxt = useMemo(() => ({ dialogId, onClose }), [dialogId, onClose])
+  const ctxt = useMemo(
+    () => ({ dialogId, onClose, overlay }),
+    [dialogId, onClose, overlay],
+  )
+  const OverlayEl = overlay ? Overlay : Fragment
 
   if (!isOpen) return null
   return (
     <dialogContext.Provider value={ctxt}>
-      <Portal>
-        <RemoveScroll
-          allowPinchZoom={allowPinchZoom}
-          enabled={isScrollDisabled}
+      <RemoveScroll allowPinchZoom={allowPinchZoom} enabled={isScrollDisabled}>
+        <FocusTakeoverBoundary
+          id={dialogId}
+          isDisabled={isFocusTakeoverDisabled}
         >
-          <FocusTakeoverBoundary
-            id={dialogId}
-            isDisabled={isFocusTakeoverDisabled}
-          >
-            {children}
-          </FocusTakeoverBoundary>
-        </RemoveScroll>
-      </Portal>
+          <Portal>
+            <OverlayEl>{children}</OverlayEl>
+          </Portal>
+        </FocusTakeoverBoundary>
+      </RemoveScroll>
     </dialogContext.Provider>
   )
 }
@@ -119,38 +132,49 @@ export const Dialog = ({
 interface DialogContext {
   dialogId: string
   onClose?: () => void
+  overlay?: boolean
 }
 
 const dialogContext = createContext<DialogContext>({
   dialogId: '',
+  overlay: false,
 })
 
 export const useDialogContext = () => useContext(dialogContext)
 
-const createAriaHider = () => {
-  const prevAriaHiddenVals: any[] = []
-  const nodes: HTMLElement[] = []
+const getParentNode = (
+  el?: Element | ParentNode | null,
+  wrappers: number = 0,
+) => {
+  const parent = el?.parentNode
+  if (!wrappers) return parent
+  else return getParentNode(parent, wrappers - 1)
+}
 
-  Array.prototype.forEach.call(
-    document.querySelectorAll('body > *'),
-    (node) => {
-      if (node.dataset.portal) return
+const createAriaHider = (newRoot: Element, wrappers: number = 0) => {
+  // hide outside els from a11y tree
+  const prevAriaHiddenVals: [Element, any][] = _.compact(
+    Array.from(document.querySelectorAll('body > *')).map((el) => {
+      const portal = getParentNode(newRoot, wrappers)
+      console.log('portal: ', portal)
+      if (el === portal) return null
 
-      const attr = node.getAttribute('aria-hidden')
-      const previouslyHidden = attr !== null && attr !== 'false'
+      const prevAriaHiddenVal = el.getAttribute('aria-hidden')
 
-      if (previouslyHidden) return
-      prevAriaHiddenVals.push(attr)
-      nodes.push(node)
-      node.setAttribute('aria-hidden', 'true')
-    },
+      // already hidden
+      if (prevAriaHiddenVal !== null && prevAriaHiddenVal !== 'false')
+        return null
+
+      el.setAttribute('aria-hidden', 'true')
+      return [el, prevAriaHiddenVal]
+    }),
   )
 
   return () => {
-    nodes.forEach((node, index) => {
-      const prevAriaHiddenVal = prevAriaHiddenVals[index]
-      if (prevAriaHiddenVal === null) node.removeAttribute('aria-hidden')
-      else node.setAttribute('aria-hidden', prevAriaHiddenVal)
+    // restore aria-hidden vals
+    prevAriaHiddenVals.forEach(([el, prevAriaHiddenVal]) => {
+      if (prevAriaHiddenVal === null) el.removeAttribute('aria-hidden')
+      else el.setAttribute('aria-hidden', prevAriaHiddenVal)
     })
   }
 }

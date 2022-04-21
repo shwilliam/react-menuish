@@ -10,7 +10,6 @@ import styled from 'styled-components'
 import { useSpring } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
-import { Overlay } from './overlay'
 import { TrayProps } from './popout'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
 import { useMounted } from '../hooks/mounted'
@@ -25,17 +24,15 @@ export const Tray = forwardRef(
     }, [isOpen])
 
     return (
-      <Dialog isOpen={innerIsOpen} onClose={onClose} {...props}>
-        <Overlay>
-          <TrayContent
-            ref={ref}
-            isOpen={isOpen}
-            onRest={() => !isOpen && setInnerIsOpen(false)}
-            {...content}
-          >
-            {children}
-          </TrayContent>
-        </Overlay>
+      <Dialog isOpen={innerIsOpen} onClose={onClose} overlay {...props}>
+        <TrayContent
+          ref={ref}
+          isOpen={isOpen}
+          onRest={() => !isOpen && setInnerIsOpen(false)}
+          {...content}
+        >
+          {children}
+        </TrayContent>
       </Dialog>
     )
   },
