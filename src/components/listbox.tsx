@@ -369,7 +369,7 @@ export const ListBoxBase = forwardRef(
     let renderedChildren: ReactElement[] = []
     let runningChildrenIdx = 0
     let nextRootActiveOptionFocusIdx: number | undefined
-    Children.forEach(validChildren, (child, idx) => {
+    Children.forEach(validChildren, (child) => {
       if (child.type === ListBoxGroup) {
         const groupChildren = Children.map(child.props.children, (child) => {
           if (child.props.isDisabled) return child
@@ -414,12 +414,12 @@ export const ListBoxBase = forwardRef(
 
     // sync level child count
     useEffect(() => {
-      const listChildCount = _.cloneDeep(listChildStateRef.current)
-      listChildCount[level] = {
-        ...listChildCount[level],
+      const listChildState = _.cloneDeep(listChildStateRef.current)
+      listChildState[level] = {
+        ...listChildState[level],
         count: runningChildrenIdx,
       }
-      listChildStateRef.current = listChildCount
+      listChildStateRef.current = listChildState
 
       return () => {
         const levelChildState = _.clone(listChildStateRef.current)
@@ -485,7 +485,7 @@ export const ListBoxItem = forwardRef(
   (
     {
       id,
-      listIdx = -1,
+      listIdx,
       onClick,
       isDisabled,
       value,
@@ -506,7 +506,8 @@ export const ListBoxItem = forwardRef(
     const wasOpen = usePrevious(isOpen)
     const isSelected = activeOptionId === innerId
     const { level } = useListLevelContext()
-    const hasVirtualFocus = [listIdx, innerId].includes(focus[level])
+    const hasVirtualFocus =
+      !_.isUndefined(listIdx) && [listIdx, innerId].includes(focus[level])
     const textValue = !_.isUndefined(value)
       ? value
       : _.isString(children)
@@ -593,11 +594,13 @@ export const ListBoxItem = forwardRef(
         onMouseOver={handleHover}
         onMouseDown={handleMouseDown}
         style={{
+          listStyleType: 'none',
           background: hasVirtualFocus
             ? 'lightblue'
             : isDisabled
             ? 'gray'
             : 'white',
+          cursor: isDisabled ? 'not-allowed' : 'default',
         }}
         {...props}
       >
