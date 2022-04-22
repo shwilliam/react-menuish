@@ -20,6 +20,7 @@ import {
   useCallback,
   MouseEventHandler,
   useMemo,
+  ComponentPropsWithoutRef,
 } from 'react'
 import _ from 'lodash'
 import { Subtray } from './tray'
@@ -332,7 +333,7 @@ const listBoxContext = createContext<ListBoxState>({
 
 const useListBoxContext = () => useContext(listBoxContext)
 
-interface ListBoxBaseProps extends ComponentProps<'ul'> {
+export interface ListBoxBaseProps extends ComponentPropsWithoutRef<'ul'> {
   state: ListBoxState
   level?: number
   labelId?: string
@@ -359,6 +360,7 @@ export const ListBoxBase = forwardRef(
       getNextFocusableIdx,
       activeOptionId,
       isMultiSelectable,
+      close,
     } = state
     const thisLevelFocus = focus[level]
 

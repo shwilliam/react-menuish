@@ -4,6 +4,7 @@ import {
   ChangeHandler,
   getListBoxKeyboardEventHandler,
   ListBoxBase,
+  ListBoxBaseProps,
   useListBoxState,
 } from './listbox'
 import { Tray } from './tray'
@@ -11,7 +12,8 @@ import { useIsMobile } from '../hooks/is-mobile'
 import { useSyncedRef } from '../hooks/synced-ref'
 import { usePrevious } from '../hooks/previous'
 
-export interface MenuProps {
+export interface MenuProps
+  extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
   value?: ReactNode
   onChange?: ChangeHandler
   onOpen?: () => void
@@ -50,7 +52,12 @@ export const Menu = forwardRef(
     const wasOpen = usePrevious(isOpen)
     const isMobile = useIsMobile()
     const listbox = (
-      <ListBoxBase state={state} onScrolledToBottom={onLoadMore} {...props} />
+      <ListBoxBase
+        state={state}
+        onScrolledToBottom={onLoadMore}
+        role="menu"
+        {...props}
+      />
     )
 
     const onCloseRef = useSyncedRef(onClose)
@@ -77,7 +84,6 @@ export const Menu = forwardRef(
         isOpen={isOpen}
         onClose={close}
         onOpen={onOpen}
-        content={{ isolateDialog: false }}
         trigger={(props) => (
           <button {...props} onClick={open} onKeyDown={handleKeyDown}>
             {value || 'open'}

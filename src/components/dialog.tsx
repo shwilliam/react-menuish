@@ -56,6 +56,7 @@ export const DialogContent = forwardRef(
     const activateFocusLock = useCallback(() => {
       if (initialFocusRef?.current) initialFocusRef.current.focus?.()
     }, [initialFocusRef])
+    const isModal = !noFocusLock && isolateDialog
 
     useOnClickOutside(innerRef, () => {
       if (isActiveFocusBoundary(dialogId)) onClose?.()
@@ -66,7 +67,7 @@ export const DialogContent = forwardRef(
       return wrapperRef.current
         ? createAriaHider(
             wrapperRef.current,
-            overlay ? 1 : 0, // number of wrappers between wrapper el and portal
+            overlay ? 2 : 1, // number of wrappers between wrapper el and portal
           )
         : () => {}
     }, [overlay, isolateDialog])
@@ -79,7 +80,11 @@ export const DialogContent = forwardRef(
         returnFocus
         autoFocus
       >
-        <animated.div ref={stableContentRef} {...props}>
+        <animated.div
+          ref={stableContentRef}
+          {...(isModal ? { 'aria-modal': true, role: 'dialog' } : {})}
+          {...props}
+        >
           {children}
         </animated.div>
       </FocusLock>
@@ -118,16 +123,19 @@ export const Dialog = ({
   if (!isOpen) return null
   return (
     <dialogContext.Provider value={ctxt}>
-      <RemoveScroll allowPinchZoom={allowPinchZoom} enabled={isScrollDisabled}>
-        <FocusTakeoverBoundary
-          id={dialogId}
-          isDisabled={isFocusTakeoverDisabled}
+      <Portal>
+        <RemoveScroll
+          allowPinchZoom={allowPinchZoom}
+          enabled={isScrollDisabled}
         >
-          <Portal>
+          <FocusTakeoverBoundary
+            id={dialogId}
+            isDisabled={isFocusTakeoverDisabled}
+          >
             <OverlayEl>{children}</OverlayEl>
-          </Portal>
-        </FocusTakeoverBoundary>
-      </RemoveScroll>
+          </FocusTakeoverBoundary>
+        </RemoveScroll>
+      </Portal>
     </dialogContext.Provider>
   )
 }

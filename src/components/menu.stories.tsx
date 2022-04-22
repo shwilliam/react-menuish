@@ -10,6 +10,7 @@ import { Menu, MenuProps } from './menu'
 import _ from 'lodash'
 import { Tooltip } from './tooltip'
 import { fruits, moreFruits } from '../util/fruits'
+import { Picker } from './picker'
 
 const fetchPokemon = async (
   url: string = 'https://pokeapi.co/api/v2/pokemon?limit=10',
@@ -47,6 +48,16 @@ const defaultMenuProps: MenuProps = {
 
 export const Default = () => {
   return <Menu {...defaultMenuProps} />
+}
+
+export const DisabledChildren = () => {
+  return (
+    <Menu {...defaultMenuProps}>
+      {fruits.map((fruit) => (
+        <ListBoxItem isDisabled>{fruit}</ListBoxItem>
+      ))}
+    </Menu>
+  )
 }
 
 export const WithTooltips = () => {
@@ -107,11 +118,11 @@ export const KeepOpen = () => {
   )
 }
 
-export const Picker = () => {
+export const AsPicker = () => {
   const [value, setValue] = useState<number | string | null>(null)
   const activeOptionId = (!_.isNull(value) && String(value)) || undefined
   return (
-    <Menu
+    <Picker
       {...defaultMenuProps}
       value={value}
       onChange={(...args) => {
@@ -123,7 +134,7 @@ export const Picker = () => {
       {fruits.map((fruit) => (
         <ListBoxItem id={fruit}>{fruit}</ListBoxItem>
       ))}
-    </Menu>
+    </Picker>
   )
 }
 

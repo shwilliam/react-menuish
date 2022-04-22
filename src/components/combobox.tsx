@@ -11,6 +11,7 @@ import { Popout } from './popout'
 import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
 import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
+import { useId } from '../hooks/id'
 
 interface ComboboxProps {
   value?: string
@@ -111,7 +112,8 @@ export const Combobox = forwardRef(
       onInputChange?.((value && String(value)) || '')
     }, [value, onInputChange])
 
-    const listbox = <ListBoxBase state={state} {...props} />
+    const listBoxId = useId()
+    const listbox = <ListBoxBase id={listBoxId} state={state} {...props} />
     const inputTriggerRef = useRef<any>()
     const focusInputTrigger = () => inputTriggerRef.current?.focus?.()
 
@@ -129,6 +131,8 @@ export const Combobox = forwardRef(
                   ref={inputTriggerRef}
                   value={inputValue}
                   onChange={handleInputChange}
+                  type="search"
+                  aria-controls={listBoxId}
                 />
               ),
             }}
@@ -152,11 +156,19 @@ export const Combobox = forwardRef(
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onBlur={handleBlur}
+              role="combobox"
+              aria-expanded={isOpen}
+              aria-controls={listBoxId}
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
             />
             <button
+              aria-haspopup="listbox"
+              aria-expanded={isOpen}
               onClick={() => {
                 setFocus([0])
-                ref.current?.focus?.()
+                ref?.current?.focus?.()
               }}
             >
               ⬇

@@ -14,6 +14,16 @@ export default {
 export const Default = () => {
   return (
     <ListBox>
+      {fruits.map((fruit) => (
+        <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+      ))}
+    </ListBox>
+  )
+}
+
+export const Grouped = () => {
+  return (
+    <ListBox>
       <ListBoxGroup label={<div>numbers</div>}>
         <ListBoxItem>one</ListBoxItem>
         <ListBoxItem isDisabled>two (disabled)</ListBoxItem>

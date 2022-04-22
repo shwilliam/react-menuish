@@ -12,24 +12,25 @@ export default {
 export const Default = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen(true)}>open</button>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Lorem />
+        <button>a button</button>
       </Modal>
-    </div>
+    </>
   )
 }
 
 export const Scrollable = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen(true)}>open</button>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Lorem paragraphs={5} />
+        <button>a button</button>
+        <Lorem paragraphs={10} />
       </Modal>
-    </div>
+    </>
   )
 }
 
@@ -37,7 +38,7 @@ export const InitialFocus = () => {
   const [isOpen, setIsOpen] = useState(false)
   const initialFocusRef = useRef<any>()
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen(true)}>open</button>
       <Modal
         isOpen={isOpen}
@@ -48,14 +49,14 @@ export const InitialFocus = () => {
         <button ref={initialFocusRef}>me</button>
         <button onClick={() => setIsOpen(false)}>close</button>
       </Modal>
-    </div>
+    </>
   )
 }
 
 export const WithMenu = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen(true)}>open</button>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <Menu>
@@ -64,18 +65,18 @@ export const WithMenu = () => {
           ))}
         </Menu>
       </Modal>
-    </div>
+    </>
   )
 }
 
 export const Nested = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
-    <div>
+    <>
       <button onClick={() => setIsOpen(true)}>open</button>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <Nested />
       </Modal>
-    </div>
+    </>
   )
 }
