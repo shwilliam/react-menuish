@@ -360,7 +360,6 @@ export const ListBoxBase = forwardRef(
       getNextFocusableIdx,
       activeOptionId,
       isMultiSelectable,
-      close,
     } = state
     const thisLevelFocus = focus[level]
 
@@ -741,6 +740,7 @@ export const SubList = forwardRef(
         <>
           {trigger({
             ref: null,
+            measureRef: null,
             id,
             listIdx,
             onClick: openSubList,

@@ -1,4 +1,11 @@
-import { useState, useEffect, forwardRef, ReactNode } from 'react'
+import {
+  useState,
+  useEffect,
+  ReactNode,
+  MutableRefObject,
+  useMemo,
+  ComponentPropsWithoutRef,
+} from 'react'
 import {
   useFloating,
   shift,
@@ -9,7 +16,9 @@ import {
   ElementRects,
   Placement,
   autoUpdate,
+  offset,
 } from '@floating-ui/react-dom'
+import useMeasure from 'react-use-measure'
 import {
   Dialog,
   DialogContent,
@@ -19,9 +28,10 @@ import {
 import { TrayContentProps } from './tray'
 import { ModalContentProps } from './modal'
 import { useSyncedRef } from '../hooks/synced-ref'
+import { mergeRefs } from '../util/merge-refs'
 
-export interface PopoutTriggerContext {
-  ref: any
+export interface PopoutTriggerContext extends ComponentPropsWithoutRef<any> {
+  ref: MutableRefObject<any> | null
 }
 
 interface DialogBaseProps extends DialogProps {
@@ -30,10 +40,10 @@ interface DialogBaseProps extends DialogProps {
 
 interface PopoutOptions {
   trigger: (triggerContext: PopoutTriggerContext) => ReactNode
+  content?: Omit<DialogContentProps, 'children'>
   placement?: Placement
-  content?: Omit<PopoutContentProps, 'children'>
-  dialog?: Omit<DialogProps, 'children'>
   maxHeight?: number
+  width?: 'trigger' | 'auto'
 }
 export interface PopoutProps extends DialogBaseProps, PopoutOptions {}
 interface PopoutVariantProps extends PopoutProps {
@@ -71,16 +81,17 @@ export const Popout = ({
   trigger,
   placement = 'bottom',
   maxHeight,
-  dialog,
+  width,
   content,
   children,
   ...props
 }: PopoutProps) => {
   const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
+  const [measureRef, { width: measureWidth }] = useMeasure()
   const { x, y, floating, strategy, refs, update } = useFloating({
     placement,
     middleware: [
-      // offset(10),
+      offset(2),
       shift({
         limiter: limitShift({
           offset: ({ reference, floating, placement }) => ({
@@ -92,6 +103,10 @@ export const Popout = ({
       size({ apply: (data) => setSizeData(data) }),
     ],
   })
+  const stableTriggerRef = useMemo(
+    () => mergeRefs(refs.reference, measureRef),
+    [refs.reference, measureRef],
+  )
   const popoutMaxHeight =
     sizeData?.height || maxHeight
       ? Math.min(sizeData?.height || Infinity, maxHeight || Infinity)
@@ -110,40 +125,31 @@ export const Popout = ({
 
   return (
     <>
-      {trigger({ ref: refs.reference })}
+      {trigger({ ref: stableTriggerRef })}
       <Dialog
         isOpen={isOpen}
         isScrollDisabled={false}
         onClose={onClose}
-        {...dialog}
+        {...props}
       >
-        <PopoutContent
+        <DialogContent
           ref={floating}
           style={{
             position: strategy,
             top: y ?? '',
             left: x ?? '',
             maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
-            maxWidth: sizeData?.width ? `${sizeData.width}px` : '',
             overflow: 'auto',
+            border: '1px solid red',
+            ...(width === 'trigger'
+              ? { width: measureWidth ? `${measureWidth}px` : '' }
+              : {}),
           }}
           {...content}
         >
           {children}
-        </PopoutContent>
+        </DialogContent>
       </Dialog>
     </>
   )
 }
-
-interface PopoutContentProps extends DialogContentProps {}
-
-const PopoutContent = forwardRef(
-  ({ children, ...props }: PopoutContentProps, ref: any) => {
-    return (
-      <DialogContent ref={ref} {...props}>
-        {children}
-      </DialogContent>
-    )
-  },
-)

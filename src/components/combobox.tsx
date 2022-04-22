@@ -114,8 +114,8 @@ export const Combobox = forwardRef(
 
     const listBoxId = useId()
     const listbox = <ListBoxBase id={listBoxId} state={state} {...props} />
-    const inputTriggerRef = useRef<any>()
-    const focusInputTrigger = () => inputTriggerRef.current?.focus?.()
+    const inputRef = useRef<any>()
+    const focusInputTrigger = () => inputRef.current?.focus?.()
 
     if (isMobile)
       return (
@@ -128,7 +128,7 @@ export const Combobox = forwardRef(
             content={{
               header: (
                 <input
-                  ref={inputTriggerRef}
+                  ref={inputRef}
                   value={inputValue}
                   onChange={handleInputChange}
                   type="search"
@@ -147,11 +147,11 @@ export const Combobox = forwardRef(
         isOpen={isOpen}
         onClose={() => setFocus([])}
         content={{ isolateDialog: false }}
+        width="trigger"
         trigger={({ ref, ...props }) => (
-          <span>
+          <span ref={ref}>
             <input
-              {...props}
-              ref={ref}
+              ref={inputRef}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -162,13 +162,14 @@ export const Combobox = forwardRef(
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
+              {...props}
             />
             <button
               aria-haspopup="listbox"
               aria-expanded={isOpen}
               onClick={() => {
                 setFocus([0])
-                ref?.current?.focus?.()
+                inputRef.current?.focus?.()
               }}
             >
               ⬇
