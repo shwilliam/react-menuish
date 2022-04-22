@@ -9,6 +9,7 @@ import {
   ReactNode,
   CSSProperties,
   Fragment,
+  ComponentPropsWithoutRef,
 } from 'react'
 import _ from 'lodash'
 import FocusLock from 'react-focus-lock'
@@ -24,11 +25,12 @@ import { Overlay } from './overlay'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 
-// TODO: aria attrs
+// require either aria-label or aria-labelledby to be provided
 
-export interface DialogContentProps {
+export interface DialogContentProps extends ComponentPropsWithoutRef<'div'> {
   noFocusLock?: boolean
   isolateDialog?: boolean
+  closeOnInteractOutside?: boolean
   initialFocusRef?: any
   style?: CSSProperties
   children: ReactNode // expected to have focusable child
@@ -39,6 +41,7 @@ export const DialogContent = forwardRef(
     {
       noFocusLock = false,
       isolateDialog = true,
+      closeOnInteractOutside = true,
       initialFocusRef,
       children,
       ...props
@@ -59,7 +62,7 @@ export const DialogContent = forwardRef(
     const isModal = !noFocusLock && isolateDialog
 
     useOnClickOutside(innerRef, () => {
-      if (isActiveFocusBoundary(dialogId)) onClose?.()
+      if (closeOnInteractOutside && isActiveFocusBoundary(dialogId)) onClose?.()
     })
 
     useEffect(() => {
