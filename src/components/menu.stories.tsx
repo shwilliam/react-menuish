@@ -11,6 +11,8 @@ import _ from 'lodash'
 import { Tooltip } from './tooltip'
 import { fruits, moreFruits } from '../util/fruits'
 import { Picker } from './picker'
+import { Lorem } from './lorem'
+import { Popout } from './popout'
 
 const fetchPokemon = async (
   url: string = 'https://pokeapi.co/api/v2/pokemon?limit=10',
@@ -170,7 +172,7 @@ export const Grouped = () => {
 export const MultilevelPicker = () => {
   const [value, setValue] = useState<number | string | null>(null)
   return (
-    <Menu
+    <Picker
       {...defaultMenuProps}
       value={value}
       onChange={(...args) => {
@@ -207,7 +209,7 @@ export const MultilevelPicker = () => {
           <ListBoxItem>l</ListBoxItem>
         </SubList>
       </SubList>
-    </Menu>
+    </Picker>
   )
 }
 
@@ -224,7 +226,7 @@ export const WithFilter = () => {
       }}
       focusResetTrigger={filter}
     >
-      <ListBoxItemFocusable>
+      <ListBoxItemFocusable isVirtuallyFocusable={false}>
         {({ focusableRef, handleKeyDown }) => (
           <input
             ref={focusableRef}
@@ -277,7 +279,7 @@ export const WithMultipleFilter = () => {
     >
       <ListBoxItem>fixed fruit 1</ListBoxItem>
       <ListBoxItem>fixed fruit 2</ListBoxItem>
-      <ListBoxItemFocusable>
+      <ListBoxItemFocusable isVirtuallyFocusable={false}>
         {({ focusableRef, handleKeyDown }) => (
           <input
             ref={focusableRef}
@@ -296,11 +298,18 @@ export const WithMultipleFilter = () => {
           <ListBoxItem>{fruit}</ListBoxItem>
         ))}
       <SubList
+        trigger={(props) => <ListBoxItem {...props}>all fruits</ListBoxItem>}
+      >
+        {fruits.map((fruit) => (
+          <ListBoxItem>{fruit}</ListBoxItem>
+        ))}
+      </SubList>
+      <SubList
         trigger={(props) => <ListBoxItem {...props}>fruits again</ListBoxItem>}
       >
         <ListBoxItem>fixed fruit 1</ListBoxItem>
         <ListBoxItem>fixed fruit 2</ListBoxItem>
-        <ListBoxItemFocusable>
+        <ListBoxItemFocusable isVirtuallyFocusable={false}>
           {({ focusableRef, handleKeyDown }) => (
             <input
               ref={focusableRef}
@@ -316,6 +325,45 @@ export const WithMultipleFilter = () => {
           <ListBoxItem>no results</ListBoxItem>
         )}
       </SubList>
+    </Menu>
+  )
+}
+
+export const WithPopout = () => {
+  const [popoutOpen, setPopoutOpen] = useState(false)
+
+  return (
+    <Menu {...defaultMenuProps}>
+      {fruits.map((fruit) => (
+        <ListBoxItem>{fruit}</ListBoxItem>
+      ))}
+      <Popout
+        isOpen={popoutOpen}
+        onClose={() => setPopoutOpen(false)}
+        trigger={(props) => (
+          <ListBoxItemFocusable
+            onClick={() => {
+              setPopoutOpen(true)
+              return false
+            }}
+            {...props}
+          >
+            {({ focusableRef, handleKeyDown }) => (
+              <button
+                ref={focusableRef}
+                onClick={() => setPopoutOpen(true)}
+                onKeyDown={handleKeyDown}
+              >
+                open
+              </button>
+            )}
+          </ListBoxItemFocusable>
+        )}
+      >
+        <button onClick={() => setPopoutOpen(false)}>close</button>
+        <Lorem paragraphs={5} />
+      </Popout>
+      <ListBoxItem>yo</ListBoxItem>
     </Menu>
   )
 }

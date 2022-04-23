@@ -51,16 +51,12 @@ export const WithFilter = () => {
         <ListBoxItem>four</ListBoxItem>
       </ListBoxGroup>
       <ListBoxGroup label={<div>fruits</div>}>
-        <ListBoxItemFocusable>
-          {({
-            focusableRef,
-            //  handleKeyDown
-          }) => (
+        <ListBoxItemFocusable isVirtuallyFocusable={false}>
+          {({ focusableRef }) => (
             <input
               ref={focusableRef}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              // onKeyDown={handleKeyDown}
             />
           )}
         </ListBoxItemFocusable>

@@ -125,13 +125,8 @@ export const Popout = ({
 
   return (
     <>
-      {trigger({ ref: stableTriggerRef })}
-      <Dialog
-        isOpen={isOpen}
-        isScrollDisabled={false}
-        onClose={onClose}
-        {...props}
-      >
+      {trigger({ ref: stableTriggerRef, ...props })}
+      <Dialog isOpen={isOpen} isScrollDisabled={false} onClose={onClose}>
         <DialogContent
           ref={floating}
           style={{

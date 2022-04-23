@@ -36,6 +36,7 @@ type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
 type Focus = (number | string)[]
 export type ChangeHandler = (value?: any) => ShouldClose | void
+
 interface ListBoxState {
   focus: Focus
   setFocus: Dispatch<SetStateAction<Focus>>
@@ -54,9 +55,15 @@ interface ListBoxState {
   activeOptionId?: string
   isMultiSelectable: boolean
 }
+
+interface StickyChild {
+  ref: MutableRefObject<any>
+  skipVirtualFocus: boolean
+}
+
 interface ListChildState {
   count: number
-  stickyChildren: { [index: number]: MutableRefObject<any> }
+  stickyChildren: { [index: number]: StickyChild }
 }
 
 interface UseListBoxStateOptions {
@@ -89,7 +96,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
 
     if (levelChildState === undefined) return 0
     if (start > levelMax) return levelMax
-    if (levelChildState.stickyChildren?.[start] !== undefined)
+    if (
+      levelChildState.stickyChildren?.[start] !== undefined &&
+      levelChildState.stickyChildren?.[start].skipVirtualFocus
+    )
       return getNextFocusableIdx(start + 1, level)
     return start
   }, [])
@@ -104,7 +114,10 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       return 0
     }
 
-    if (thisLevelState.stickyChildren?.[start] !== undefined)
+    if (
+      thisLevelState.stickyChildren?.[start] !== undefined &&
+      thisLevelState.stickyChildren?.[start].skipVirtualFocus
+    )
       return getPrevFocusableIdx(start - 1, level)
 
     return start
@@ -172,7 +185,12 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
             ? stickyEls.slice(0, focus[actualIdx])
             : stickyEls
 
-        if (!!_.compact(passedStickyEls).length) return [actualIdx, stickyEls]
+        if (
+          !!_.compact(
+            passedStickyEls.filter((stickyEl) => !!stickyEl?.skipVirtualFocus),
+          ).length
+        )
+          return [actualIdx, stickyEls]
         return acc
       },
       [null, null],
@@ -185,9 +203,19 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       )
     })
 
-    if (matchingStickyEl) matchingStickyEl.current?.focus()
-    // else if (isMobile) return
-    // else if (noFocusTrap) stickyTriggerRef.current.focus?.()
+    const virtuallyFocusedStickyEl = childrenStickyEls[level]?.[focus[level]]
+
+    if (
+      virtuallyFocusedStickyEl &&
+      virtuallyFocusedStickyEl.skipVirtualFocus === false
+    ) {
+      virtuallyFocusedStickyEl.ref.current.focus()
+      return
+    }
+
+    if (matchingStickyEl) matchingStickyEl.ref.current?.focus()
+    // // else if (isMobile) return
+    // // else if (noFocusTrap) stickyTriggerRef.current.focus?.()
     else focusTrapRef.current?.focus?.()
   }, [
     focus,
@@ -611,8 +639,8 @@ export const ListBoxItem = forwardRef(
   },
 )
 
-interface ListBoxItemFocusableProps {
-  listIdx?: number
+interface ListBoxItemFocusableProps extends ListBoxItemProps {
+  isVirtuallyFocusable?: boolean
   children: (props: {
     focusableRef: any
     handleKeyDown: KeyboardEventHandler
@@ -620,7 +648,17 @@ interface ListBoxItemFocusableProps {
 }
 
 export const ListBoxItemFocusable = forwardRef(
-  ({ listIdx = -1, children }: ListBoxItemFocusableProps, ref: any) => {
+  (
+    {
+      listIdx = -1,
+      isVirtuallyFocusable = true,
+      onClick,
+      isDisabled,
+      children,
+      ...props
+    }: ListBoxItemFocusableProps,
+    ref: any,
+  ) => {
     const focusableRef = useRef<any>(null)
     const state = useListBoxContext()
     const { listChildStateRef } = state
@@ -637,7 +675,10 @@ export const ListBoxItemFocusable = forwardRef(
         ...clone[level],
         stickyChildren: {
           ...(clone[level]?.stickyChildren || {}),
-          [listIdx]: focusableRef,
+          [listIdx]: {
+            ref: focusableRef,
+            skipVirtualFocus: !isVirtuallyFocusable,
+          },
         },
       }
       listChildStateRef.current = clone
@@ -659,7 +700,13 @@ export const ListBoxItemFocusable = forwardRef(
     })
 
     return (
-      <ListBoxItem ref={ref} onClick={() => false} listIdx={listIdx} isDisabled>
+      <ListBoxItem
+        ref={ref}
+        onClick={onClick || (() => false)}
+        listIdx={listIdx}
+        isDisabled={!isVirtuallyFocusable || isDisabled}
+        {...props}
+      >
         {children({
           focusableRef,
           handleKeyDown,
