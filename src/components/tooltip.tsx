@@ -46,7 +46,7 @@ export const Tooltip = forwardRef(
         isFocusTakeoverDisabled
         {...popout}
         content={{
-          ...(popout?.content ?? {}),
+          ...(popout?.content || {}),
           noFocusLock: true,
           isolateDialog: false,
           role: 'tooltip',

@@ -1,4 +1,4 @@
-import { Modal } from './modal'
+import * as Modal from './modal'
 import { ModalProps } from './popout'
 
 interface AlertDialogProps extends ModalProps {
@@ -8,7 +8,7 @@ interface AlertDialogProps extends ModalProps {
 }
 
 export const AlertDialog = ({ content, ...props }: AlertDialogProps) => (
-  <Modal
+  <Modal.Dialog
     {...props}
     content={{
       ...content,

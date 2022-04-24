@@ -399,7 +399,7 @@ export const ListBoxBase = forwardRef(
     let runningChildrenIdx = 0
     let nextRootActiveOptionFocusIdx: number | undefined
     Children.forEach(validChildren, (child) => {
-      if (child.type === ListBoxGroup) {
+      if (child.type === Group) {
         const groupChildren = Children.map(child.props.children, (child) => {
           if (child.props.isDisabled) return child
           else {
@@ -499,7 +499,7 @@ export const ListBoxBase = forwardRef(
   },
 )
 
-interface ListBoxItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
+interface ItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
   listIdx?: number
   onClick?: ActionHandler
   isDisabled?: boolean
@@ -510,7 +510,7 @@ interface ListBoxItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
   children: ReactNode
 }
 
-export const ListBoxItem = forwardRef(
+export const Item = forwardRef(
   (
     {
       id,
@@ -522,7 +522,7 @@ export const ListBoxItem = forwardRef(
       onVirtualFocusEnd,
       children,
       ...props
-    }: ListBoxItemProps,
+    }: ItemProps,
     ref: ForwardedRef<any>,
   ) => {
     const innerRef = useRef<any>()
@@ -639,7 +639,7 @@ export const ListBoxItem = forwardRef(
   },
 )
 
-interface ListBoxItemFocusableProps extends ListBoxItemProps {
+interface FocusableItemProps extends ItemProps {
   isVirtuallyFocusable?: boolean
   children: (props: {
     focusableRef: any
@@ -647,7 +647,7 @@ interface ListBoxItemFocusableProps extends ListBoxItemProps {
   }) => ReactNode
 }
 
-export const ListBoxItemFocusable = forwardRef(
+export const FocusableItem = forwardRef(
   (
     {
       listIdx = -1,
@@ -656,7 +656,7 @@ export const ListBoxItemFocusable = forwardRef(
       isDisabled,
       children,
       ...props
-    }: ListBoxItemFocusableProps,
+    }: FocusableItemProps,
     ref: any,
   ) => {
     const focusableRef = useRef<any>(null)
@@ -700,7 +700,7 @@ export const ListBoxItemFocusable = forwardRef(
     })
 
     return (
-      <ListBoxItem
+      <Item
         ref={ref}
         onClick={onClick || (() => false)}
         listIdx={listIdx}
@@ -711,18 +711,18 @@ export const ListBoxItemFocusable = forwardRef(
           focusableRef,
           handleKeyDown,
         })}
-      </ListBoxItem>
+      </Item>
     )
   },
 )
 
-interface ListBoxGroupProps {
+interface GroupProps {
   label: ReactNode
   children: ReactNode
 }
 
-export const ListBoxGroup = forwardRef(
-  ({ label, children }: ListBoxGroupProps, ref: ForwardedRef<any>) => {
+export const Group = forwardRef(
+  ({ label, children }: GroupProps, ref: ForwardedRef<any>) => {
     const groupLabelId = useId()
     return (
       <div ref={ref} role="presentation">

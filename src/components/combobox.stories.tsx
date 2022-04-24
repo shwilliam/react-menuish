@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { fruits, moreFruits } from '../util/fruits'
-import { ListBoxGroup, ListBoxItem, SubList } from './listbox'
+import { Group, Item, SubList } from './listbox'
 import { Combobox } from './combobox'
 import { LoremWrap } from './lorem'
 
@@ -22,11 +22,9 @@ export const Default = () => {
       onInputChange={setInputValue}
     >
       {filteredFruits.length ? (
-        filteredFruits.map((fruit, idx) => (
-          <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
-        ))
+        filteredFruits.map((fruit, idx) => <Item key={fruit}>{fruit}</Item>)
       ) : (
-        <ListBoxItem>no results</ListBoxItem>
+        <Item>no results</Item>
       )}
     </Combobox>
   )
@@ -52,13 +50,11 @@ export const MultiLevel = () => {
       onInputChange={setInputValue}
     >
       {filteredFruits.map((fruit, idx) => (
-        <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+        <Item key={fruit}>{fruit}</Item>
       ))}
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>more fruits</ListBoxItem>}
-      >
+      <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
         {moreFruits.map((fruit) => (
-          <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+          <Item key={fruit}>{fruit}</Item>
         ))}
       </SubList>
     </Combobox>
@@ -80,12 +76,12 @@ export const AltValue = () => {
     >
       {filteredFruits.length ? (
         filteredFruits.map((fruit, idx) => (
-          <ListBoxItem value={idx} key={fruit}>
+          <Item value={idx} key={fruit}>
             {fruit}
-          </ListBoxItem>
+          </Item>
         ))
       ) : (
-        <ListBoxItem>no results</ListBoxItem>
+        <Item>no results</Item>
       )}
     </Combobox>
   )
@@ -108,24 +104,22 @@ export const Grouped = () => {
       inputValue={inputValue}
       onInputChange={setInputValue}
     >
-      <ListBoxGroup label={<div>fruits</div>}>
+      <Group label={<div>fruits</div>}>
         {filteredFruits.length ? (
-          filteredFruits.map((fruit) => (
-            <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
-          ))
+          filteredFruits.map((fruit) => <Item key={fruit}>{fruit}</Item>)
         ) : (
-          <ListBoxItem isDisabled>no results</ListBoxItem>
+          <Item isDisabled>no results</Item>
         )}
-      </ListBoxGroup>
-      <ListBoxGroup label={<div>more fruits</div>}>
+      </Group>
+      <Group label={<div>more fruits</div>}>
         {moreFilteredFruits.length ? (
           moreFilteredFruits.map((fruit, idx) => (
-            <ListBoxItem key={fruit}>{fruit}</ListBoxItem>
+            <Item key={fruit}>{fruit}</Item>
           ))
         ) : (
-          <ListBoxItem isDisabled>no results</ListBoxItem>
+          <Item isDisabled>no results</Item>
         )}
-      </ListBoxGroup>
+      </Group>
     </Combobox>
   )
 }

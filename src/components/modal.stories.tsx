@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
-import { Modal } from './modal'
+import * as Modal from './modal'
 import { Menu } from './menu'
-import { ListBoxItem } from './listbox'
+import { Item } from './listbox'
 import { Lorem } from './lorem'
 import { fruits } from '../util/fruits'
 
@@ -14,9 +14,9 @@ export const Default = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <button>a button</button>
-      </Modal>
+      </Modal.Dialog>
     </>
   )
 }
@@ -26,10 +26,17 @@ export const Scrollable = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <button>a button</button>
-        <Lorem paragraphs={10} />
-      </Modal>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Modal.Header>
+          <Modal.Title>
+            a very looooooooooong title that prolly gonnna have to wrap
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <button>a button</button>
+          <Lorem paragraphs={10} />
+        </Modal.Body>
+      </Modal.Dialog>
     </>
   )
 }
@@ -40,7 +47,7 @@ export const InitialFocus = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal
+      <Modal.Dialog
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         content={{ initialFocusRef }}
@@ -48,7 +55,7 @@ export const InitialFocus = () => {
         <button>not me</button>
         <button ref={initialFocusRef}>me</button>
         <button onClick={() => setIsOpen(false)}>close</button>
-      </Modal>
+      </Modal.Dialog>
     </>
   )
 }
@@ -58,13 +65,13 @@ export const WithMenu = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <Menu>
           {fruits.map((f) => (
-            <ListBoxItem key={f}>{f}</ListBoxItem>
+            <Item key={f}>{f}</Item>
           ))}
         </Menu>
-      </Modal>
+      </Modal.Dialog>
     </>
   )
 }
@@ -74,9 +81,9 @@ export const Nested = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <Nested />
-      </Modal>
+      </Modal.Dialog>
     </>
   )
 }

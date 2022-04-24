@@ -1,11 +1,6 @@
 import { useRef, useState } from 'react'
 import { action } from '@storybook/addon-actions'
-import {
-  ListBoxItemFocusable,
-  ListBoxGroup,
-  ListBoxItem,
-  SubList,
-} from './listbox'
+import { FocusableItem, Group, Item, SubList } from './listbox'
 import { Menu, MenuProps } from './menu'
 import _ from 'lodash'
 import { Tooltip } from './tooltip'
@@ -45,7 +40,7 @@ const defaultMenuProps: MenuProps = {
   onChange: action('onChange'),
   onOpen: action('onOpen'),
   onClose: action('onClose'),
-  children: fruits.map((fruit) => <ListBoxItem>{fruit}</ListBoxItem>),
+  children: fruits.map((fruit) => <Item>{fruit}</Item>),
 }
 
 export const Default = () => {
@@ -56,7 +51,7 @@ export const DisabledChildren = () => {
   return (
     <Menu {...defaultMenuProps}>
       {fruits.map((fruit) => (
-        <ListBoxItem isDisabled>{fruit}</ListBoxItem>
+        <Item isDisabled>{fruit}</Item>
       ))}
     </Menu>
   )
@@ -68,18 +63,16 @@ export const WithTooltips = () => {
       {fruits.map((fruit) => (
         <Tooltip
           popout={{ placement: 'right' }}
-          trigger={(props) => <ListBoxItem {...props}>{fruit}</ListBoxItem>}
+          trigger={(props) => <Item {...props}>{fruit}</Item>}
         >
           more info about {fruit}
         </Tooltip>
       ))}
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>more fruits</ListBoxItem>}
-      >
+      <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
         {moreFruits.map((fruit) => (
           <Tooltip
             popout={{ placement: 'right' }}
-            trigger={(props) => <ListBoxItem {...props}>{fruit}</ListBoxItem>}
+            trigger={(props) => <Item {...props}>{fruit}</Item>}
           >
             more info about {fruit}
           </Tooltip>
@@ -101,9 +94,9 @@ export const Async = () => {
       onLoadMore={more}
     >
       {pokemon.map((pokemon) => (
-        <ListBoxItem>{pokemon.name}</ListBoxItem>
+        <Item>{pokemon.name}</Item>
       ))}
-      {loading ? <ListBoxItem isDisabled>loading</ListBoxItem> : null}
+      {loading ? <Item isDisabled>loading</Item> : null}
     </Menu>
   )
 }
@@ -134,7 +127,7 @@ export const AsPicker = () => {
       activeOptionId={activeOptionId}
     >
       {fruits.map((fruit) => (
-        <ListBoxItem id={fruit}>{fruit}</ListBoxItem>
+        <Item id={fruit}>{fruit}</Item>
       ))}
     </Picker>
   )
@@ -151,20 +144,20 @@ export const Grouped = () => {
         action('onChange')(...args)
       }}
     >
-      <ListBoxGroup label={<div>numbers</div>}>
-        <ListBoxItem value={1}>one</ListBoxItem>
-        <ListBoxItem value={2} isDisabled>
+      <Group label={<div>numbers</div>}>
+        <Item value={1}>one</Item>
+        <Item value={2} isDisabled>
           two (disabled)
-        </ListBoxItem>
-        <ListBoxItem value={3}>three</ListBoxItem>
-        <ListBoxItem value={4}>four</ListBoxItem>
-      </ListBoxGroup>
-      <ListBoxGroup label={<div>letters</div>}>
-        <ListBoxItem>a</ListBoxItem>
-        <ListBoxItem>b</ListBoxItem>
-        <ListBoxItem>c</ListBoxItem>
-        <ListBoxItem>d</ListBoxItem>
-      </ListBoxGroup>
+        </Item>
+        <Item value={3}>three</Item>
+        <Item value={4}>four</Item>
+      </Group>
+      <Group label={<div>letters</div>}>
+        <Item>a</Item>
+        <Item>b</Item>
+        <Item>c</Item>
+        <Item>d</Item>
+      </Group>
     </Menu>
   )
 }
@@ -181,32 +174,24 @@ export const MultilevelPicker = () => {
       }}
     >
       {fruits.map((fruit) => (
-        <ListBoxItem>{fruit}</ListBoxItem>
+        <Item>{fruit}</Item>
       ))}
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>letters</ListBoxItem>}
-      >
-        <ListBoxItem>a</ListBoxItem>
-        <ListBoxItem>b</ListBoxItem>
-        <ListBoxItem>c</ListBoxItem>
-        <ListBoxItem>d</ListBoxItem>
+      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+        <Item>a</Item>
+        <Item>b</Item>
+        <Item>c</Item>
+        <Item>d</Item>
       </SubList>
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>more letters</ListBoxItem>}
-      >
-        <ListBoxItem>e</ListBoxItem>
-        <ListBoxItem>f</ListBoxItem>
-        <ListBoxItem>g</ListBoxItem>
-        <ListBoxItem>h</ListBoxItem>
-        <SubList
-          trigger={(props) => (
-            <ListBoxItem {...props}>even more letters</ListBoxItem>
-          )}
-        >
-          <ListBoxItem>i</ListBoxItem>
-          <ListBoxItem>j</ListBoxItem>
-          <ListBoxItem>k</ListBoxItem>
-          <ListBoxItem>l</ListBoxItem>
+      <SubList trigger={(props) => <Item {...props}>more letters</Item>}>
+        <Item>e</Item>
+        <Item>f</Item>
+        <Item>g</Item>
+        <Item>h</Item>
+        <SubList trigger={(props) => <Item {...props}>even more letters</Item>}>
+          <Item>i</Item>
+          <Item>j</Item>
+          <Item>k</Item>
+          <Item>l</Item>
         </SubList>
       </SubList>
     </Picker>
@@ -226,7 +211,7 @@ export const WithFilter = () => {
       }}
       focusResetTrigger={filter}
     >
-      <ListBoxItemFocusable isVirtuallyFocusable={false}>
+      <FocusableItem isVirtuallyFocusable={false}>
         {({ focusableRef, handleKeyDown }) => (
           <input
             ref={focusableRef}
@@ -238,24 +223,22 @@ export const WithFilter = () => {
             onKeyDown={handleKeyDown}
           />
         )}
-      </ListBoxItemFocusable>
+      </FocusableItem>
       {fruits
         .filter((fruit) => fruit.includes(filter.toLowerCase()))
         .map((fruit) => (
-          <ListBoxItem>{fruit}</ListBoxItem>
+          <Item>{fruit}</Item>
         ))}
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>letters</ListBoxItem>}
-      >
-        <ListBoxItem>a</ListBoxItem>
-        <ListBoxItem>b</ListBoxItem>
-        <ListBoxItem>c</ListBoxItem>
-        <ListBoxItem>d</ListBoxItem>
+      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+        <Item>a</Item>
+        <Item>b</Item>
+        <Item>c</Item>
+        <Item>d</Item>
       </SubList>
       {moreFruits
         .filter((fruit) => fruit.includes(filter.toLowerCase()))
         .map((fruit) => (
-          <ListBoxItem>{fruit}</ListBoxItem>
+          <Item>{fruit}</Item>
         ))}
     </Menu>
   )
@@ -277,9 +260,9 @@ export const WithMultipleFilter = () => {
         action('onChange')(...args)
       }}
     >
-      <ListBoxItem>fixed fruit 1</ListBoxItem>
-      <ListBoxItem>fixed fruit 2</ListBoxItem>
-      <ListBoxItemFocusable isVirtuallyFocusable={false}>
+      <Item>fixed fruit 1</Item>
+      <Item>fixed fruit 2</Item>
+      <FocusableItem isVirtuallyFocusable={false}>
         {({ focusableRef, handleKeyDown }) => (
           <input
             ref={focusableRef}
@@ -291,25 +274,21 @@ export const WithMultipleFilter = () => {
             onKeyDown={handleKeyDown}
           />
         )}
-      </ListBoxItemFocusable>
+      </FocusableItem>
       {fruits
         .filter((fruit) => fruit.includes(filter.toLowerCase()))
         .map((fruit) => (
-          <ListBoxItem>{fruit}</ListBoxItem>
+          <Item>{fruit}</Item>
         ))}
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>all fruits</ListBoxItem>}
-      >
+      <SubList trigger={(props) => <Item {...props}>all fruits</Item>}>
         {fruits.map((fruit) => (
-          <ListBoxItem>{fruit}</ListBoxItem>
+          <Item>{fruit}</Item>
         ))}
       </SubList>
-      <SubList
-        trigger={(props) => <ListBoxItem {...props}>fruits again</ListBoxItem>}
-      >
-        <ListBoxItem>fixed fruit 1</ListBoxItem>
-        <ListBoxItem>fixed fruit 2</ListBoxItem>
-        <ListBoxItemFocusable isVirtuallyFocusable={false}>
+      <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+        <Item>fixed fruit 1</Item>
+        <Item>fixed fruit 2</Item>
+        <FocusableItem isVirtuallyFocusable={false}>
           {({ focusableRef, handleKeyDown }) => (
             <input
               ref={focusableRef}
@@ -318,11 +297,11 @@ export const WithMultipleFilter = () => {
               onKeyDown={handleKeyDown}
             />
           )}
-        </ListBoxItemFocusable>
+        </FocusableItem>
         {filteredFruits2.length ? (
-          filteredFruits2.map((fruit) => <ListBoxItem>{fruit}</ListBoxItem>)
+          filteredFruits2.map((fruit) => <Item>{fruit}</Item>)
         ) : (
-          <ListBoxItem>no results</ListBoxItem>
+          <Item>no results</Item>
         )}
       </SubList>
     </Menu>
@@ -335,13 +314,13 @@ export const WithPopout = () => {
   return (
     <Menu {...defaultMenuProps}>
       {fruits.map((fruit) => (
-        <ListBoxItem>{fruit}</ListBoxItem>
+        <Item>{fruit}</Item>
       ))}
       <Popout
         isOpen={popoutOpen}
         onClose={() => setPopoutOpen(false)}
         trigger={(props) => (
-          <ListBoxItemFocusable
+          <FocusableItem
             onClick={() => {
               setPopoutOpen(true)
               return false
@@ -357,13 +336,13 @@ export const WithPopout = () => {
                 open
               </button>
             )}
-          </ListBoxItemFocusable>
+          </FocusableItem>
         )}
       >
         <button onClick={() => setPopoutOpen(false)}>close</button>
         <Lorem paragraphs={5} />
       </Popout>
-      <ListBoxItem>yo</ListBoxItem>
+      <Item>yo</Item>
     </Menu>
   )
 }

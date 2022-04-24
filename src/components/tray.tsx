@@ -96,11 +96,7 @@ const TrayContent = forwardRef(
           style={{
             maxHeight: `${viewportHeight}px`,
             overflowY: 'auto',
-            ...(isFullscreen
-              ? {}
-              : {
-                  minHeight: `${trayHeight}px`,
-                }),
+            ...(isFullscreen ? {} : { minHeight: `${trayHeight}px` }),
           }}
         >
           {header ? (
@@ -146,7 +142,7 @@ export const Subtray = forwardRef(
   },
 )
 
-interface SubtrayContentProps {
+interface SubtrayContentProps extends DialogContentProps {
   isOpen?: boolean
   onRest?: () => void
   onClose?: () => void
