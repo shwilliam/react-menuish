@@ -502,6 +502,7 @@ export const ListBoxBase = forwardRef(
 interface ItemProps extends Omit<ComponentProps<'li'>, 'onClick'> {
   listIdx?: number
   onClick?: ActionHandler
+  triggeredOnHover?: boolean
   isDisabled?: boolean
   value?: any
   activeOptionId?: string
@@ -516,7 +517,8 @@ export const Item = forwardRef(
       id,
       listIdx,
       onClick,
-      isDisabled,
+      triggeredOnHover = false,
+      isDisabled = false,
       value,
       onVirtualFocusStart,
       onVirtualFocusEnd,
@@ -560,6 +562,7 @@ export const Item = forwardRef(
         sliced[level] = listIdx
         return sliced
       })
+      if (triggeredOnHover) handleAction()
     }
 
     // register click handler on virtual focus
@@ -814,6 +817,7 @@ export const SubList = forwardRef(
             id: innerId,
             listIdx,
             onClick: openSubList,
+            triggeredOnHover: true,
           })
         }
         placement="right"
