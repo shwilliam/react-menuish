@@ -11,7 +11,7 @@ import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 export const Dialog = forwardRef(
   ({ content, children, ...props }: ModalProps, ref: any) => {
     return (
-      <BaseDialog overlay {...props}>
+      <BaseDialog {...props}>
         <ModalContent {...content}>{children}</ModalContent>
       </BaseDialog>
     )

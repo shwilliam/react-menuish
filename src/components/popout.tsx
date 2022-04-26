@@ -1,34 +1,21 @@
 import {
-  useState,
   useEffect,
-  ReactNode,
   MutableRefObject,
-  useMemo,
   ComponentPropsWithoutRef,
+  memo,
 } from 'react'
+import { autoUpdate } from '@floating-ui/react-dom'
+import { ModalContentProps } from './modal'
 import {
-  useFloating,
-  shift,
-  flip,
-  size,
-  limitShift,
-  Dimensions,
-  ElementRects,
-  Placement,
-  autoUpdate,
-  offset,
-} from '@floating-ui/react-dom'
-import useMeasure from 'react-use-measure'
-import {
+  createDialogVariant,
   Dialog,
   DialogContent,
   DialogContentProps,
   DialogProps,
+  useDialogContext,
 } from './dialog'
 import { TrayContentProps } from './tray'
-import { ModalContentProps } from './modal'
 import { useSyncedRef } from '../hooks/synced-ref'
-import { mergeRefs } from '../util/merge-refs'
 
 export interface PopoutTriggerContext extends ComponentPropsWithoutRef<any> {
   ref: MutableRefObject<any> | null
@@ -39,10 +26,9 @@ interface DialogBaseProps extends DialogProps {
 }
 
 interface PopoutOptions {
-  trigger: (triggerContext: PopoutTriggerContext) => ReactNode
   content?: Omit<DialogContentProps, 'children'>
-  placement?: Placement
   maxHeight?: number
+  maxWidth?: number
   width?: 'trigger' | 'auto'
 }
 export interface PopoutProps extends DialogBaseProps, PopoutOptions {}
@@ -74,43 +60,25 @@ export type DialogVariantProps = AnyDialogVariantProps & {
   mobile?: AnyDialogVariantProps
 }
 
-export const Popout = ({
-  isOpen = false,
+export const PopoutBase = ({
   onOpen,
-  onClose,
-  trigger,
-  placement = 'bottom',
   maxHeight,
+  maxWidth,
   width,
   content,
   children,
   ...props
 }: PopoutProps) => {
-  const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
-  const [measureRef, { width: measureWidth }] = useMeasure()
-  const { x, y, floating, strategy, refs, update } = useFloating({
-    placement,
-    middleware: [
-      offset(2),
-      shift({
-        limiter: limitShift({
-          offset: ({ reference, floating, placement }) => ({
-            mainAxis: reference.height,
-          }),
-        }),
-      }),
-      flip(),
-      size({ apply: (data) => setSizeData(data) }),
-    ],
-  })
-  const stableTriggerRef = useMemo(
-    () => mergeRefs(refs.reference, measureRef),
-    [refs.reference, measureRef],
-  )
+  const { position, size, isOpen } = useDialogContext()
+  const { x, y, floating, strategy, refs, update } = position
   const popoutMaxHeight =
-    sizeData?.height || maxHeight
-      ? Math.min(sizeData?.height || Infinity, maxHeight || Infinity)
+    size?.height || maxHeight
+      ? Math.min(size?.height || Infinity, maxHeight || Infinity)
       : 0
+  // const popoutMaxWidth =
+  //   sizeData?.width || maxWidth
+  //     ? Math.min(sizeData?.width || Infinity, maxWidth || Infinity)
+  //     : 0
 
   const floatingEl = refs.floating.current
   useEffect(() => {
@@ -124,27 +92,28 @@ export const Popout = ({
   }, [isOpen])
 
   return (
-    <>
-      {trigger({ ref: stableTriggerRef, ...props })}
-      <Dialog isOpen={isOpen} isScrollDisabled={false} onClose={onClose}>
-        <DialogContent
-          ref={floating}
-          style={{
-            position: strategy,
-            top: y ?? '',
-            left: x ?? '',
-            maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
-            overflow: 'auto',
-            border: '1px solid red',
-            ...(width === 'trigger'
-              ? { width: measureWidth ? `${measureWidth}px` : '' }
-              : {}),
-          }}
-          {...content}
-        >
-          {children}
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog isScrollDisabled={false}>
+      <DialogContent
+        ref={floating}
+        style={{
+          position: strategy,
+          top: y ?? '',
+          left: x ?? '',
+          maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
+          // maxWidth: popoutMaxWidth ? `${popoutMaxWidth}px` : '',
+          maxWidth: '100%',
+          overflow: 'auto',
+          border: '1px solid red',
+          ...(width === 'trigger'
+            ? { width: size.triggerWidth ? `${size.triggerWidth}px` : '' }
+            : {}),
+        }}
+        {...content}
+      >
+        {children}
+      </DialogContent>
+    </Dialog>
   )
 }
+
+export const Popout = memo(createDialogVariant(PopoutBase))

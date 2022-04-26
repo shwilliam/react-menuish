@@ -12,9 +12,14 @@ import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
 import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
+import { DialogTrigger } from './dialog'
+
+// TODO:
+// allow trigger override(?)
+// disable filter when opened (until type)
 
 interface ComboboxProps {
-  value?: string
+  value?: string | null
   onChange?: ChangeHandler
   inputValue?: string
   onInputChange?: (value: string) => void
@@ -51,7 +56,6 @@ export const Combobox = forwardRef(
           focusPrev()
           handled = true
           break
-        case ' ':
         case 'Enter':
           if (focus.length) {
             triggerAction()
@@ -109,8 +113,8 @@ export const Combobox = forwardRef(
     const isMobile = useIsMobile()
 
     useEffect(() => {
-      onInputChange?.((value && String(value)) || '')
-    }, [value, onInputChange])
+      if (!isMobile) onInputChange?.((value && String(value)) || '')
+    }, [value, onInputChange, isMobile])
 
     const listBoxId = useId()
     const listbox = <ListBoxBase id={listBoxId} state={state} {...props} />
@@ -119,12 +123,20 @@ export const Combobox = forwardRef(
 
     if (isMobile)
       return (
-        <>
-          <button onClick={() => setFocus([0])}>{value || 'open'}</button>
+        <DialogTrigger
+          isOpen={isOpen}
+          onClose={() => {
+            setFocus([])
+            onInputChange?.('')
+          }}
+          onOpen={focusInputTrigger}
+          trigger={({ ref }) => (
+            <button ref={ref} onClick={() => setFocus([0])}>
+              {value || 'open'}
+            </button>
+          )}
+        >
           <Tray
-            isOpen={isOpen}
-            onOpen={focusInputTrigger}
-            onClose={() => setFocus([])}
             content={{
               header: (
                 <input
@@ -139,16 +151,14 @@ export const Combobox = forwardRef(
           >
             {listbox}
           </Tray>
-        </>
+        </DialogTrigger>
       )
 
     return (
-      <Popout
+      <DialogTrigger
         isOpen={isOpen}
         onClose={() => setFocus([])}
-        content={{ isolateDialog: false }}
-        width="trigger"
-        trigger={({ ref, ...props }) => (
+        trigger={({ ref, open }) => (
           <span ref={ref}>
             <input
               ref={inputRef}
@@ -162,7 +172,7 @@ export const Combobox = forwardRef(
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
-              {...props}
+              // {...props}
             />
             <button
               aria-haspopup="listbox"
@@ -177,8 +187,14 @@ export const Combobox = forwardRef(
           </span>
         )}
       >
-        {listbox}
-      </Popout>
+        <Popout
+          isOpen={isOpen}
+          content={{ isolateDialog: false }}
+          width="trigger"
+        >
+          {listbox}
+        </Popout>
+      </DialogTrigger>
     )
   },
 )

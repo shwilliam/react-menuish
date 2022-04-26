@@ -8,7 +8,7 @@ export default {
 
 export const Default = () => {
   return (
-    <ListBox>
+    <ListBox options={{ onChange: () => false }}>
       {fruits.map((fruit) => (
         <Item key={fruit}>{fruit}</Item>
       ))}

@@ -25,12 +25,17 @@ import {
 import _ from 'lodash'
 import { Subtray } from './tray'
 import { Popout, PopoutTriggerContext } from './popout'
+import { DialogTrigger } from './dialog'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 import { usePrevious } from '../hooks/previous'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
+
+// TODO:
+// menu handles wrapping DialogTrigger or Container
+// move sublist to menu, handle switch by level
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -320,14 +325,18 @@ export const getListBoxKeyboardEventHandler = (
   return handleKeyDown
 }
 
-interface ListBoxProps {
+interface ListBoxProps extends Omit<ListBoxBaseProps, 'state'> {
+  options?: UseListBoxStateOptions
   isFixed?: boolean
   children: ReactNode[]
 }
 
 export const ListBox = forwardRef(
-  ({ isFixed = true, ...props }: ListBoxProps, ref: ForwardedRef<any>) => {
-    const { state } = useListBoxState()
+  (
+    { isFixed = true, options, ...props }: ListBoxProps,
+    ref: ForwardedRef<any>,
+  ) => {
+    const { state } = useListBoxState(options)
     const handleKeyDown = getListBoxKeyboardEventHandler({ state, isFixed })
 
     return (
@@ -787,50 +796,59 @@ export const SubList = forwardRef(
 
     if (isMobile)
       return (
-        <>
-          {trigger({
-            ref: null,
-            measureRef: null,
-            id,
-            listIdx,
-            onClick: openSubList,
-          })}
-          <Subtray
-            isOpen={isOpen}
-            onClose={() => closeLevel(thisLevel)}
-            {...props}
-          >
+        <DialogTrigger
+          isOpen={isOpen}
+          onClose={() => closeLevel(thisLevel)}
+          placement="right"
+          trigger={({ ref }) =>
+            trigger({
+              ref,
+              measureRef: null,
+              id,
+              listIdx,
+              onClick: openSubList,
+            })
+          }
+        >
+          <Subtray>
             <ListBoxBase level={thisLevel} ref={ref} state={state}>
               {children}
             </ListBoxBase>
           </Subtray>
-        </>
+        </DialogTrigger>
       )
 
     return (
-      <Popout
+      <DialogTrigger
         isOpen={isOpen}
         onClose={() => closeLevel(thisLevel)}
-        trigger={(props) =>
+        placement="right"
+        trigger={({ ref }) =>
           trigger({
-            ...props,
+            ref,
             id: innerId,
             listIdx,
-            onClick: openSubList,
+            onClick: () => {
+              console.log('open')
+              openSubList()
+              return false
+            },
             triggeredOnHover: true,
           })
         }
-        placement="right"
-        content={{
-          initialFocusRef: focusTrapRef,
-          noFocusLock: thisLevel > 0,
-        }}
-        {...props}
       >
-        <ListBoxBase level={thisLevel} ref={ref} state={state}>
-          {children}
-        </ListBoxBase>
-      </Popout>
+        <Popout
+          content={{
+            initialFocusRef: focusTrapRef,
+            noFocusLock: thisLevel > 0,
+          }}
+          {...props}
+        >
+          <ListBoxBase level={thisLevel} ref={ref} state={state}>
+            {children}
+          </ListBoxBase>
+        </Popout>
+      </DialogTrigger>
     )
   },
 )
