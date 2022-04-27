@@ -23,24 +23,19 @@ import {
   ComponentPropsWithoutRef,
 } from 'react'
 import _ from 'lodash'
-import { Subtray } from './tray'
-import { Popout, PopoutTriggerContext } from './popout'
-import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
+import { useId } from '../hooks/id'
 import { usePrevious } from '../hooks/previous'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
-
-// TODO:
-// move sublist to menu, handle switch by level
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
 type Focus = (number | string)[]
 export type ChangeHandler = (value?: any) => ShouldClose | void
 
-interface ListBoxState {
+export interface ListBoxState {
   focus: Focus
   setFocus: Dispatch<SetStateAction<Focus>>
   actionRef: MutableRefObject<Action | null>
@@ -366,7 +361,7 @@ const listBoxContext = createContext<ListBoxState>({
   isMultiSelectable: false,
 })
 
-const useListBoxContext = () => useContext(listBoxContext)
+export const useListBoxContext = () => useContext(listBoxContext)
 
 export interface ListBoxBaseProps extends ComponentPropsWithoutRef<'ul'> {
   state: ListBoxState
@@ -743,102 +738,6 @@ export const Group = forwardRef(
           {children}
         </div>
       </div>
-    )
-  },
-)
-
-interface SubListProps {
-  id?: string
-  trigger: (
-    triggerContext: PopoutTriggerContext & {
-      id?: string
-      listIdx: number
-      onClick?: ActionHandler
-    },
-  ) => ReactNode
-  listIdx?: number
-  onAction?: () => void
-  children: ReactNode[]
-}
-
-export const SubList = forwardRef(
-  (
-    { id, listIdx = -1, trigger, children, ...props }: SubListProps,
-    ref: ForwardedRef<any>,
-  ) => {
-    const innerId = useId(id)
-    const isMobile = useIsMobile()
-    const state = useListBoxContext()
-    const { focus, setFocus, closeLevel, focusTrapRef } = state
-    const { level } = useListLevelContext()
-    const thisLevel = level + 1
-    const isOpen = focus[level] === innerId
-    const openSubList = () => {
-      setFocus((s) => {
-        const clone = _.clone(s)
-        clone[level] = innerId
-        clone[thisLevel] = 0
-        return clone
-      })
-      return false
-    }
-
-    useEffect(() => {
-      if (_.last(focus) === innerId)
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone[clone.length - 1] = listIdx
-          return clone
-        })
-    }, [focus, setFocus, listIdx, innerId])
-
-    if (isMobile)
-      return (
-        <Subtray
-          isOpen={isOpen}
-          onClose={() => closeLevel(thisLevel)}
-          placement="right"
-          trigger={({ ref }) =>
-            trigger({
-              ref,
-              measureRef: null,
-              id,
-              listIdx,
-              onClick: openSubList,
-            })
-          }
-        >
-          <ListBoxBase level={thisLevel} ref={ref} state={state}>
-            {children}
-          </ListBoxBase>
-        </Subtray>
-      )
-
-    return (
-      <Popout
-        isOpen={isOpen}
-        onClose={() => closeLevel(thisLevel)}
-        placement="right"
-        trigger={({ ref }) =>
-          trigger({
-            ref,
-            id: innerId,
-            listIdx,
-            onClick: () => {
-              openSubList()
-              return false
-            },
-            triggeredOnHover: true,
-          })
-        }
-        initialFocusRef={focusTrapRef}
-        noFocusLock={thisLevel > 0}
-        {...props}
-      >
-        <ListBoxBase level={thisLevel} ref={ref} state={state}>
-          {children}
-        </ListBoxBase>
-      </Popout>
     )
   },
 )

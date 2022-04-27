@@ -1,6 +1,6 @@
 import { MouseEventHandler, useRef, useState } from 'react'
 import { action } from '@storybook/addon-actions'
-import { FocusableItem, Group, Item, SubList } from './listbox'
+import { FocusableItem, Group, Item } from './listbox'
 import { Menu, MenuProps } from './menu'
 import _ from 'lodash'
 import { Tooltip } from './tooltip'
@@ -131,7 +131,7 @@ export const WithTooltips = () => {
           more info about {fruit}
         </Tooltip>
       ))}
-      <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
+      <Menu trigger={(props) => <Item {...props}>more fruits</Item>}>
         {moreFruits.map((fruit) => (
           <Tooltip
             popout={{ placement: 'right' }}
@@ -140,7 +140,7 @@ export const WithTooltips = () => {
             more info about {fruit}
           </Tooltip>
         ))}
-      </SubList>
+      </Menu>
     </Menu>
   )
 }
@@ -255,24 +255,27 @@ export const Multilevel = () => {
       {fruits.map((fruit) => (
         <Item>{fruit}</Item>
       ))}
-      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+      <Menu
+        onOpen={action('onOpen [submenu]')}
+        trigger={(props) => <Item {...props}>letters</Item>}
+      >
         <Item>a</Item>
         <Item>b</Item>
         <Item>c</Item>
         <Item>d</Item>
-      </SubList>
-      <SubList trigger={(props) => <Item {...props}>more letters</Item>}>
+      </Menu>
+      <Menu trigger={(props) => <Item {...props}>more letters</Item>}>
         <Item>e</Item>
         <Item>f</Item>
         <Item>g</Item>
         <Item>h</Item>
-        <SubList trigger={(props) => <Item {...props}>even more letters</Item>}>
+        <Menu trigger={(props) => <Item {...props}>even more letters</Item>}>
           <Item>i</Item>
           <Item>j</Item>
           <Item>k</Item>
           <Item>l</Item>
-        </SubList>
-      </SubList>
+        </Menu>
+      </Menu>
     </Menu>
   )
 }
@@ -309,12 +312,12 @@ export const WithFilter = () => {
         .map((fruit) => (
           <Item>{fruit} alkjsdlkfjsdlkj sdlkjf sdlkj sdfkljlsdfjk</Item>
         ))}
-      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+      <Menu trigger={(props) => <Item {...props}>letters</Item>}>
         <Item>a</Item>
         <Item>b</Item>
         <Item>c</Item>
         <Item>d</Item>
-      </SubList>
+      </Menu>
       {moreFruits
         .filter((fruit) => fruit.includes(filter.toLowerCase()))
         .map((fruit) => (
@@ -360,12 +363,12 @@ export const WithMultipleFilter = () => {
         .map((fruit) => (
           <Item>{fruit}</Item>
         ))}
-      <SubList trigger={(props) => <Item {...props}>all fruits</Item>}>
+      <Menu trigger={(props) => <Item {...props}>all fruits</Item>}>
         {fruits.map((fruit) => (
           <Item>{fruit}</Item>
         ))}
-      </SubList>
-      <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+      </Menu>
+      <Menu trigger={(props) => <Item {...props}>fruits again</Item>}>
         <Item>fixed fruit 1</Item>
         <Item>fixed fruit 2</Item>
         <FocusableItem isVirtuallyFocusable={false}>
@@ -383,7 +386,7 @@ export const WithMultipleFilter = () => {
         ) : (
           <Item>no results</Item>
         )}
-      </SubList>
+      </Menu>
     </Menu>
   )
 }
