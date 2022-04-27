@@ -55,7 +55,7 @@ export const InitialFocus = () => {
           open
         </button>
       )}
-      content={{ initialFocusRef }}
+      initialFocusRef={initialFocusRef}
     >
       <button>not me</button>
       <button ref={initialFocusRef}>me</button>
@@ -76,7 +76,7 @@ export const ExternalOpenState = () => {
           open
         </button>
       )}
-      content={{ initialFocusRef }}
+      initialFocusRef={initialFocusRef}
     >
       <button>not me</button>
       <button ref={initialFocusRef}>me</button>
@@ -93,7 +93,7 @@ export const Fullscreen = () => {
           open
         </button>
       )}
-      content={{ isFullscreen: true }}
+      options={{ isFullscreen: true }}
     >
       <Lorem />
     </Tray>
@@ -108,7 +108,7 @@ export const FullscreenScrollable = () => {
           open
         </button>
       )}
-      content={{ isFullscreen: true }}
+      options={{ isFullscreen: true }}
     >
       <Lorem paragraphs={50} />
     </Tray>

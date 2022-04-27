@@ -1,21 +1,35 @@
-import { forwardRef } from 'react'
+import { forwardRef, ReactNode } from 'react'
 import styled from 'styled-components'
 import {
   Dialog as BaseDialog,
   DialogContent,
   DialogContentProps,
+  DialogVariant,
+  GetDialogVariantProps,
 } from './dialog'
-import { ModalProps } from './popout'
 import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 
+interface ModalBaseProps {
+  children: ReactNode
+}
+
+const ModalBase = forwardRef(({ children }: ModalProps, ref: any) => {
+  return (
+    <BaseDialog>
+      <ModalContent ref={ref}>{children}</ModalContent>
+    </BaseDialog>
+  )
+})
+
+interface ModalProps extends GetDialogVariantProps<ModalBaseProps> {}
 export const Dialog = forwardRef(
-  ({ content, children, ...props }: ModalProps, ref: any) => {
-    return (
-      <BaseDialog {...props}>
-        <ModalContent {...content}>{children}</ModalContent>
-      </BaseDialog>
-    )
-  },
+  ({ options, children, ...props }: ModalProps, ref) => (
+    <DialogVariant {...props}>
+      <ModalBase ref={ref} {...options}>
+        {children}
+      </ModalBase>
+    </DialogVariant>
+  ),
 )
 
 export interface ModalContentProps extends DialogContentProps {}

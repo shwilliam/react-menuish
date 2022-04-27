@@ -12,7 +12,6 @@ import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
 import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
-import { DialogTrigger } from './dialog'
 
 // TODO:
 // allow trigger override(?)
@@ -92,7 +91,6 @@ export const Combobox = forwardRef(
       }
 
       if (handled) {
-        console.log('prevent default')
         e.preventDefault()
         e.stopPropagation()
       }
@@ -123,7 +121,7 @@ export const Combobox = forwardRef(
 
     if (isMobile)
       return (
-        <DialogTrigger
+        <Tray
           isOpen={isOpen}
           onClose={() => {
             setFocus([])
@@ -135,29 +133,28 @@ export const Combobox = forwardRef(
               {value || 'open'}
             </button>
           )}
+          options={{
+            header: (
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                type="search"
+                aria-controls={listBoxId}
+              />
+            ),
+          }}
         >
-          <Tray
-            content={{
-              header: (
-                <input
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  type="search"
-                  aria-controls={listBoxId}
-                />
-              ),
-            }}
-          >
-            {listbox}
-          </Tray>
-        </DialogTrigger>
+          {listbox}
+        </Tray>
       )
 
     return (
-      <DialogTrigger
+      <Popout
         isOpen={isOpen}
+        options={{ width: 'trigger' }}
         onClose={() => setFocus([])}
+        isolateDialog={false}
         trigger={({ ref, open }) => (
           <span ref={ref}>
             <input
@@ -187,14 +184,8 @@ export const Combobox = forwardRef(
           </span>
         )}
       >
-        <Popout
-          isOpen={isOpen}
-          content={{ isolateDialog: false }}
-          width="trigger"
-        >
-          {listbox}
-        </Popout>
-      </DialogTrigger>
+        {listbox}
+      </Popout>
     )
   },
 )
