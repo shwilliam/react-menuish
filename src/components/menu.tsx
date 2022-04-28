@@ -1,6 +1,6 @@
 import { ForwardedRef, forwardRef, ReactNode, useEffect } from 'react'
 import _ from 'lodash'
-import { Popout, PopoutBaseProps } from './popout'
+import { PopoutBaseProps } from './popout'
 import {
   ChangeHandler,
   getListBoxKeyboardEventHandler,
@@ -11,12 +11,13 @@ import {
   useListBoxState,
   useListLevelContext,
 } from './listbox'
-import { Subtray, Tray, TrayBaseProps } from './tray'
+import { TrayBaseProps } from './tray'
 import { DialogVariantProps, useDialogContext } from './dialog'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useSyncedRef } from '../hooks/synced-ref'
 import { usePrevious } from '../hooks/previous'
 import { useId } from '../hooks/id'
+import { Popout, PopoutProps, Tray, TrayProps } from './dialog-variant'
 
 interface MenuBaseProps
   extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
@@ -88,11 +89,9 @@ const MenuBase = forwardRef(
   },
 )
 
-export interface MenuProps
-  extends Omit<MenuBaseProps, 'state'>,
-    DialogVariantProps {
-  options?: PopoutBaseProps
-  mobileOptions?: TrayBaseProps
+export interface MenuProps extends Omit<MenuBaseProps, 'state'> {
+  id?: string
+  dialog?: Omit<PopoutProps, 'children'> & Omit<TrayProps, 'children'>
   trigger?: (triggerContext: any) => ReactNode // TODO: type
   listIdx?: number
 }
@@ -102,8 +101,7 @@ export const Menu = forwardRef(
     {
       id,
       listIdx = -1,
-      options,
-      mobileOptions,
+      dialog,
       onChange,
       activeOptionId,
       focusResetTrigger,
@@ -150,36 +148,31 @@ export const Menu = forwardRef(
         })
     }, [focus, setFocus, listIdx, innerId])
 
-    if (isMobile) {
-      if (thisLevel > 0)
-        return (
-          <Subtray
-            isOpen={isSubmenuOpen}
-            onClose={() => closeLevel(thisLevel)}
-            trigger={
-              trigger
-                ? ({ ref }) =>
-                    trigger({
-                      ref,
-                      measureRef: null,
-                      id,
-                      listIdx,
-                      onClick: openSubList,
-                    })
-                : undefined
-            }
-            options={mobileOptions}
-            {...props}
-          >
-            {menu}
-          </Subtray>
-        )
+    if (isMobile)
       return (
-        <Tray options={mobileOptions} trigger={trigger} {...props}>
+        <Tray
+          isSubtray={thisLevel > 0}
+          {...(thisLevel > 0
+            ? {
+                isOpen: isSubmenuOpen,
+                onClose: () => closeLevel(thisLevel),
+                trigger: trigger
+                  ? ({ ref }) =>
+                      trigger({
+                        ref,
+                        measureRef: null,
+                        id,
+                        listIdx,
+                        onClick: openSubList,
+                      })
+                  : undefined,
+              }
+            : { trigger })}
+          {...dialog}
+        >
           {menu}
         </Tray>
       )
-    }
 
     return (
       <Popout
@@ -205,8 +198,7 @@ export const Menu = forwardRef(
                 : undefined,
             }
           : { trigger })}
-        {...props}
-        options={options}
+        {...dialog}
       >
         {menu}
       </Popout>

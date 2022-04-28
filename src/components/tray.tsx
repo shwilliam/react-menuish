@@ -13,8 +13,6 @@ import {
   Dialog,
   DialogContent,
   DialogContentProps,
-  DialogVariant,
-  GetDialogVariantProps,
   useDialogContext,
 } from './dialog'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
@@ -22,11 +20,11 @@ import { useMounted } from '../hooks/mounted'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
 
 export interface TrayBaseProps extends TrayContentProps {
-  children: ReactNode
+  isSubtray?: boolean
 }
 
-const TrayBase = forwardRef(
-  ({ children, ...props }: TrayBaseProps, ref: any) => {
+export const TrayBase = forwardRef(
+  ({ isSubtray, children, ...props }: TrayBaseProps, ref: any) => {
     const dialogCtxt = useDialogContext()
     const [innerIsOpen, setInnerIsOpen] = useState(dialogCtxt.isOpen)
 
@@ -34,6 +32,18 @@ const TrayBase = forwardRef(
       if (dialogCtxt.isOpen) setInnerIsOpen(true)
     }, [dialogCtxt.isOpen])
 
+    if (isSubtray) {
+      if (!innerIsOpen) return null
+      return (
+        <SubtrayContent
+          ref={ref}
+          onRest={() => !dialogCtxt.isOpen && setInnerIsOpen(false)}
+          {...props}
+        >
+          {children}
+        </SubtrayContent>
+      )
+    }
     return (
       <Dialog isOpen={innerIsOpen}>
         <TrayContent
@@ -48,22 +58,13 @@ const TrayBase = forwardRef(
   },
 )
 
-interface TrayProps extends GetDialogVariantProps<TrayBaseProps> {}
+interface TrayContentBaseProps extends DialogContentProps {
+  onRest?: () => void
+}
 
-export const Tray = forwardRef(
-  ({ options, children, ...props }: TrayProps, ref) => (
-    <DialogVariant overlay {...props}>
-      <TrayBase ref={ref} {...options}>
-        {children}
-      </TrayBase>
-    </DialogVariant>
-  ),
-)
-
-export interface TrayContentProps extends DialogContentProps {
+export interface TrayContentProps extends TrayContentBaseProps {
   header?: ReactNode
   isFullscreen?: boolean
-  onRest?: () => void
   onScrolledToBottom?: () => void
 }
 
@@ -139,46 +140,7 @@ const StyledDialogContent = styled(DialogContent)`
   border: 1px solid blue;
 `
 
-interface SubtrayBaseProps extends SubtrayContentProps {}
-
-const SubtrayBase = forwardRef(
-  ({ children, ...props }: SubtrayBaseProps, ref: any) => {
-    const dialogCtxt = useDialogContext()
-    const [innerIsOpen, setInnerIsOpen] = useState(dialogCtxt.isOpen)
-
-    useEffect(() => {
-      if (dialogCtxt.isOpen) setInnerIsOpen(true)
-    }, [dialogCtxt.isOpen])
-
-    if (!innerIsOpen) return null
-    return (
-      <SubtrayContent
-        ref={ref}
-        onRest={() => !dialogCtxt.isOpen && setInnerIsOpen(false)}
-        {...props}
-      >
-        {children}
-      </SubtrayContent>
-    )
-  },
-)
-
-interface SubtrayProps extends GetDialogVariantProps<SubtrayBaseProps> {}
-
-export const Subtray = forwardRef(
-  ({ options, children, ...props }: SubtrayProps, ref) => (
-    <DialogVariant {...props}>
-      <SubtrayBase ref={ref} {...options}>
-        {children}
-      </SubtrayBase>
-    </DialogVariant>
-  ),
-)
-
-interface SubtrayContentProps extends DialogContentProps {
-  onRest?: () => void
-  children: ReactNode
-}
+interface SubtrayContentProps extends TrayContentBaseProps {}
 
 const SubtrayContent = forwardRef(
   ({ onRest, children, ...props }: SubtrayContentProps, ref: any) => {

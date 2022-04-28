@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Tray, Subtray } from './tray'
+import { Tray } from './dialog-variant'
 import { Lorem } from './lorem'
 
 export default {
@@ -93,7 +93,7 @@ export const Fullscreen = () => {
           open
         </button>
       )}
-      options={{ isFullscreen: true }}
+      isFullscreen
     >
       <Lorem />
     </Tray>
@@ -108,7 +108,7 @@ export const FullscreenScrollable = () => {
           open
         </button>
       )}
-      options={{ isFullscreen: true }}
+      isFullscreen
     >
       <Lorem paragraphs={50} />
     </Tray>
@@ -125,15 +125,16 @@ export const WithSubtrayTrigger = () => {
       )}
     >
       <Lorem paragraphs={2} />
-      <Subtray
+      <Tray
         trigger={({ ref, open }) => (
           <button ref={ref} onClick={open}>
             open
           </button>
         )}
+        isSubtray
       >
         <Lorem />
-      </Subtray>
+      </Tray>
     </Tray>
   )
 }
@@ -151,9 +152,13 @@ export const WithSubtrayContainer = () => {
     >
       <Lorem paragraphs={2} />
       <button onClick={() => setIsSubtrayOpen(true)}>open</button>
-      <Subtray isOpen={isSubtrayOpen} onClose={() => setIsSubtrayOpen(false)}>
+      <Tray
+        isSubtray
+        isOpen={isSubtrayOpen}
+        onClose={() => setIsSubtrayOpen(false)}
+      >
         <Lorem />
-      </Subtray>
+      </Tray>
     </Tray>
   )
 }

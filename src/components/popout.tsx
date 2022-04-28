@@ -1,12 +1,6 @@
 import { useEffect, ReactNode, forwardRef, useMemo } from 'react'
 import { autoUpdate } from '@floating-ui/react-dom'
-import {
-  Dialog,
-  DialogContent,
-  DialogVariant,
-  GetDialogVariantProps,
-  useDialogContext,
-} from './dialog'
+import { Dialog, DialogContent, useDialogContext } from './dialog'
 import { mergeRefs } from '../util/merge-refs'
 
 export interface PopoutBaseProps {
@@ -73,15 +67,4 @@ export const PopoutBase = forwardRef(
       </Dialog>
     )
   },
-)
-
-type PopoutProps = GetDialogVariantProps<PopoutBaseProps>
-export const Popout = forwardRef(
-  ({ options, children, ...props }: PopoutProps, ref) => (
-    <DialogVariant isScrollDisabled={false} {...props}>
-      <PopoutBase ref={ref} {...options}>
-        {children}
-      </PopoutBase>
-    </DialogVariant>
-  ),
 )
