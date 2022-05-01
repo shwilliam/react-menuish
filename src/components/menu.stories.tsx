@@ -8,6 +8,8 @@ import { fruits, moreFruits } from '../util/fruits'
 import { Picker } from './picker'
 import { Lorem } from './lorem'
 import { Popout } from './popout'
+import { DialogTrigger } from './dialog'
+import { mergeRefs } from '../util/merge-refs'
 
 const fetchPokemon = async (
   url: string = 'https://pokeapi.co/api/v2/pokemon?limit=10',
@@ -38,13 +40,23 @@ export default {
 
 const defaultMenuProps: MenuProps = {
   onChange: action('onChange'),
-  onOpen: action('onOpen'),
-  onClose: action('onClose'),
+  // onOpen: action('onOpen'),
+  // onClose: action('onClose'),
   children: fruits.map((fruit) => <Item>{fruit}</Item>),
 }
 
 export const Default = () => {
-  return <Menu {...defaultMenuProps} />
+  return (
+    <DialogTrigger
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <Menu {...defaultMenuProps} />
+    </DialogTrigger>
+  )
 }
 
 export const DisabledChildren = () => {
@@ -252,97 +264,124 @@ export const WithMultipleFilter = () => {
     fruit.includes(filter2.toLowerCase()),
   )
   return (
-    <Menu
-      {...defaultMenuProps}
-      value={value}
-      onChange={(...args) => {
-        setValue(args[0])
-        action('onChange')(...args)
-      }}
+    <DialogTrigger
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
     >
-      <Item>fixed fruit 1</Item>
-      <Item>fixed fruit 2</Item>
-      <FocusableItem isVirtuallyFocusable={false}>
-        {({ focusableRef, handleKeyDown }) => (
-          <input
-            ref={focusableRef}
-            value={filter}
-            onChange={(...args) => {
-              setFilter(args[0].target.value)
-              action('onChange (input)')(...args)
-            }}
-            onKeyDown={handleKeyDown}
-          />
-        )}
-      </FocusableItem>
-      {fruits
-        .filter((fruit) => fruit.includes(filter.toLowerCase()))
-        .map((fruit) => (
-          <Item>{fruit}</Item>
-        ))}
-      <SubList trigger={(props) => <Item {...props}>all fruits</Item>}>
-        {fruits.map((fruit) => (
-          <Item>{fruit}</Item>
-        ))}
-      </SubList>
-      <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+      <Menu
+        {...defaultMenuProps}
+        value={value}
+        onChange={(...args) => {
+          setValue(args[0])
+          action('onChange')(...args)
+        }}
+      >
         <Item>fixed fruit 1</Item>
         <Item>fixed fruit 2</Item>
         <FocusableItem isVirtuallyFocusable={false}>
           {({ focusableRef, handleKeyDown }) => (
             <input
               ref={focusableRef}
-              value={filter2}
-              onChange={(e) => setFilter2(e.target.value)}
+              value={filter}
+              onChange={(...args) => {
+                setFilter(args[0].target.value)
+                action('onChange (input)')(...args)
+              }}
               onKeyDown={handleKeyDown}
             />
           )}
         </FocusableItem>
-        {filteredFruits2.length ? (
-          filteredFruits2.map((fruit) => <Item>{fruit}</Item>)
-        ) : (
-          <Item>no results</Item>
-        )}
-      </SubList>
-    </Menu>
+        {fruits
+          .filter((fruit) => fruit.includes(filter.toLowerCase()))
+          .map((fruit) => (
+            <Item>{fruit}</Item>
+          ))}
+        <SubList
+          trigger={({ ref, ...props }) => <Item {...props}>all fruits</Item>}
+        >
+          {fruits.map((fruit) => (
+            <Item>{fruit}</Item>
+          ))}
+        </SubList>
+        <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+          <Item>fixed fruit 1</Item>
+          <Item>fixed fruit 2</Item>
+          <FocusableItem isVirtuallyFocusable={false}>
+            {({ focusableRef, handleKeyDown }) => (
+              <input
+                ref={focusableRef}
+                value={filter2}
+                onChange={(e) => setFilter2(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            )}
+          </FocusableItem>
+          {filteredFruits2.length ? (
+            filteredFruits2.map((fruit) => <Item>{fruit}</Item>)
+          ) : (
+            <Item>no results</Item>
+          )}
+        </SubList>
+      </Menu>
+    </DialogTrigger>
   )
 }
 
-export const WithPopout = () => {
+const MenuWPopout = () => {
   const [popoutOpen, setPopoutOpen] = useState(false)
 
   return (
-    <Menu {...defaultMenuProps}>
-      {fruits.map((fruit) => (
-        <Item>{fruit}</Item>
-      ))}
-      <Popout
-        isOpen={popoutOpen}
-        onClose={() => setPopoutOpen(false)}
-        trigger={(props) => (
-          <FocusableItem
-            onClick={() => {
-              setPopoutOpen(true)
-              return false
-            }}
-            {...props}
-          >
-            {({ focusableRef, handleKeyDown }) => (
-              <button
-                ref={focusableRef}
-                onClick={() => setPopoutOpen(true)}
-                onKeyDown={handleKeyDown}
-              >
-                open
-              </button>
-            )}
-          </FocusableItem>
-        )}
-      >
-        <button onClick={() => setPopoutOpen(false)}>close</button>
-        <Lorem paragraphs={5} />
-      </Popout>
-      <Item>yo</Item>
-    </Menu>
+    <DialogTrigger
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <Menu {...defaultMenuProps}>
+        {fruits.map((fruit) => (
+          <Item>{fruit}</Item>
+        ))}
+        <DialogTrigger
+          isOpen={popoutOpen}
+          onClose={() => setPopoutOpen(false)}
+          trigger={({ ref, ...props }) => (
+            <FocusableItem
+              onClick={() => {
+                setPopoutOpen(true)
+                return false
+              }}
+              {...props}
+            >
+              {({ focusableRef, handleKeyDown }) => (
+                <button
+                  ref={mergeRefs(ref, focusableRef)}
+                  onClick={() => setPopoutOpen(true)}
+                  onKeyDown={handleKeyDown}
+                >
+                  open
+                </button>
+              )}
+            </FocusableItem>
+          )}
+        >
+          <Popout>
+            <button onClick={() => setPopoutOpen(false)}>close</button>
+            <Lorem paragraphs={5} />
+          </Popout>
+        </DialogTrigger>
+        <Item>yo</Item>
+      </Menu>
+    </DialogTrigger>
   )
 }
+
+export const WithPopout = () => (
+  <>
+    <MenuWPopout />
+    <MenuWPopout />
+  </>
+)

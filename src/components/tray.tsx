@@ -9,26 +9,31 @@ import {
 import styled from 'styled-components'
 import { Transition, useSpring, config, a } from 'react-spring'
 import useMeasure from 'react-use-measure'
-import { Dialog, DialogContent, DialogContentProps } from './dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogContentProps,
+  useDialogContext,
+} from './dialog'
 import { TrayProps } from './popout'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
 import { useMounted } from '../hooks/mounted'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
 
 export const Tray = forwardRef(
-  ({ isOpen, onClose, content, children, ...props }: TrayProps, ref: any) => {
-    const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
+  ({ content, children, ...props }: TrayProps, ref: any) => {
+    const dialogCtxt = useDialogContext()
+    const [innerIsOpen, setInnerIsOpen] = useState(dialogCtxt.isOpen)
 
     useEffect(() => {
-      if (isOpen) setInnerIsOpen(true)
-    }, [isOpen])
+      if (dialogCtxt.isOpen) setInnerIsOpen(true)
+    }, [dialogCtxt.isOpen])
 
     return (
-      <Dialog isOpen={innerIsOpen} onClose={onClose} overlay {...props}>
+      <Dialog isOpen={innerIsOpen} overlay {...props}>
         <TrayContent
           ref={ref}
-          isOpen={isOpen}
-          onRest={() => !isOpen && setInnerIsOpen(false)}
+          onRest={() => !dialogCtxt.isOpen && setInnerIsOpen(false)}
           {...content}
         >
           {children}
@@ -40,7 +45,6 @@ export const Tray = forwardRef(
 
 export interface TrayContentProps extends DialogContentProps {
   header?: ReactNode
-  isOpen?: boolean
   isFullscreen?: boolean
   onRest?: () => void
   onScrolledToBottom?: () => void
@@ -49,7 +53,6 @@ export interface TrayContentProps extends DialogContentProps {
 const TrayContent = forwardRef(
   (
     {
-      isOpen = false,
       isFullscreen = false,
       onRest,
       header,
@@ -59,6 +62,7 @@ const TrayContent = forwardRef(
     }: TrayContentProps,
     ref,
   ) => {
+    const dialogCtxt = useDialogContext()
     const hasMounted = useMounted()
     const viewportHeight = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
@@ -69,7 +73,7 @@ const TrayContent = forwardRef(
     }, [isFullscreen, contentHeight])
     const springStyle = useSpring({
       height:
-        hasMounted && isOpen
+        hasMounted && dialogCtxt.isOpen
           ? isFullscreen
             ? viewportHeight
             : Math.min(contentHeight, viewportHeight)
@@ -81,10 +85,10 @@ const TrayContent = forwardRef(
     })
 
     useEffect(() => {
-      if (!isOpen) return
+      if (!dialogCtxt.isOpen) return
       window.addEventListener('resize', measureTray)
       return () => window.removeEventListener('resize', measureTray)
-    }, [isOpen, measureTray])
+    }, [dialogCtxt.isOpen, measureTray])
 
     const bottomRef = useRef<any>()
     useScrolledToBottom(bottomRef, onScrolledToBottom)
@@ -118,16 +122,15 @@ const StyledDialogContent = styled(DialogContent)`
   border: 1px solid blue;
 `
 
-interface SubtrayProps extends DialogContentProps {
-  isOpen?: boolean
-  onClose?: () => void
-}
+interface SubtrayProps extends DialogContentProps {}
 
 export const Subtray = forwardRef(
-  ({ isOpen, children, ...props }: SubtrayProps, ref: any) => {
+  ({ children, ...props }: SubtrayProps, ref: any) => {
+    const dialogCtxt = useDialogContext()
+
     return (
       <Transition
-        items={isOpen}
+        items={dialogCtxt.isOpen}
         from={{ translateX: '100vw', opacity: 1 }}
         enter={{ translateX: '0px', opacity: 1 }}
         leave={{ translateX: '100vw', opacity: 0 }}
@@ -152,7 +155,7 @@ export const Subtray = forwardRef(
                 ...style,
               }}
             >
-              <button onClick={props.onClose}>close</button>
+              <button onClick={dialogCtxt.onClose}>close</button>
               {children}
             </DialogContent>
           )

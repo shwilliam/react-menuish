@@ -31,6 +31,7 @@ import { usePrevious } from '../hooks/previous'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
+import { DialogTrigger } from './dialog'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -792,51 +793,59 @@ export const SubList = forwardRef(
 
     if (isMobile)
       return (
-        <>
-          {trigger({
-            ref: null,
-            measureRef: null,
-            id,
-            listIdx,
-            onClick: openSubList,
-          })}
-          <Subtray
-            isOpen={isOpen}
-            onClose={() => closeLevel(thisLevel)}
-            {...props}
-          >
+        <DialogTrigger
+          isOpen={isOpen}
+          onClose={() => closeLevel(thisLevel)}
+          placement="right"
+          trigger={({ ref }) =>
+            trigger({
+              ref,
+              measureRef: null,
+              id,
+              listIdx,
+              onClick: openSubList,
+            })
+          }
+        >
+          <Subtray {...props}>
             <ListBoxBase level={thisLevel} ref={ref} state={state}>
               {children}
             </ListBoxBase>
           </Subtray>
-        </>
+        </DialogTrigger>
       )
 
     return (
-      <Popout
+      <DialogTrigger
         isOpen={isOpen}
         onClose={() => closeLevel(thisLevel)}
-        trigger={(props) =>
+        placement="right"
+        trigger={({ ref }) =>
           trigger({
-            ...props,
+            ref,
             id: innerId,
             listIdx,
-            onClick: openSubList,
+            onClick: () => {
+              openSubList()
+              return false
+            },
             triggeredOnHover: true,
           })
         }
-        placement="right"
-        content={{
-          initialFocusRef: focusTrapRef,
-          noFocusLock: thisLevel > 0,
-        }}
-        dialog={{ isFocusTakeoverDisabled: true }}
-        {...props}
       >
-        <ListBoxBase level={thisLevel} ref={ref} state={state}>
-          {children}
-        </ListBoxBase>
-      </Popout>
+        <Popout
+          content={{
+            initialFocusRef: focusTrapRef,
+            noFocusLock: thisLevel > 0,
+          }}
+          dialog={{ isFocusTakeoverDisabled: true }}
+          {...props}
+        >
+          <ListBoxBase level={thisLevel} ref={ref} state={state}>
+            {children}
+          </ListBoxBase>
+        </Popout>
+      </DialogTrigger>
     )
   },
 )
