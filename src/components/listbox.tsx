@@ -213,10 +213,14 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       return
     }
 
-    if (matchingStickyEl) matchingStickyEl.ref.current?.focus()
+    if (matchingStickyEl) {
+      matchingStickyEl.ref.current?.focus()
+    }
     // // else if (isMobile) return
     // // else if (noFocusTrap) stickyTriggerRef.current.focus?.()
-    else focusTrapRef.current?.focus?.()
+    else {
+      focusTrapRef.current?.focus?.()
+    }
   }, [
     focus,
     //  noFocusTrap,
@@ -711,6 +715,7 @@ export const FocusableItem = forwardRef(
         {...props}
       >
         {children({
+          // ref,
           focusableRef,
           handleKeyDown,
         })}
@@ -825,6 +830,7 @@ export const SubList = forwardRef(
           initialFocusRef: focusTrapRef,
           noFocusLock: thisLevel > 0,
         }}
+        dialog={{ isFocusTakeoverDisabled: true }}
         {...props}
       >
         <ListBoxBase level={thisLevel} ref={ref} state={state}>

@@ -5,6 +5,7 @@ import {
   MutableRefObject,
   useMemo,
   ComponentPropsWithoutRef,
+  useRef,
 } from 'react'
 import {
   useFloating,
@@ -83,9 +84,11 @@ export const Popout = ({
   maxHeight,
   width,
   content,
+  dialog,
   children,
   ...props
 }: PopoutProps) => {
+  const triggerRef = useRef<any>()
   const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
   const [measureRef, { width: measureWidth }] = useMeasure()
   const { x, y, floating, strategy, refs, update } = useFloating({
@@ -125,8 +128,14 @@ export const Popout = ({
 
   return (
     <>
-      {trigger({ ref: stableTriggerRef, ...props })}
-      <Dialog isOpen={isOpen} isScrollDisabled={false} onClose={onClose}>
+      {trigger({ ref: stableTriggerRef, ...props }, triggerRef)}
+      <Dialog
+        isOpen={isOpen}
+        isScrollDisabled={false}
+        onClose={onClose}
+        triggerRef={triggerRef}
+        {...dialog}
+      >
         <DialogContent
           ref={floating}
           style={{

@@ -24,6 +24,7 @@ import { Portal } from './portal'
 import { Overlay } from './overlay'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
+import { useMounted } from '../hooks/mounted'
 
 // require either aria-label or aria-labelledby to be provided
 
@@ -55,14 +56,22 @@ export const DialogContent = forwardRef(
       () => mergeRefs(ref, innerRef),
       [ref, innerRef],
     )
-    const { isActiveFocusBoundary } = useFocusTakeoverContext()
+    const focusTakeoverCtxt = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
-      if (initialFocusRef?.current) initialFocusRef.current.focus?.()
+      if (initialFocusRef?.current) {
+        initialFocusRef.current.focus?.()
+        console.log('focus dialog initialFocusRef')
+      }
     }, [initialFocusRef])
     const isModal = !noFocusLock && isolateDialog
 
     useOnClickOutside(innerRef, () => {
-      if (closeOnInteractOutside && isActiveFocusBoundary(dialogId)) onClose?.()
+      if (
+        closeOnInteractOutside &&
+        (focusTakeoverCtxt.getIsTopmost(dialogId) ||
+          focusTakeoverCtxt.getIsDeactivated(dialogId))
+      )
+        onClose?.()
     })
 
     useEffect(() => {
@@ -114,8 +123,10 @@ export const Dialog = ({
   isScrollDisabled = true,
   isFocusTakeoverDisabled = false,
   overlay = false,
+  triggerRef,
   children,
 }: DialogProps) => {
+  const parentDialogCtxt = useDialogContext()
   const dialogId = useId(id)
   const ctxt = useMemo(
     () => ({ dialogId, onClose, overlay }),
@@ -133,7 +144,16 @@ export const Dialog = ({
         >
           <FocusTakeoverBoundary
             id={dialogId}
+            parentId={parentDialogCtxt.dialogId}
             isDisabled={isFocusTakeoverDisabled}
+            onClose={() => {
+              onClose?.()
+            }}
+            onActivate={() => console.log('activate: ', dialogId)}
+            onRestore={() => {
+              console.log('deactivate: ', dialogId)
+              requestAnimationFrame(() => triggerRef?.current?.focus?.())
+            }}
           >
             <OverlayEl>{children}</OverlayEl>
           </FocusTakeoverBoundary>
@@ -170,7 +190,6 @@ const createAriaHider = (newRoot: Element, wrappers: number = 0) => {
   const prevAriaHiddenVals: [Element, any][] = _.compact(
     Array.from(document.querySelectorAll('body > *')).map((el) => {
       const portal = getParentNode(newRoot, wrappers)
-      console.log('portal: ', portal)
       if (el === portal) return null
 
       const prevAriaHiddenVal = el.getAttribute('aria-hidden')

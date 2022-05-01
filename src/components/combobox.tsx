@@ -88,7 +88,6 @@ export const Combobox = forwardRef(
       }
 
       if (handled) {
-        console.log('prevent default')
         e.preventDefault()
         e.stopPropagation()
       }
