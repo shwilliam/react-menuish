@@ -12,6 +12,7 @@ import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
 import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
+import { DialogTrigger } from './dialog'
 
 interface ComboboxProps {
   value?: string
@@ -88,7 +89,6 @@ export const Combobox = forwardRef(
       }
 
       if (handled) {
-        console.log('prevent default')
         e.preventDefault()
         e.stopPropagation()
       }
@@ -119,12 +119,17 @@ export const Combobox = forwardRef(
 
     if (isMobile)
       return (
-        <>
-          <button onClick={() => setFocus([0])}>{value || 'open'}</button>
+        <DialogTrigger
+          isOpen={isOpen}
+          onOpen={focusInputTrigger}
+          onClose={() => setFocus([])}
+          trigger={({ ref }) => (
+            <button ref={ref} onClick={() => setFocus([0])}>
+              {value || 'open'}
+            </button>
+          )}
+        >
           <Tray
-            isOpen={isOpen}
-            onOpen={focusInputTrigger}
-            onClose={() => setFocus([])}
             content={{
               header: (
                 <input
@@ -139,16 +144,14 @@ export const Combobox = forwardRef(
           >
             {listbox}
           </Tray>
-        </>
+        </DialogTrigger>
       )
 
     return (
-      <Popout
+      <DialogTrigger
         isOpen={isOpen}
         onClose={() => setFocus([])}
-        content={{ isolateDialog: false }}
-        width="trigger"
-        trigger={({ ref, ...props }) => (
+        trigger={({ ref, open }) => (
           <span ref={ref}>
             <input
               ref={inputRef}
@@ -162,7 +165,6 @@ export const Combobox = forwardRef(
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
-              {...props}
             />
             <button
               aria-haspopup="listbox"
@@ -177,8 +179,10 @@ export const Combobox = forwardRef(
           </span>
         )}
       >
-        {listbox}
-      </Popout>
+        <Popout content={{ isolateDialog: false }} width="trigger">
+          {listbox}
+        </Popout>
+      </DialogTrigger>
     )
   },
 )

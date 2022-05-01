@@ -11,13 +11,12 @@ import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useSyncedRef } from '../hooks/synced-ref'
 import { usePrevious } from '../hooks/previous'
+import { useDialogContext } from './dialog'
 
 export interface MenuProps
   extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
   value?: ReactNode
   onChange?: ChangeHandler
-  onOpen?: () => void
-  onClose?: () => void
   activeOptionId?: string
   onLoadMore?: () => void
   focusResetTrigger?: any
@@ -29,8 +28,6 @@ export const Menu = forwardRef(
     {
       value,
       onChange,
-      onOpen,
-      onClose,
       activeOptionId,
       onLoadMore,
       focusResetTrigger,
@@ -38,6 +35,7 @@ export const Menu = forwardRef(
     }: MenuProps,
     ref: ForwardedRef<any>,
   ) => {
+    const dialogCtxt = useDialogContext()
     const { state } = useListBoxState({
       onChange,
       activeOptionId,
@@ -60,36 +58,26 @@ export const Menu = forwardRef(
       />
     )
 
-    const onCloseRef = useSyncedRef(onClose)
+    const onCloseRef = useSyncedRef(dialogCtxt.onClose)
     useEffect(() => {
-      if (wasOpen && !isOpen) onCloseRef.current?.()
-    }, [isOpen, wasOpen])
+      if (wasOpen && !isOpen) {
+        onCloseRef.current?.()
+        dialogCtxt.onClose?.()
+      }
+    }, [isOpen, wasOpen, dialogCtxt.onClose])
+
+    useEffect(() => {
+      if (!isOpen && dialogCtxt.isOpen) {
+        open()
+        // dialogCtxt.onOpen?.()
+      }
+    }, [isOpen, dialogCtxt.isOpen])
 
     if (isMobile)
-      return (
-        <>
-          <button onClick={open}>{value || 'open'}</button>
-          <Tray
-            isOpen={isOpen}
-            onClose={close}
-            content={{ onScrolledToBottom: onLoadMore }}
-          >
-            {listbox}
-          </Tray>
-        </>
-      )
+      return <Tray content={{ onScrolledToBottom: onLoadMore }}>{listbox}</Tray>
 
     return (
-      <Popout
-        isOpen={isOpen}
-        onClose={close}
-        onOpen={onOpen}
-        trigger={(props) => (
-          <button {...props} onClick={open} onKeyDown={handleKeyDown}>
-            {value || 'open'}
-          </button>
-        )}
-      >
+      <Popout>
         <span
           aria-hidden
           tabIndex={0}

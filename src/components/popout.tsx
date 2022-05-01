@@ -5,6 +5,7 @@ import {
   MutableRefObject,
   useMemo,
   ComponentPropsWithoutRef,
+  useRef,
 } from 'react'
 import {
   useFloating,
@@ -24,6 +25,7 @@ import {
   DialogContent,
   DialogContentProps,
   DialogProps,
+  useDialogContext,
 } from './dialog'
 import { TrayContentProps } from './tray'
 import { ModalContentProps } from './modal'
@@ -39,9 +41,7 @@ interface DialogBaseProps extends DialogProps {
 }
 
 interface PopoutOptions {
-  trigger: (triggerContext: PopoutTriggerContext) => ReactNode
   content?: Omit<DialogContentProps, 'children'>
-  placement?: Placement
   maxHeight?: number
   width?: 'trigger' | 'auto'
 }
@@ -75,48 +75,27 @@ export type DialogVariantProps = AnyDialogVariantProps & {
 }
 
 export const Popout = ({
-  isOpen = false,
   onOpen,
-  onClose,
-  trigger,
-  placement = 'bottom',
   maxHeight,
   width,
   content,
+  dialog,
   children,
   ...props
 }: PopoutProps) => {
-  const [sizeData, setSizeData] = useState<Dimensions & ElementRects>()
-  const [measureRef, { width: measureWidth }] = useMeasure()
-  const { x, y, floating, strategy, refs, update } = useFloating({
-    placement,
-    middleware: [
-      offset(2),
-      shift({
-        limiter: limitShift({
-          offset: ({ reference, floating, placement }) => ({
-            mainAxis: reference.height,
-          }),
-        }),
-      }),
-      flip(),
-      size({ apply: (data) => setSizeData(data) }),
-    ],
-  })
-  const stableTriggerRef = useMemo(
-    () => mergeRefs(refs.reference, measureRef),
-    [refs.reference, measureRef],
-  )
+  const { position, size, isOpen } = useDialogContext()
+  const { x, y, floating, strategy, refs, update } = position || {}
   const popoutMaxHeight =
-    sizeData?.height || maxHeight
-      ? Math.min(sizeData?.height || Infinity, maxHeight || Infinity)
+    size?.height || maxHeight
+      ? Math.min(size?.height || Infinity, maxHeight || Infinity)
       : 0
 
-  const floatingEl = refs.floating.current
+  const floatingEl = refs?.floating.current
   useEffect(() => {
-    if (!refs.reference.current || !refs.floating.current) return
+    if (!refs || !update || !refs.reference.current || !refs.floating.current)
+      return
     return autoUpdate(refs.reference.current, refs.floating.current, update)
-  }, [refs.reference, refs.floating, floatingEl, update, isOpen])
+  }, [refs?.reference, refs?.floating, floatingEl, update, isOpen])
 
   const onOpenRef = useSyncedRef(onOpen)
   useEffect(() => {
@@ -124,27 +103,24 @@ export const Popout = ({
   }, [isOpen])
 
   return (
-    <>
-      {trigger({ ref: stableTriggerRef, ...props })}
-      <Dialog isOpen={isOpen} isScrollDisabled={false} onClose={onClose}>
-        <DialogContent
-          ref={floating}
-          style={{
-            position: strategy,
-            top: y ?? '',
-            left: x ?? '',
-            maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
-            overflow: 'auto',
-            border: '1px solid red',
-            ...(width === 'trigger'
-              ? { width: measureWidth ? `${measureWidth}px` : '' }
-              : {}),
-          }}
-          {...content}
-        >
-          {children}
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog isScrollDisabled={false} {...dialog}>
+      <DialogContent
+        ref={floating}
+        style={{
+          position: strategy,
+          top: y ?? '',
+          left: x ?? '',
+          maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
+          overflow: 'auto',
+          border: '1px solid red',
+          ...(width === 'trigger'
+            ? { width: size?.triggerWidth ? `${size?.triggerWidth}px` : '' }
+            : {}),
+        }}
+        {...content}
+      >
+        {children}
+      </DialogContent>
+    </Dialog>
   )
 }
