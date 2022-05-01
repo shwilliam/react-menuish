@@ -1,5 +1,5 @@
-import { ForwardedRef, forwardRef, ReactNode, useEffect } from 'react'
-import { Popout, PopoutBaseProps } from './popout'
+import { ForwardedRef, forwardRef, ReactNode, useEffect, memo } from 'react'
+import { Popout } from './popout'
 import {
   ChangeHandler,
   getListBoxKeyboardEventHandler,
@@ -7,20 +7,20 @@ import {
   ListBoxBaseProps,
   useListBoxState,
 } from './listbox'
-import { Tray, TrayBaseProps } from './tray'
+import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useSyncedRef } from '../hooks/synced-ref'
 import { usePrevious } from '../hooks/previous'
-import { DialogVariantProps, useDialogContext } from './dialog'
+import { createDialogVariant, useDialogContext } from './dialog'
 
-interface MenuBaseProps
+export interface MenuProps
   extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
   value?: ReactNode
   onChange?: ChangeHandler
   activeOptionId?: string
   onLoadMore?: () => void
   focusResetTrigger?: any
-  children: ReactNode
+  children: ReactNode[]
 }
 
 const MenuBase = forwardRef(
@@ -32,9 +32,10 @@ const MenuBase = forwardRef(
       onLoadMore,
       focusResetTrigger,
       ...props
-    }: MenuBaseProps,
+    }: MenuProps,
     ref: ForwardedRef<any>,
   ) => {
+    console.log(props)
     const dialogCtxt = useDialogContext()
     const { state } = useListBoxState({
       onChange,
@@ -51,7 +52,6 @@ const MenuBase = forwardRef(
     const isMobile = useIsMobile()
     const listbox = (
       <ListBoxBase
-        ref={ref}
         state={state}
         onScrolledToBottom={onLoadMore}
         role="menu"
@@ -63,9 +63,9 @@ const MenuBase = forwardRef(
     useEffect(() => {
       if (wasOpen && !isOpen) {
         onCloseRef.current?.()
-        // close()
+        dialogCtxt.onClose?.()
       }
-    }, [isOpen, wasOpen])
+    }, [isOpen, wasOpen, dialogCtxt.onClose])
 
     useEffect(() => {
       if (!isOpen && dialogCtxt.isOpen) {
@@ -74,9 +74,17 @@ const MenuBase = forwardRef(
       }
     }, [isOpen, dialogCtxt.isOpen])
 
-    if (isMobile) return listbox
+    if (isMobile)
+      return <Tray content={{ onScrolledToBottom: onLoadMore }}>{listbox}</Tray>
+
     return (
-      <>
+      <Popout
+      // trigger={(props) => (
+      //   <button {...props} onClick={open} onKeyDown={handleKeyDown}>
+      //     {value || 'open'}
+      //   </button>
+      // )}
+      >
         <span
           aria-hidden
           tabIndex={0}
@@ -84,35 +92,9 @@ const MenuBase = forwardRef(
           onKeyDown={handleKeyDown}
         />
         {listbox}
-      </>
-    )
-  },
-)
-
-export interface MenuProps extends MenuBaseProps, DialogVariantProps {
-  options?: PopoutBaseProps
-  mobileOptions?: TrayBaseProps
-}
-
-export const Menu = forwardRef(
-  ({ options, mobileOptions, children, ...props }: MenuProps, ref) => {
-    const isMobile = useIsMobile()
-
-    if (isMobile)
-      return (
-        <Tray {...props} options={mobileOptions}>
-          <MenuBase ref={ref} {...props}>
-            {children}
-          </MenuBase>
-        </Tray>
-      )
-
-    return (
-      <Popout {...props} options={options}>
-        <MenuBase ref={ref} {...props}>
-          {children}
-        </MenuBase>
       </Popout>
     )
   },
 )
+
+export const Menu = memo(createDialogVariant(MenuBase))

@@ -39,8 +39,8 @@ export default {
 
 const defaultMenuProps: MenuProps = {
   onChange: action('onChange'),
-  onOpen: action('onOpen'),
-  onClose: action('onClose'),
+  // onOpen: action('onOpen'),
+  // onClose: action('onClose'),
   children: fruits.map((fruit) => <Item>{fruit}</Item>),
 }
 
@@ -63,7 +63,7 @@ export const WithExternalStateTrigger = () => {
     <Menu
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      trigger={({ ref }) => (
+      trigger={({ ref, open }) => (
         <button ref={ref} onClick={() => setIsOpen(true)}>
           open
         </button>
@@ -87,10 +87,10 @@ export const Context = () => {
     >
       right click me
       <Menu
-        {...defaultMenuProps}
         isOpen={!!position}
         onClose={() => setPosition(undefined)}
         position={position}
+        {...defaultMenuProps}
       />
     </div>
   )
@@ -98,41 +98,33 @@ export const Context = () => {
 
 export const DisabledChildren = () => {
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
     >
-      {fruits.map((fruit) => (
-        <Item isDisabled>{fruit}</Item>
-      ))}
-    </Menu>
+      <Menu {...defaultMenuProps}>
+        {fruits.map((fruit) => (
+          <Item isDisabled>{fruit}</Item>
+        ))}
+      </Menu>
+    </DialogTrigger>
   )
 }
 
 export const WithTooltips = () => {
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
     >
-      {fruits.map((fruit) => (
-        <Tooltip
-          popout={{ placement: 'right' }}
-          trigger={(props) => <Item {...props}>{fruit}</Item>}
-        >
-          more info about {fruit}
-        </Tooltip>
-      ))}
-      <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
-        {moreFruits.map((fruit) => (
+      <Menu {...defaultMenuProps}>
+        {fruits.map((fruit) => (
           <Tooltip
             popout={{ placement: 'right' }}
             trigger={(props) => <Item {...props}>{fruit}</Item>}
@@ -140,8 +132,18 @@ export const WithTooltips = () => {
             more info about {fruit}
           </Tooltip>
         ))}
-      </SubList>
-    </Menu>
+        <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
+          {moreFruits.map((fruit) => (
+            <Tooltip
+              popout={{ placement: 'right' }}
+              trigger={(props) => <Item {...props}>{fruit}</Item>}
+            >
+              more info about {fruit}
+            </Tooltip>
+          ))}
+        </SubList>
+      </Menu>
+    </DialogTrigger>
   )
 }
 
@@ -149,41 +151,46 @@ export const Async = () => {
   const { pokemon, more, loading } = usePokemon()
 
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      onOpen={() => {
-        if (!pokemon.length) more()
-      }}
-      onChange={action('onChange')}
-      onLoadMore={more}
     >
-      {pokemon.map((pokemon) => (
-        <Item>{pokemon.name}</Item>
-      ))}
-      {loading ? <Item isDisabled>loading</Item> : null}
-    </Menu>
+      <Menu
+        onOpen={() => {
+          if (!pokemon.length) more()
+        }}
+        onChange={action('onChange')}
+        onLoadMore={more}
+      >
+        {pokemon.map((pokemon) => (
+          <Item>{pokemon.name}</Item>
+        ))}
+        {loading ? <Item isDisabled>loading</Item> : null}
+      </Menu>
+    </DialogTrigger>
   )
 }
 
 export const KeepOpen = () => {
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      onChange={(...args) => {
-        action('onChange')(...args)
-        return false
-      }}
-    />
+    >
+      <Menu
+        {...defaultMenuProps}
+        onChange={(...args) => {
+          action('onChange')(...args)
+          return false
+        }}
+      />
+    </DialogTrigger>
   )
 }
 
@@ -210,117 +217,125 @@ export const KeepOpen = () => {
 export const Grouped = () => {
   const [value, setValue] = useState<number | string | null>(null)
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      value={value}
-      onChange={(...args) => {
-        setValue(args[0])
-        action('onChange')(...args)
-      }}
     >
-      <Group label={<div>numbers</div>}>
-        <Item value={1}>one</Item>
-        <Item value={2} isDisabled>
-          two (disabled)
-        </Item>
-        <Item value={3}>three</Item>
-        <Item value={4}>four</Item>
-      </Group>
-      <Group label={<div>letters</div>}>
-        <Item>a</Item>
-        <Item>b</Item>
-        <Item>c</Item>
-        <Item>d</Item>
-      </Group>
-    </Menu>
+      <Menu
+        {...defaultMenuProps}
+        value={value}
+        onChange={(...args) => {
+          setValue(args[0])
+          action('onChange')(...args)
+        }}
+      >
+        <Group label={<div>numbers</div>}>
+          <Item value={1}>one</Item>
+          <Item value={2} isDisabled>
+            two (disabled)
+          </Item>
+          <Item value={3}>three</Item>
+          <Item value={4}>four</Item>
+        </Group>
+        <Group label={<div>letters</div>}>
+          <Item>a</Item>
+          <Item>b</Item>
+          <Item>c</Item>
+          <Item>d</Item>
+        </Group>
+      </Menu>
+    </DialogTrigger>
   )
 }
 
 export const Multilevel = () => {
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      onChange={action('onChange')}
     >
-      {fruits.map((fruit) => (
-        <Item>{fruit}</Item>
-      ))}
-      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
-        <Item>a</Item>
-        <Item>b</Item>
-        <Item>c</Item>
-        <Item>d</Item>
-      </SubList>
-      <SubList trigger={(props) => <Item {...props}>more letters</Item>}>
-        <Item>e</Item>
-        <Item>f</Item>
-        <Item>g</Item>
-        <Item>h</Item>
-        <SubList trigger={(props) => <Item {...props}>even more letters</Item>}>
-          <Item>i</Item>
-          <Item>j</Item>
-          <Item>k</Item>
-          <Item>l</Item>
+      <Menu {...defaultMenuProps} onChange={action('onChange')}>
+        {fruits.map((fruit) => (
+          <Item>{fruit}</Item>
+        ))}
+        <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+          <Item>a</Item>
+          <Item>b</Item>
+          <Item>c</Item>
+          <Item>d</Item>
         </SubList>
-      </SubList>
-    </Menu>
+        <SubList trigger={(props) => <Item {...props}>more letters</Item>}>
+          <Item>e</Item>
+          <Item>f</Item>
+          <Item>g</Item>
+          <Item>h</Item>
+          <SubList
+            trigger={(props) => <Item {...props}>even more letters</Item>}
+          >
+            <Item>i</Item>
+            <Item>j</Item>
+            <Item>k</Item>
+            <Item>l</Item>
+          </SubList>
+        </SubList>
+      </Menu>
+    </DialogTrigger>
   )
 }
 
 export const WithFilter = () => {
   const [filter, setFilter] = useState('')
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      style={{ width: '200px' }}
-      onChange={action('onChange')}
-      focusResetTrigger={filter}
     >
-      <FocusableItem isVirtuallyFocusable={false}>
-        {({ focusableRef, handleKeyDown }) => (
-          <input
-            ref={focusableRef}
-            value={filter}
-            onChange={(...args) => {
-              setFilter(args[0].target.value)
-              action('onChange (input)')(...args)
-            }}
-            onKeyDown={handleKeyDown}
-          />
-        )}
-      </FocusableItem>
-      {fruits
-        .filter((fruit) => fruit.includes(filter.toLowerCase()))
-        .map((fruit) => (
-          <Item>{fruit} alkjsdlkfjsdlkj sdlkjf sdlkj sdfkljlsdfjk</Item>
-        ))}
-      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
-        <Item>a</Item>
-        <Item>b</Item>
-        <Item>c</Item>
-        <Item>d</Item>
-      </SubList>
-      {moreFruits
-        .filter((fruit) => fruit.includes(filter.toLowerCase()))
-        .map((fruit) => (
-          <Item>{fruit}</Item>
-        ))}
-    </Menu>
+      <Menu
+        {...defaultMenuProps}
+        style={{ width: '200px' }}
+        onChange={action('onChange')}
+        focusResetTrigger={filter}
+      >
+        <FocusableItem isVirtuallyFocusable={false}>
+          {({ focusableRef, handleKeyDown }) => (
+            <input
+              ref={focusableRef}
+              value={filter}
+              onChange={(...args) => {
+                setFilter(args[0].target.value)
+                action('onChange (input)')(...args)
+              }}
+              onKeyDown={handleKeyDown}
+            />
+          )}
+        </FocusableItem>
+        {fruits
+          .filter((fruit) => fruit.includes(filter.toLowerCase()))
+          .map((fruit) => (
+            <Item>{fruit} alkjsdlkfjsdlkj sdlkjf sdlkj sdfkljlsdfjk</Item>
+          ))}
+        <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+          <Item>a</Item>
+          <Item>b</Item>
+          <Item>c</Item>
+          <Item>d</Item>
+        </SubList>
+        {moreFruits
+          .filter((fruit) => fruit.includes(filter.toLowerCase()))
+          .map((fruit) => (
+            <Item>{fruit}</Item>
+          ))}
+      </Menu>
+    </DialogTrigger>
   )
 }
 
@@ -331,60 +346,60 @@ export const WithMultipleFilter = () => {
     fruit.includes(filter2.toLowerCase()),
   )
   return (
-    <Menu
-      {...defaultMenuProps}
+    <DialogTrigger
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
         </button>
       )}
-      onChange={action('onChange')}
     >
-      <Item>fixed fruit 1</Item>
-      <Item>fixed fruit 2</Item>
-      <FocusableItem isVirtuallyFocusable={false}>
-        {({ focusableRef, handleKeyDown }) => (
-          <input
-            ref={focusableRef}
-            value={filter}
-            onChange={(...args) => {
-              setFilter(args[0].target.value)
-              action('onChange (input)')(...args)
-            }}
-            onKeyDown={handleKeyDown}
-          />
-        )}
-      </FocusableItem>
-      {fruits
-        .filter((fruit) => fruit.includes(filter.toLowerCase()))
-        .map((fruit) => (
-          <Item>{fruit}</Item>
-        ))}
-      <SubList trigger={(props) => <Item {...props}>all fruits</Item>}>
-        {fruits.map((fruit) => (
-          <Item>{fruit}</Item>
-        ))}
-      </SubList>
-      <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+      <Menu {...defaultMenuProps} onChange={action('onChange')}>
         <Item>fixed fruit 1</Item>
         <Item>fixed fruit 2</Item>
         <FocusableItem isVirtuallyFocusable={false}>
           {({ focusableRef, handleKeyDown }) => (
             <input
               ref={focusableRef}
-              value={filter2}
-              onChange={(e) => setFilter2(e.target.value)}
+              value={filter}
+              onChange={(...args) => {
+                setFilter(args[0].target.value)
+                action('onChange (input)')(...args)
+              }}
               onKeyDown={handleKeyDown}
             />
           )}
         </FocusableItem>
-        {filteredFruits2.length ? (
-          filteredFruits2.map((fruit) => <Item>{fruit}</Item>)
-        ) : (
-          <Item>no results</Item>
-        )}
-      </SubList>
-    </Menu>
+        {fruits
+          .filter((fruit) => fruit.includes(filter.toLowerCase()))
+          .map((fruit) => (
+            <Item>{fruit}</Item>
+          ))}
+        <SubList trigger={(props) => <Item {...props}>all fruits</Item>}>
+          {fruits.map((fruit) => (
+            <Item>{fruit}</Item>
+          ))}
+        </SubList>
+        <SubList trigger={(props) => <Item {...props}>fruits again</Item>}>
+          <Item>fixed fruit 1</Item>
+          <Item>fixed fruit 2</Item>
+          <FocusableItem isVirtuallyFocusable={false}>
+            {({ focusableRef, handleKeyDown }) => (
+              <input
+                ref={focusableRef}
+                value={filter2}
+                onChange={(e) => setFilter2(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            )}
+          </FocusableItem>
+          {filteredFruits2.length ? (
+            filteredFruits2.map((fruit) => <Item>{fruit}</Item>)
+          ) : (
+            <Item>no results</Item>
+          )}
+        </SubList>
+      </Menu>
+    </DialogTrigger>
   )
 }
 

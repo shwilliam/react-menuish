@@ -13,6 +13,10 @@ import {
   ComponentPropsWithoutRef,
   useLayoutEffect,
   MutableRefObject,
+  Component,
+  FunctionComponent,
+  ComponentProps,
+  ComponentType,
 } from 'react'
 import _ from 'lodash'
 import {
@@ -41,53 +45,62 @@ import { Portal } from './portal'
 import { Overlay } from './overlay'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
-import { Require } from '../types'
+import { PopoutBase, PopoutProps } from './popout'
 
 // require either aria-label or aria-labelledby to be provided
 
 export interface DialogContentProps extends ComponentPropsWithoutRef<'div'> {
+  noFocusLock?: boolean
+  isolateDialog?: boolean
+  closeOnInteractOutside?: boolean
+  initialFocusRef?: any
   style?: CSSProperties
   children: ReactNode // expected to have focusable child
 }
 
 export const DialogContent = forwardRef(
-  ({ children, ...props }: DialogContentProps, ref: any) => {
-    const dialogCtxt = useDialogContext()
+  (
+    {
+      noFocusLock = false,
+      isolateDialog = true,
+      closeOnInteractOutside = true,
+      initialFocusRef,
+      children,
+      ...props
+    }: DialogContentProps,
+    ref: any,
+  ) => {
     const innerRef = useRef<any>()
     const wrapperRef = useRef<any>()
+    const { dialogId, onClose, overlay } = useDialogContext()
     const stableContentRef = useMemo(
       () => mergeRefs(ref, innerRef),
       [ref, innerRef],
     )
     const { isActiveFocusBoundary } = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
-      if (dialogCtxt.initialFocusRef?.current)
-        dialogCtxt.initialFocusRef.current.focus?.()
-    }, [dialogCtxt.initialFocusRef])
-    const isModal = !dialogCtxt.noFocusLock && dialogCtxt.isolateDialog
+      if (initialFocusRef?.current) initialFocusRef.current.focus?.()
+    }, [initialFocusRef])
+    const isModal = !noFocusLock && isolateDialog
 
     useOnClickOutside(innerRef, () => {
-      if (
-        dialogCtxt.closeOnInteractOutside &&
-        isActiveFocusBoundary(dialogCtxt.dialogId)
-      )
-        dialogCtxt.onClose?.()
+      if (closeOnInteractOutside && isActiveFocusBoundary(dialogId)) onClose?.()
     })
 
     useEffect(() => {
-      if (!dialogCtxt.isolateDialog) return
+      if (!isolateDialog) return
       return wrapperRef.current
         ? createAriaHider(
             wrapperRef.current,
-            dialogCtxt.overlay ? 2 : 1, // number of wrappers between wrapper el and portal
+            overlay ? 2 : 1, // number of wrappers between wrapper el and portal
           )
         : () => {}
-    }, [dialogCtxt.isolateDialog, dialogCtxt.overlay])
+    }, [isolateDialog, overlay])
 
     return (
       <FocusLock
         ref={wrapperRef}
-        disabled={dialogCtxt.noFocusLock}
+        disabled={noFocusLock}
         onActivation={activateFocusLock}
         returnFocus
         autoFocus
@@ -106,24 +119,34 @@ export const DialogContent = forwardRef(
 
 export interface DialogProps {
   isOpen?: boolean
+  allowPinchZoom?: boolean
+  isScrollDisabled?: boolean
+  isFocusTakeoverDisabled?: boolean
+  overlay?: boolean
   children: ReactNode
 }
 
-export const Dialog = ({ children, ...props }: DialogProps) => {
+export const Dialog = ({
+  isOpen: externalIsOpen,
+  allowPinchZoom = false,
+  isScrollDisabled = true,
+  isFocusTakeoverDisabled = false,
+  overlay = false,
+  children,
+}: DialogProps) => {
   const dialogCtxt = useDialogContext()
-  const isOpen = _.isUndefined(props.isOpen) ? dialogCtxt.isOpen : props.isOpen
-  const OverlayEl = dialogCtxt.overlay ? Overlay : Fragment
+  const isOpen = _.isUndefined(externalIsOpen)
+    ? dialogCtxt.isOpen
+    : externalIsOpen
+  const OverlayEl = overlay ? Overlay : Fragment
 
   if (!isOpen) return null
   return (
     <Portal>
-      <RemoveScroll
-        allowPinchZoom={dialogCtxt.allowPinchZoom}
-        enabled={dialogCtxt.isScrollDisabled}
-      >
+      <RemoveScroll allowPinchZoom={allowPinchZoom} enabled={isScrollDisabled}>
         <FocusTakeoverBoundary
           id={dialogCtxt.dialogId}
-          isDisabled={dialogCtxt.isFocusTakeoverDisabled}
+          isDisabled={isFocusTakeoverDisabled}
         >
           <OverlayEl>{children}</OverlayEl>
         </FocusTakeoverBoundary>
@@ -141,31 +164,14 @@ interface DialogContext {
   size?: Partial<DialogSize>
   onClose?: () => void
   onOpen?: () => void
-  allowPinchZoom: boolean
-  isScrollDisabled: boolean
-  isFocusTakeoverDisabled: boolean
-  noFocusLock: boolean
-  isolateDialog: boolean
-  closeOnInteractOutside: boolean
-  initialFocusRef?: any
 }
 
 export type DialogSize = (Dimensions & ElementRects) & { triggerWidth?: number }
 
-const defaultDialogVariantOptions = {
-  isOpen: false,
-  overlay: false,
-  allowPinchZoom: false,
-  isScrollDisabled: true,
-  isFocusTakeoverDisabled: false,
-  noFocusLock: false,
-  isolateDialog: true,
-  closeOnInteractOutside: true,
-}
-
 const dialogContext = createContext<DialogContext>({
+  isOpen: false,
   dialogId: '',
-  ...defaultDialogVariantOptions,
+  overlay: false,
 })
 
 export const useDialogContext = () => useContext(dialogContext)
@@ -184,6 +190,7 @@ const createAriaHider = (newRoot: Element, wrappers: number = 0) => {
   const prevAriaHiddenVals: [Element, any][] = _.compact(
     Array.from(document.querySelectorAll('body > *')).map((el) => {
       const portal = getParentNode(newRoot, wrappers)
+      console.log('portal: ', portal)
       if (el === portal) return null
 
       const prevAriaHiddenVal = el.getAttribute('aria-hidden')
@@ -206,56 +213,142 @@ const createAriaHider = (newRoot: Element, wrappers: number = 0) => {
   }
 }
 
-interface DialogTriggerProps extends Require<DialogVariantProps, 'trigger'> {}
+interface DialogVariantTriggerProps {
+  ref: MutableRefObject<any>
+  open: () => void
+  close: () => void
+}
+interface DialogVariantProps {
+  id?: string
+  isOpen?: boolean
+  onOpen?: () => void
+  onClose?: () => void
+  overlay?: boolean
+  trigger?: (props: DialogVariantTriggerProps) => ReactNode
+  placement?: Placement
+  position?: PopoverPosition
+}
+
+const dialogVariantProps = [
+  'id',
+  'isOpen',
+  'onOpen',
+  'onClose',
+  'overlay',
+  'trigger',
+  'placement',
+  'position',
+]
+
+export const pickDialogVariantProps = (o) =>
+  _.pick(o, dialogVariantProps) as DialogVariantProps
+
+export const createDialogVariant =
+  <C,>(Comp: FunctionComponent<C>) =>
+  ({
+    trigger,
+    id,
+    isOpen,
+    onOpen,
+    onClose,
+    overlay,
+    placement,
+    position,
+    ...props
+  }: C & DialogVariantProps) => {
+    const wrapperProps = useMemo(
+      () => ({
+        id,
+        isOpen,
+        onOpen,
+        onClose,
+        overlay,
+      }),
+      [id, isOpen, onOpen, onClose, overlay],
+    )
+
+    if (trigger)
+      return (
+        <DialogTrigger
+          trigger={trigger}
+          placement={placement}
+          {...wrapperProps}
+        >
+          <Comp {...props} />
+        </DialogTrigger>
+      )
+
+    return (
+      <DialogContainer position={position} {...wrapperProps}>
+        <Comp {...props} />
+      </DialogContainer>
+    )
+  }
+
+interface DialogTriggerProps {
+  id?: string
+  isOpen?: boolean
+  onClose?: () => void
+  onOpen?: () => void
+  placement?: Placement
+  trigger: (props: any) => ReactNode // FIXME: type
+  overlay?: boolean
+  children: ReactNode
+}
 
 export const DialogTrigger = ({
+  id,
+  isOpen: externalIsOpen,
+  onClose,
+  onOpen,
   placement,
   trigger,
+  overlay = false,
   children,
-  ...props
 }: DialogTriggerProps) => {
   const [innerIsOpen, setInnerIsOpen] = useState(false)
-  const isOpen = !!(_.isUndefined(props.isOpen) ? innerIsOpen : props.isOpen)
+  const isOpen = !!(_.isUndefined(externalIsOpen)
+    ? innerIsOpen
+    : externalIsOpen)
   const [measureRef, { width: triggerWidth }] = useMeasure()
   const popover = usePopoverPosition({ placement })
   const stableTriggerRef = useMemo(
     () => mergeRefs(popover.position.refs.reference, measureRef),
     [popover.position.refs.reference, measureRef],
   )
-  const innerDialogId = useId(props.dialogId)
+  const dialogId = useId(id)
   const sizeData = useMemo(
     () => ({ ...popover.size, triggerWidth }),
     [popover.size, triggerWidth],
   )
   const close = useCallback(() => {
     setInnerIsOpen(false)
-    props.onClose?.()
-  }, [props.onClose])
+    onClose?.()
+  }, [onClose])
   const open = useCallback(() => {
     setInnerIsOpen(true)
-    props.onOpen?.()
-  }, [props.onOpen])
+    onOpen?.()
+  }, [onOpen])
   const ctxt = useMemo(
     () => ({
-      ...defaultDialogVariantOptions,
-      ...props,
-      dialogId: innerDialogId,
-      isOpen,
+      dialogId,
       onClose: close,
       onOpen: open,
       triggerRef: stableTriggerRef,
       position: popover.position,
       size: sizeData,
+      isOpen,
+      overlay,
     }),
     [
-      innerDialogId,
-      isOpen,
+      dialogId,
       open,
       close,
       stableTriggerRef,
       popover.position,
       sizeData,
-      props,
+      isOpen,
+      overlay,
     ],
   )
 
@@ -265,127 +358,6 @@ export const DialogTrigger = ({
       <dialogContext.Provider value={ctxt}>{children}</dialogContext.Provider>
     </>
   )
-}
-
-interface DialogContainerProps extends DialogVariantProps {}
-
-export const DialogContainer = ({
-  position,
-  children,
-  ...props
-}: DialogContainerProps) => {
-  const [measureRef, { width: triggerWidth }] = useMeasure()
-  const popover = usePopoverPosition()
-  const stableTriggerRef = useMemo(
-    () => mergeRefs(popover.position.refs.reference, measureRef),
-    [popover.position.refs.reference, measureRef],
-  )
-  const innerDialogId = useId(props.dialogId)
-  const sizeData = useMemo(
-    () => ({ ...popover.size, triggerWidth }),
-    [popover.size, triggerWidth],
-  )
-  const ctxt = useMemo(
-    () => ({
-      ...defaultDialogVariantOptions,
-      ...props,
-      dialogId: innerDialogId,
-      triggerRef: stableTriggerRef,
-      position: popover.position,
-      size: sizeData,
-    }),
-    [innerDialogId, stableTriggerRef, popover.position, sizeData, props],
-  )
-
-  useEffect(() => {
-    if (
-      props.isOpen &&
-      popover.position.refs.reference.current &&
-      popover.position.refs.floating.current
-    ) {
-      return autoUpdate(
-        popover.position.refs.reference.current,
-        popover.position.refs.floating.current,
-        popover.position.update,
-      )
-    }
-  }, [
-    props.isOpen,
-    popover.position.update,
-    popover.position.refs.reference,
-    popover.position.refs.floating,
-  ])
-
-  useLayoutEffect(() => {
-    if (!position) return
-    popover.position.reference({
-      getBoundingClientRect() {
-        return {
-          x: position.x,
-          y: position.y,
-          width: 0,
-          height: 0,
-          top: position.y,
-          right: position.x,
-          bottom: position.y,
-          left: position.x,
-        }
-      },
-    })
-  }, [position, popover.position.reference])
-
-  useLayoutEffect(() => {
-    if (props.isOpen) {
-      popover.position.refs.floating.current?.focus()
-    }
-  }, [props.isOpen, popover.position.refs.floating])
-
-  return (
-    <dialogContext.Provider value={ctxt}>{children}</dialogContext.Provider>
-  )
-}
-
-interface DialogVariantTriggerProps {
-  ref: MutableRefObject<any>
-  open: () => void
-  close: () => void
-}
-
-export interface DialogVariantProps {
-  trigger?: (props: DialogVariantTriggerProps) => ReactNode
-  placement?: Placement
-  position?: PopoverPosition
-  dialogId?: string
-  isOpen?: boolean
-  onOpen?: () => void
-  onClose?: () => void
-  overlay?: boolean
-  allowPinchZoom?: boolean
-  isScrollDisabled?: boolean
-  isFocusTakeoverDisabled?: boolean
-  noFocusLock?: boolean
-  isolateDialog?: boolean
-  closeOnInteractOutside?: boolean
-  initialFocusRef?: any
-  children: ReactNode
-}
-
-export type GetDialogVariantProps<P extends { children }> = Omit<
-  DialogVariantProps,
-  'children'
-> & {
-  options?: Omit<P, 'children'>
-  children: P['children']
-}
-
-export const DialogVariant = ({ trigger, ...props }: DialogVariantProps) => {
-  if (trigger) return <DialogTrigger trigger={trigger} {...props} />
-  return <DialogContainer {...props} />
-}
-
-export interface PopoverPosition {
-  x: number
-  y: number
 }
 
 interface UsePopoverPositionOptions {
@@ -412,4 +384,106 @@ export const usePopoverPosition = (options: UsePopoverPositionOptions = {}) => {
   })
 
   return { position, size: popoverSize }
+}
+
+export interface PopoverPosition {
+  x: number
+  y: number
+}
+
+interface DialogContainerProps {
+  id?: string
+  isOpen?: boolean
+  onClose?: () => void
+  position?: PopoverPosition
+  overlay?: boolean
+  children: ReactNode
+}
+
+export const DialogContainer = ({
+  id,
+  isOpen = false,
+  onClose,
+  position,
+  overlay = false,
+  children,
+}: DialogContainerProps) => {
+  const [measureRef, { width: triggerWidth }] = useMeasure()
+  const popover = usePopoverPosition()
+  const stableTriggerRef = useMemo(
+    () => mergeRefs(popover.position.refs.reference, measureRef),
+    [popover.position.refs.reference, measureRef],
+  )
+  const dialogId = useId(id)
+  const sizeData = useMemo(
+    () => ({ ...popover.size, triggerWidth }),
+    [popover.size, triggerWidth],
+  )
+  const ctxt = useMemo(
+    () => ({
+      dialogId,
+      onClose,
+      triggerRef: stableTriggerRef,
+      position: popover.position,
+      size: sizeData,
+      isOpen,
+      overlay,
+    }),
+    [
+      dialogId,
+      onClose,
+      stableTriggerRef,
+      popover.position,
+      sizeData,
+      isOpen,
+      overlay,
+    ],
+  )
+
+  useEffect(() => {
+    if (
+      isOpen &&
+      popover.position.refs.reference.current &&
+      popover.position.refs.floating.current
+    ) {
+      return autoUpdate(
+        popover.position.refs.reference.current,
+        popover.position.refs.floating.current,
+        popover.position.update,
+      )
+    }
+  }, [
+    isOpen,
+    popover.position.update,
+    popover.position.refs.reference,
+    popover.position.refs.floating,
+  ])
+
+  useLayoutEffect(() => {
+    if (!position) return
+    popover.position.reference({
+      getBoundingClientRect() {
+        return {
+          x: position.x,
+          y: position.y,
+          width: 0,
+          height: 0,
+          top: position.y,
+          right: position.x,
+          bottom: position.y,
+          left: position.x,
+        }
+      },
+    })
+  }, [position, popover.position.reference])
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      popover.position.refs.floating.current?.focus()
+    }
+  }, [isOpen, popover.position.refs.floating])
+
+  return (
+    <dialogContext.Provider value={ctxt}>{children}</dialogContext.Provider>
+  )
 }

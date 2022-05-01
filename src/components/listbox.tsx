@@ -25,6 +25,7 @@ import {
 import _ from 'lodash'
 import { Subtray } from './tray'
 import { Popout, PopoutTriggerContext } from './popout'
+import { DialogTrigger } from './dialog'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 import { usePrevious } from '../hooks/previous'
@@ -33,6 +34,7 @@ import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
 
 // TODO:
+// menu handles wrapping DialogTrigger or Container
 // move sublist to menu, handle switch by level
 
 type ShouldClose = boolean
@@ -92,6 +94,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
+  const open = () => setFocus([-1])
   const getNextFocusableIdx = useCallback((start: number, level: number) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
@@ -105,7 +108,6 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
       return getNextFocusableIdx(start + 1, level)
     return start
   }, [])
-  const open = () => setFocus([getNextFocusableIdx(0, 0)])
   const getPrevFocusableIdx = (start: number, level: number) => {
     const thisLevelState = listChildStateRef.current[level]
 
@@ -794,7 +796,7 @@ export const SubList = forwardRef(
 
     if (isMobile)
       return (
-        <Subtray
+        <DialogTrigger
           isOpen={isOpen}
           onClose={() => closeLevel(thisLevel)}
           placement="right"
@@ -808,14 +810,16 @@ export const SubList = forwardRef(
             })
           }
         >
-          <ListBoxBase level={thisLevel} ref={ref} state={state}>
-            {children}
-          </ListBoxBase>
-        </Subtray>
+          <Subtray>
+            <ListBoxBase level={thisLevel} ref={ref} state={state}>
+              {children}
+            </ListBoxBase>
+          </Subtray>
+        </DialogTrigger>
       )
 
     return (
-      <Popout
+      <DialogTrigger
         isOpen={isOpen}
         onClose={() => closeLevel(thisLevel)}
         placement="right"
@@ -825,20 +829,26 @@ export const SubList = forwardRef(
             id: innerId,
             listIdx,
             onClick: () => {
+              console.log('open')
               openSubList()
               return false
             },
             triggeredOnHover: true,
           })
         }
-        initialFocusRef={focusTrapRef}
-        noFocusLock={thisLevel > 0}
-        {...props}
       >
-        <ListBoxBase level={thisLevel} ref={ref} state={state}>
-          {children}
-        </ListBoxBase>
-      </Popout>
+        <Popout
+          content={{
+            initialFocusRef: focusTrapRef,
+            noFocusLock: thisLevel > 0,
+          }}
+          {...props}
+        >
+          <ListBoxBase level={thisLevel} ref={ref} state={state}>
+            {children}
+          </ListBoxBase>
+        </Popout>
+      </DialogTrigger>
     )
   },
 )
