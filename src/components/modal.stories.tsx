@@ -4,15 +4,9 @@ import { Menu } from './menu'
 import { Item } from './listbox'
 import { Lorem } from './lorem'
 import { fruits } from '../util/fruits'
-import { DialogContainer, DialogTrigger, useDialogContext } from './dialog'
 
 export default {
   title: 'Modal',
-}
-
-const DialogCloseButton = () => {
-  const { onClose } = useDialogContext()
-  return <button onClick={onClose}>close</button>
 }
 
 export const Default = () => {
@@ -20,91 +14,65 @@ export const Default = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <DialogContainer isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Modal.Dialog>
-          <DialogCloseButton />
-        </Modal.Dialog>
-      </DialogContainer>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <button>a button</button>
+      </Modal.Dialog>
     </>
   )
 }
 
-export const WithTrigger = () => {
-  return (
-    <DialogTrigger
-      trigger={({ ref, open }) => (
-        <button ref={ref} onClick={open}>
-          open
-        </button>
-      )}
-    >
-      <Modal.Dialog>
-        <DialogCloseButton />
-      </Modal.Dialog>
-    </DialogTrigger>
-  )
-}
-
-export const WithOverlay = () => {
-  return (
-    <DialogContainer isOpen>
-      <Modal.Dialog overlay>
-        <button>button</button>
-      </Modal.Dialog>
-    </DialogContainer>
-  )
-}
-
 export const Scrollable = () => {
+  const [isOpen, setIsOpen] = useState(false)
   return (
-    <DialogContainer isOpen>
-      <Modal.Dialog>
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <Modal.Header>
           <Modal.Title>
             a very looooooooooong title that prolly gonnna have to wrap
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <button>button</button>
+          <button>a button</button>
           <Lorem paragraphs={10} />
         </Modal.Body>
       </Modal.Dialog>
-    </DialogContainer>
+    </>
   )
 }
 
 export const InitialFocus = () => {
+  const [isOpen, setIsOpen] = useState(false)
   const initialFocusRef = useRef<any>()
   return (
-    <DialogContainer isOpen>
-      <Modal.Dialog content={{ initialFocusRef }}>
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
+      <Modal.Dialog
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        content={{ initialFocusRef }}
+      >
         <button>not me</button>
         <button ref={initialFocusRef}>me</button>
-        <button>not me</button>
+        <button onClick={() => setIsOpen(false)}>close</button>
       </Modal.Dialog>
-    </DialogContainer>
+    </>
   )
 }
 
 export const WithMenu = () => {
+  const [isOpen, setIsOpen] = useState(false)
   return (
-    <DialogContainer isOpen>
-      <Modal.Dialog>
-        <DialogTrigger
-          trigger={({ ref, open }) => (
-            <button ref={ref} onClick={open}>
-              menu
-            </button>
-          )}
-        >
-          <Menu>
-            {fruits.map((f) => (
-              <Item key={f}>{f}</Item>
-            ))}
-          </Menu>
-        </DialogTrigger>
+    <>
+      <button onClick={() => setIsOpen(true)}>open</button>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Menu>
+          {fruits.map((f) => (
+            <Item key={f}>{f}</Item>
+          ))}
+        </Menu>
       </Modal.Dialog>
-    </DialogContainer>
+    </>
   )
 }
 
@@ -113,12 +81,9 @@ export const Nested = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <DialogContainer isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Modal.Dialog overlay>
-          <Nested />
-          <DialogCloseButton />
-        </Modal.Dialog>
-      </DialogContainer>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Nested />
+      </Modal.Dialog>
     </>
   )
 }

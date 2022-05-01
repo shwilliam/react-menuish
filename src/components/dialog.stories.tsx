@@ -7,16 +7,14 @@ export default {
   parameters: {
     docs: {
       description: {
-        component: `The \`Dialog\` and \`DialogContent\` components are
-        primarily used to hide all content outside itself from the a11y tree on
-        mount and restores them on unmount. They also handle locking scroll,
-        trapping focus and portalling, if desired. It is typically only used as
-        part of other abstractions, such as modals or trays, ensuring only the
-        top-most dialog is accessible; you likely won't want to use it directly.
-        The \`Dialog\` component expects a single child of \`DialogContent\`
-        (separated for easier styling). Because dialogs hide all content outside
-        itself to screen readers, they expect to have a focusable child to focus
-        on open and trap focus.`,
+        component: `The \`Dialog\` and \`DialogContent\` components are used to
+        hide all content outside itself from the a11y tree on mount and
+        restores them on unmount. It is typically only used as part of other
+        abstractions, such as modals or trays, ensuring only the top-most dialog
+        is accessible. The \`Dialog\` component expects a single child of
+        \`DialogContent\`; they are separated for easier styling. Because
+        dialogs hide all content outside itself to screen readers, they expect
+        to have a focusable child to focus on open and trap focus.`,
       },
     },
   },
