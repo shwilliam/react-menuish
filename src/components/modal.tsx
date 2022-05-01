@@ -4,21 +4,32 @@ import {
   Dialog as BaseDialog,
   DialogContent,
   DialogContentProps,
+  DialogVariant,
+  GetDialogVariantProps,
 } from './dialog'
 import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 
-export interface ModalBaseProps {
+interface ModalBaseProps {
   children: ReactNode
 }
 
-export const ModalBase = forwardRef(
-  ({ children }: ModalBaseProps, ref: any) => {
-    return (
-      <BaseDialog>
-        <ModalContent ref={ref}>{children}</ModalContent>
-      </BaseDialog>
-    )
-  },
+const ModalBase = forwardRef(({ children }: ModalProps, ref: any) => {
+  return (
+    <BaseDialog>
+      <ModalContent ref={ref}>{children}</ModalContent>
+    </BaseDialog>
+  )
+})
+
+interface ModalProps extends GetDialogVariantProps<ModalBaseProps> {}
+export const Dialog = forwardRef(
+  ({ options, children, ...props }: ModalProps, ref) => (
+    <DialogVariant {...props}>
+      <ModalBase ref={ref} {...options}>
+        {children}
+      </ModalBase>
+    </DialogVariant>
+  ),
 )
 
 export interface ModalContentProps extends DialogContentProps {}

@@ -334,9 +334,10 @@ export const ListBox = forwardRef(
 
     return (
       <ListBoxBase
+        tabIndex={0}
         ref={ref}
         state={state}
-        listAttrs={{ tabIndex: 0, onKeyDown: handleKeyDown }}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     )
@@ -362,12 +363,11 @@ const listBoxContext = createContext<ListBoxState>({
 
 export const useListBoxContext = () => useContext(listBoxContext)
 
-export interface ListBoxBaseProps {
+export interface ListBoxBaseProps extends ComponentPropsWithoutRef<'ul'> {
   state: ListBoxState
   level?: number
   labelId?: string
   onScrolledToBottom?: () => void
-  listAttrs?: ComponentPropsWithoutRef<'ul'>
   children: ReactNode
 }
 
@@ -378,7 +378,6 @@ export const ListBoxBase = forwardRef(
       level = 0,
       labelId,
       onScrolledToBottom,
-      listAttrs,
       children,
       ...props
     }: ListBoxBaseProps,
@@ -487,7 +486,7 @@ export const ListBoxBase = forwardRef(
             role="listbox"
             {...(isMultiSelectable ? { 'aria-multiselectable': 'true' } : {})}
             {...(labelId ? { 'aria-labelledby': labelId } : {})}
-            {...listAttrs}
+            {...props}
           >
             {renderedChildren}
           </ul>

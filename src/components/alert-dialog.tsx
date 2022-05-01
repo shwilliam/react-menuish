@@ -1,9 +1,19 @@
-import { ModalDialog, ModalProps } from './dialog-variant'
+import * as Modal from './modal'
+import { ModalProps } from './popout'
 
 interface AlertDialogProps extends ModalProps {
-  'aria-describedby': string
+  content: Omit<ModalProps['content'], 'aria-describedby'> & {
+    'aria-describedby': string
+  }
 }
 
-export const AlertDialog = (props: AlertDialogProps) => (
-  <ModalDialog closeOnInteractOutside={false} role="alertdialog" {...props} />
+export const AlertDialog = ({ content, ...props }: AlertDialogProps) => (
+  <Modal.Dialog
+    {...props}
+    content={{
+      ...content,
+      closeOnInteractOutside: false,
+      role: 'alertdialog',
+    }}
+  />
 )

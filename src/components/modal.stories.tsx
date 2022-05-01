@@ -2,10 +2,9 @@ import { useState, useRef } from 'react'
 import * as Modal from './modal'
 import { Menu } from './menu'
 import { Item } from './listbox'
-import { useDialogContext } from './dialog'
-import { ModalDialog } from './dialog-variant'
-import { fruits } from '../util/fruits'
 import { Lorem } from './lorem'
+import { fruits } from '../util/fruits'
+import { useDialogContext } from './dialog'
 
 export default {
   title: 'Modal',
@@ -21,16 +20,16 @@ export const Default = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <ModalDialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <DialogCloseButton />
-      </ModalDialog>
+      </Modal.Dialog>
     </>
   )
 }
 
 export const WithTrigger = () => {
   return (
-    <ModalDialog
+    <Modal.Dialog
       trigger={({ ref, open }) => (
         <button ref={ref} onClick={open}>
           open
@@ -38,21 +37,21 @@ export const WithTrigger = () => {
       )}
     >
       <DialogCloseButton />
-    </ModalDialog>
+    </Modal.Dialog>
   )
 }
 
-export const NoOverlay = () => {
+export const WithOverlay = () => {
   return (
-    <ModalDialog isOpen overlay={false}>
+    <Modal.Dialog isOpen overlay>
       <button>button</button>
-    </ModalDialog>
+    </Modal.Dialog>
   )
 }
 
 export const Scrollable = () => {
   return (
-    <ModalDialog isOpen>
+    <Modal.Dialog isOpen>
       <Modal.Header>
         <Modal.Title>
           a very looooooooooong title that prolly gonnna have to wrap
@@ -62,24 +61,24 @@ export const Scrollable = () => {
         <button>button</button>
         <Lorem paragraphs={10} />
       </Modal.Body>
-    </ModalDialog>
+    </Modal.Dialog>
   )
 }
 
 export const InitialFocus = () => {
   const initialFocusRef = useRef<any>()
   return (
-    <ModalDialog isOpen initialFocusRef={initialFocusRef}>
+    <Modal.Dialog isOpen initialFocusRef={initialFocusRef}>
       <button>not me</button>
       <button ref={initialFocusRef}>me</button>
       <button>not me</button>
-    </ModalDialog>
+    </Modal.Dialog>
   )
 }
 
 export const WithMenu = () => {
   return (
-    <ModalDialog isOpen>
+    <Modal.Dialog isOpen>
       <Menu
         trigger={({ ref, open }) => (
           <button ref={ref} onClick={open}>
@@ -91,7 +90,7 @@ export const WithMenu = () => {
           <Item key={f}>{f}</Item>
         ))}
       </Menu>
-    </ModalDialog>
+    </Modal.Dialog>
   )
 }
 
@@ -100,10 +99,10 @@ export const Nested = () => {
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
-      <ModalDialog isOpen={isOpen} onClose={() => setIsOpen(false)} overlay>
+      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)} overlay>
         <Nested />
         <DialogCloseButton />
-      </ModalDialog>
+      </Modal.Dialog>
     </>
   )
 }

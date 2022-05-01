@@ -16,10 +16,17 @@ import {
 } from 'react'
 import _ from 'lodash'
 import {
+  useFloating,
+  shift,
+  flip,
+  size,
+  limitShift,
   Dimensions,
   ElementRects,
+  offset,
   autoUpdate,
   UseFloatingReturn,
+  Placement,
 } from '@floating-ui/react-dom'
 import useMeasure from 'react-use-measure'
 import FocusLock from 'react-focus-lock'
@@ -35,8 +42,6 @@ import { Overlay } from './overlay'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 import { Require } from '../types'
-import { usePopoverPosition } from '../hooks/popover-position'
-import { DialogVariantBaseProps } from './dialog-variant'
 
 // require either aria-label or aria-labelledby to be provided
 
@@ -201,8 +206,7 @@ const createAriaHider = (newRoot: Element, wrappers: number = 0) => {
   }
 }
 
-interface DialogTriggerProps
-  extends Require<DialogVariantBaseProps, 'trigger'> {}
+interface DialogTriggerProps extends Require<DialogVariantProps, 'trigger'> {}
 
 export const DialogTrigger = ({
   placement,
@@ -263,7 +267,7 @@ export const DialogTrigger = ({
   )
 }
 
-interface DialogContainerProps extends DialogVariantBaseProps {}
+interface DialogContainerProps extends DialogVariantProps {}
 
 export const DialogContainer = ({
   position,
@@ -339,4 +343,73 @@ export const DialogContainer = ({
   return (
     <dialogContext.Provider value={ctxt}>{children}</dialogContext.Provider>
   )
+}
+
+interface DialogVariantTriggerProps {
+  ref: MutableRefObject<any>
+  open: () => void
+  close: () => void
+}
+
+export interface DialogVariantProps {
+  trigger?: (props: DialogVariantTriggerProps) => ReactNode
+  placement?: Placement
+  position?: PopoverPosition
+  dialogId?: string
+  isOpen?: boolean
+  onOpen?: () => void
+  onClose?: () => void
+  overlay?: boolean
+  allowPinchZoom?: boolean
+  isScrollDisabled?: boolean
+  isFocusTakeoverDisabled?: boolean
+  noFocusLock?: boolean
+  isolateDialog?: boolean
+  closeOnInteractOutside?: boolean
+  initialFocusRef?: any
+  children: ReactNode
+}
+
+export type GetDialogVariantProps<P extends { children }> = Omit<
+  DialogVariantProps,
+  'children'
+> & {
+  options?: Omit<P, 'children'>
+  children: P['children']
+}
+
+export const DialogVariant = ({ trigger, ...props }: DialogVariantProps) => {
+  if (trigger) return <DialogTrigger trigger={trigger} {...props} />
+  return <DialogContainer {...props} />
+}
+
+export interface PopoverPosition {
+  x: number
+  y: number
+}
+
+interface UsePopoverPositionOptions {
+  placement?: Placement
+}
+
+export const usePopoverPosition = (options: UsePopoverPositionOptions = {}) => {
+  const { placement = 'bottom' } = options
+  const [popoverSize, setPopoverSize] = useState<Dimensions & ElementRects>()
+  const position = useFloating({
+    placement,
+    middleware: [
+      offset(2),
+      shift({
+        limiter: limitShift({
+          offset: ({ reference, floating, placement }) => ({
+            mainAxis: reference.height,
+          }),
+        }),
+      }),
+      flip(),
+      size({ apply: (data) => setPopoverSize(data) }),
+    ],
+  })
+
+  return { position, size: popoverSize }
 }

@@ -7,8 +7,9 @@ import {
   useRef,
   KeyboardEventHandler,
 } from 'react'
+import { Popout } from './popout'
 import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
-import { Popout, Tray } from './dialog-variant'
+import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
 
@@ -132,15 +133,17 @@ export const Combobox = forwardRef(
               {value || 'open'}
             </button>
           )}
-          header={
-            <input
-              ref={inputRef}
-              value={inputValue}
-              onChange={handleInputChange}
-              type="search"
-              aria-controls={listBoxId}
-            />
-          }
+          options={{
+            header: (
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={handleInputChange}
+                type="search"
+                aria-controls={listBoxId}
+              />
+            ),
+          }}
         >
           {listbox}
         </Tray>
@@ -149,7 +152,7 @@ export const Combobox = forwardRef(
     return (
       <Popout
         isOpen={isOpen}
-        width="trigger"
+        options={{ width: 'trigger' }}
         onClose={() => setFocus([])}
         isolateDialog={false}
         trigger={({ ref, open }) => (

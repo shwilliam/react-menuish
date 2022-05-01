@@ -39,10 +39,8 @@ export default {
 
 const defaultMenuProps: MenuProps = {
   onChange: action('onChange'),
-  dialog: {
-    onOpen: action('onOpen'),
-    onClose: action('onClose'),
-  },
+  onOpen: action('onOpen'),
+  onClose: action('onClose'),
   children: fruits.map((fruit) => <Item>{fruit}</Item>),
 }
 
@@ -63,10 +61,8 @@ export const WithExternalStateTrigger = () => {
   const [isOpen, setIsOpen] = useState(false)
   return (
     <Menu
-      dialog={{
-        isOpen,
-        onClose: () => setIsOpen(false),
-      }}
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
       trigger={({ ref }) => (
         <button ref={ref} onClick={() => setIsOpen(true)}>
           open
@@ -92,11 +88,9 @@ export const Context = () => {
       right click me
       <Menu
         {...defaultMenuProps}
-        dialog={{
-          isOpen: !!position,
-          onClose: () => setPosition(undefined),
-          position,
-        }}
+        isOpen={!!position}
+        onClose={() => setPosition(undefined)}
+        position={position}
       />
     </div>
   )
@@ -162,10 +156,8 @@ export const Async = () => {
           open
         </button>
       )}
-      dialog={{
-        onOpen: () => {
-          if (!pokemon.length) more()
-        },
+      onOpen={() => {
+        if (!pokemon.length) more()
       }}
       onChange={action('onChange')}
       onLoadMore={more}
