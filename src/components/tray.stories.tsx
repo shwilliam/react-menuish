@@ -84,6 +84,8 @@ export const FullscreenScrollable = () => {
 export const WithSubtray = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubtrayOpen, setIsSubtrayOpen] = useState(false)
+  const [isNestedSubtrayOpen, setIsNestedSubtrayOpen] = useState(false)
+
   return (
     <>
       <button onClick={() => setIsOpen(true)}>open</button>
@@ -91,6 +93,13 @@ export const WithSubtray = () => {
         <Lorem paragraphs={2} />
         <button onClick={() => setIsSubtrayOpen(true)}>open</button>
         <Subtray isOpen={isSubtrayOpen} onClose={() => setIsSubtrayOpen(false)}>
+          <button onClick={() => setIsNestedSubtrayOpen(true)}>open</button>
+          <Subtray
+            isOpen={isNestedSubtrayOpen}
+            onClose={() => setIsNestedSubtrayOpen(false)}
+          >
+            <Lorem />
+          </Subtray>
           <Lorem />
         </Subtray>
       </Tray>

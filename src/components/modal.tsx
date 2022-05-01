@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
+import { useTransition } from 'react-spring'
 import {
   Dialog as BaseDialog,
   DialogContent,
@@ -9,12 +10,29 @@ import { ModalProps } from './popout'
 import { VISUAL_VIEWPORT_HEIGHT_VAR } from '../hooks/viewport-size'
 
 export const Dialog = forwardRef(
-  ({ content, children, ...props }: ModalProps, ref: any) => {
-    return (
-      <BaseDialog overlay {...props}>
-        <ModalContent {...content}>{children}</ModalContent>
+  ({ isOpen, content, children, ...props }: ModalProps, ref: any) => {
+    const transitions = useTransition(isOpen, {
+      from: { opacity: 0, y: -10 },
+      enter: { opacity: 1, y: 0 },
+      leave: { opacity: 0, y: 10 },
+    })
+
+    return transitions((styles, item) => (
+      <BaseDialog isOpen={!!item} overlay {...props}>
+        <ModalContent
+          ref={ref}
+          style={{
+            opacity: styles.opacity,
+            transform: styles.y.to(
+              (value) => `translate3d(0px, ${value}px, 0px)`,
+            ),
+          }}
+          {...content}
+        >
+          {children}
+        </ModalContent>
       </BaseDialog>
-    )
+    ))
   },
 )
 

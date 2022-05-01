@@ -7,7 +7,7 @@ import {
   useCallback,
 } from 'react'
 import styled from 'styled-components'
-import { useSpring } from 'react-spring'
+import { Transition, useSpring, config, a } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import { Dialog, DialogContent, DialogContentProps } from './dialog'
 import { TrayProps } from './popout'
@@ -118,75 +118,46 @@ const StyledDialogContent = styled(DialogContent)`
   border: 1px solid blue;
 `
 
-interface SubtrayProps extends SubtrayContentProps {}
+interface SubtrayProps extends DialogContentProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
 
 export const Subtray = forwardRef(
   ({ isOpen, children, ...props }: SubtrayProps, ref: any) => {
-    const [innerIsOpen, setInnerIsOpen] = useState(isOpen)
-
-    useEffect(() => {
-      if (isOpen) setInnerIsOpen(true)
-    }, [isOpen])
-
-    if (!innerIsOpen) return null
     return (
-      <SubtrayContent
-        ref={ref}
-        isOpen={isOpen}
-        onRest={() => !isOpen && setInnerIsOpen(false)}
-        {...props}
-      >
-        {children}
-      </SubtrayContent>
-    )
-  },
-)
-
-interface SubtrayContentProps extends DialogContentProps {
-  isOpen?: boolean
-  onRest?: () => void
-  onClose?: () => void
-  children: ReactNode
-}
-
-const SubtrayContent = forwardRef(
-  (
-    {
-      isOpen = false,
-      onRest,
-      onClose,
-      children,
-      ...props
-    }: SubtrayContentProps,
-    ref: any,
-  ) => {
-    const hasMounted = useMounted()
-    const springStyle = useSpring({
-      x: hasMounted && isOpen ? '0vw' : '100vw',
-      onRest,
-    })
-
-    return (
-      <SubtrayContentWrapper
-        ref={ref}
-        style={{
-          transform: springStyle.x.to((x) => `translateX(${x})`) as any,
+      <Transition
+        items={isOpen}
+        from={{ translateX: '100vw', opacity: 1 }}
+        enter={{ translateX: '0px', opacity: 1 }}
+        leave={{ translateX: '100vw', opacity: 0 }}
+        config={{
+          ...config.gentle,
+          bounce: 0,
         }}
-        {...props}
       >
-        <button onClick={onClose}>close</button>
-        {children}
-      </SubtrayContentWrapper>
+        {(style, item) =>
+          item && (
+            <DialogContent
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                height: '100%',
+                width: '100%',
+                background: 'white',
+                zIndex: 2,
+                ...style,
+              }}
+            >
+              <button onClick={props.onClose}>close</button>
+              {children}
+            </DialogContent>
+          )
+        }
+      </Transition>
     )
   },
 )
-
-const SubtrayContentWrapper = styled(DialogContent)`
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  overflow-y: auto;
-  background: white;
-`

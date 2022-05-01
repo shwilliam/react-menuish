@@ -4,6 +4,8 @@ import { useTooltip } from '../hooks/tooltip'
 import { useHover } from '../hooks/hover'
 import { useId } from '../hooks/id'
 import { useKeyPress } from '../hooks/key-press'
+import { useTransition, a, config } from 'react-spring'
+import styled from 'styled-components'
 
 interface TooltipTriggerContext extends PopoutTriggerContext {
   onVirtualFocusStart: () => void
@@ -26,6 +28,12 @@ export const Tooltip = forwardRef(
     const { hoverProps } = useHover({
       onHoverStart: open,
       onHoverEnd: close,
+    })
+    const transitions = useTransition(isOpen, {
+      from: { opacity: 0 },
+      enter: { opacity: 1 },
+      leave: { opacity: 0 },
+      config: config.stiff,
     })
 
     useKeyPress('Escape', close, 'keydown')
@@ -53,8 +61,18 @@ export const Tooltip = forwardRef(
           id: tooltipId,
         }}
       >
-        {children}
+        {transitions(
+          (style, item) =>
+            item && <TooltipWrapper style={style}>{children}</TooltipWrapper>,
+        )}
       </Popout>
     )
   },
 )
+
+const TooltipWrapper = styled(a.div)`
+  background: #222;
+  color: white;
+  border-radius: 4px;
+  padding: 6px;
+`
