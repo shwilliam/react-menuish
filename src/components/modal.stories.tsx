@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react'
+import { useRef } from 'react'
 import * as Modal from './modal'
 import { Menu } from './menu'
 import { Item } from './listbox'
 import { Lorem } from './lorem'
+import { ModalVariant } from './dialog-variant'
 import { fruits } from '../util/fruits'
 
 export default {
@@ -10,80 +11,86 @@ export default {
 }
 
 export const Default = () => {
-  const [isOpen, setIsOpen] = useState(false)
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <button>a button</button>
-      </Modal.Dialog>
-    </>
+    <ModalVariant
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <button>a button</button>
+    </ModalVariant>
   )
 }
 
 export const Scrollable = () => {
-  const [isOpen, setIsOpen] = useState(false)
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Modal.Header>
-          <Modal.Title>
-            a very looooooooooong title that prolly gonnna have to wrap
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <button>a button</button>
-          <Lorem paragraphs={10} />
-        </Modal.Body>
-      </Modal.Dialog>
-    </>
+    <ModalVariant
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <Modal.Header>
+        <Modal.Title>
+          a very looooooooooong title that prolly gonnna have to wrap
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <button>a button</button>
+        <Lorem paragraphs={10} />
+      </Modal.Body>
+    </ModalVariant>
   )
 }
 
 export const InitialFocus = () => {
-  const [isOpen, setIsOpen] = useState(false)
   const initialFocusRef = useRef<any>()
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal.Dialog
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        content={{ initialFocusRef }}
-      >
-        <button>not me</button>
-        <button ref={initialFocusRef}>me</button>
-        <button onClick={() => setIsOpen(false)}>close</button>
-      </Modal.Dialog>
-    </>
+    <ModalVariant
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+      dialog={{ initialFocusRef }}
+    >
+      <button>not me</button>
+      <button ref={initialFocusRef}>me</button>
+    </ModalVariant>
   )
 }
 
 export const WithMenu = () => {
-  const [isOpen, setIsOpen] = useState(false)
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Menu>
-          {fruits.map((f) => (
-            <Item key={f}>{f}</Item>
-          ))}
-        </Menu>
-      </Modal.Dialog>
-    </>
+    <ModalVariant
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <Menu>
+        {fruits.map((f) => (
+          <Item key={f}>{f}</Item>
+        ))}
+      </Menu>
+    </ModalVariant>
   )
 }
 
 export const Nested = () => {
-  const [isOpen, setIsOpen] = useState(false)
   return (
-    <>
-      <button onClick={() => setIsOpen(true)}>open</button>
-      <Modal.Dialog isOpen={isOpen} onClose={() => setIsOpen(false)}>
-        <Nested />
-      </Modal.Dialog>
-    </>
+    <ModalVariant
+      trigger={({ ref, open }) => (
+        <button ref={ref} onClick={open}>
+          open
+        </button>
+      )}
+    >
+      <Nested />
+    </ModalVariant>
   )
 }

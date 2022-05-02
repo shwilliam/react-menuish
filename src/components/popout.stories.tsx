@@ -1,34 +1,46 @@
 import { useState } from 'react'
-import { Popout } from './popout'
+import { PopoutVariant } from './dialog-variant'
 import { Lorem } from './lorem'
-import { DialogTrigger } from './dialog'
 
 export default {
   title: 'Popout',
 }
 
 export const Default = () => {
-  const [isOpen, setIsOpen] = useState(false)
   return (
-    <DialogTrigger
-      trigger={({ ref, open }) => (
-        <button ref={ref} onClick={open}>
-          open
-        </button>
-      )}
-    >
-      <Popout
-      // isOpen={isOpen}
-      // onClose={() => setIsOpen(false)}
-      // trigger={(props) => (
-      //   <button {...props} onClick={() => setIsOpen(true)}>
-      //     open
-      //   </button>
-      // )}
+    <>
+      <PopoutVariant
+        trigger={({ ref, open }) => (
+          <button ref={ref} onClick={open}>
+            open
+          </button>
+        )}
       >
         <Lorem paragraphs={5} />
-      </Popout>
+      </PopoutVariant>
       <Lorem paragraphs={50} />
-    </DialogTrigger>
+    </>
+  )
+}
+
+export const ExternalState = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  return (
+    <>
+      <PopoutVariant
+        trigger={({ ref, open }) => (
+          <button ref={ref} onClick={() => setIsOpen(true)}>
+            open
+          </button>
+        )}
+        dialog={{
+          isOpen,
+          onClose: () => setIsOpen(false),
+        }}
+      >
+        <Lorem paragraphs={5} />
+      </PopoutVariant>
+      <Lorem paragraphs={50} />
+    </>
   )
 }

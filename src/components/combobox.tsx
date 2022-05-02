@@ -13,6 +13,7 @@ import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
 import { DialogTrigger } from './dialog'
+import { PopoutVariant, TrayVariant } from './dialog-variant'
 
 interface ComboboxProps {
   value?: string
@@ -119,38 +120,33 @@ export const Combobox = forwardRef(
 
     if (isMobile)
       return (
-        <DialogTrigger
-          isOpen={isOpen}
-          onOpen={focusInputTrigger}
-          onClose={() => setFocus([])}
+        <TrayVariant
           trigger={({ ref }) => (
             <button ref={ref} onClick={() => setFocus([0])}>
               {value || 'open'}
             </button>
           )}
+          dialog={{
+            isOpen,
+            onClose: () => setFocus([]),
+            onOpen: focusInputTrigger,
+          }}
+          header={
+            <input
+              ref={inputRef}
+              value={inputValue}
+              onChange={handleInputChange}
+              type="search"
+              aria-controls={listBoxId}
+            />
+          }
         >
-          <Tray
-            content={{
-              header: (
-                <input
-                  ref={inputRef}
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  type="search"
-                  aria-controls={listBoxId}
-                />
-              ),
-            }}
-          >
-            {listbox}
-          </Tray>
-        </DialogTrigger>
+          {listbox}
+        </TrayVariant>
       )
 
     return (
-      <DialogTrigger
-        isOpen={isOpen}
-        onClose={() => setFocus([])}
+      <PopoutVariant
         trigger={({ ref, open }) => (
           <span ref={ref}>
             <input
@@ -178,11 +174,15 @@ export const Combobox = forwardRef(
             </button>
           </span>
         )}
+        dialog={{
+          isOpen,
+          onClose: () => setFocus([]),
+          isolateDialog: false,
+        }}
+        width="trigger"
       >
-        <Popout content={{ isolateDialog: false }} width="trigger">
-          {listbox}
-        </Popout>
-      </DialogTrigger>
+        {listbox}
+      </PopoutVariant>
     )
   },
 )

@@ -1,62 +1,148 @@
 import { ForwardedRef, forwardRef, ReactNode, useEffect } from 'react'
-import { Popout } from './popout'
+import _ from 'lodash'
 import {
   ChangeHandler,
   getListBoxKeyboardEventHandler,
   ListBoxBase,
   ListBoxBaseProps,
+  useListBoxContext,
   useListBoxState,
+  useListLevelContext,
 } from './listbox'
-import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useSyncedRef } from '../hooks/synced-ref'
 import { usePrevious } from '../hooks/previous'
 import { useDialogContext } from './dialog'
+import { GetDialogVariantProps, PopoutVariant } from './dialog-variant'
+import { useId } from '../hooks/id'
 
-export interface MenuProps
-  extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
-  value?: ReactNode
-  onChange?: ChangeHandler
-  activeOptionId?: string
-  onLoadMore?: () => void
-  focusResetTrigger?: any
-  children: ReactNode[]
+interface MenuProps extends MenuBaseProps {
+  dialog?: Omit<MenuDialogProps, 'trigger'>['dialog']
+  popout?: Omit<Omit<MenuDialogProps, 'trigger'>, 'dialog'>
+  trigger: MenuDialogProps['trigger']
 }
 
 export const Menu = forwardRef(
   (
+    { id, listIdx = -1, trigger, dialog, popout, ...props }: MenuProps,
+    ref: ForwardedRef<any>,
+  ) => {
+    const innerId = useId(id)
+    const { level } = useListLevelContext()
+    const thisLevel = level + 1
+    const isSubmenu = thisLevel > 0
+    const parentState = useListBoxContext()
+    const isMobile = useIsMobile()
+    const isSubmenuOpen = parentState.focus[level] === innerId
+    const openSubList = () => {
+      parentState.setFocus((s) => {
+        const clone = _.clone(s)
+        clone[level] = innerId
+        clone[thisLevel] = 0
+        return clone
+      })
+      return false
+    }
+
+    useEffect(() => {
+      if (_.last(parentState.focus) === innerId)
+        parentState.setFocus((s) => {
+          const clone = _.clone(s)
+          clone[clone.length - 1] = listIdx
+          return clone
+        })
+    }, [parentState.focus, parentState.setFocus, listIdx, innerId])
+
+    return (
+      <PopoutVariant
+        mobileType="tray"
+        mobileOptions={{ isSubtray: isSubmenu }}
+        trigger={
+          isSubmenu
+            ? trigger
+              ? ({ ref }) =>
+                  trigger({
+                    ref,
+                    id: innerId,
+                    listIdx,
+                    onClick: () => {
+                      openSubList()
+                      return false
+                    },
+                    triggeredOnHover: !isMobile,
+                  })
+              : undefined
+            : trigger
+        }
+        dialog={
+          isSubmenu
+            ? {
+                isOpen: isSubmenuOpen,
+                onClose: () => parentState.closeLevel(thisLevel),
+                placement: 'right-start',
+                initialFocusRef: isMobile
+                  ? undefined
+                  : parentState.focusTrapRef,
+                noFocusLock: thisLevel > 0 || isMobile,
+                isFocusTakeoverDisabled: !isMobile,
+                ...(dialog || {}),
+              }
+            : dialog
+        }
+        {...popout}
+      >
+        <MenuBase id={innerId} ref={ref} {...props} />
+      </PopoutVariant>
+    )
+  },
+)
+
+interface MenuDialogProps extends GetDialogVariantProps<'popout', 'tray'> {}
+
+interface MenuBaseProps
+  extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
+  value?: ReactNode
+  onChange?: ChangeHandler
+  activeOptionId?: string
+  focusResetTrigger?: any
+  children: ReactNode[]
+}
+
+const MenuBase = forwardRef(
+  (
     {
+      id,
       value,
       onChange,
       activeOptionId,
-      onLoadMore,
       focusResetTrigger,
       ...props
-    }: MenuProps,
+    }: MenuBaseProps,
     ref: ForwardedRef<any>,
   ) => {
+    const isMobile = useIsMobile()
+    const parentListBoxState = useListBoxContext()
     const dialogCtxt = useDialogContext()
     const { state } = useListBoxState({
       onChange,
       activeOptionId,
       focusResetTrigger,
     })
-    const { focus, focusTrapRef, open, close } = state
+    const { level } = useListLevelContext()
+    const thisLevel = level + 1
+    const isSubmenu = thisLevel > 0
+    const thisState = isSubmenu ? parentListBoxState : state
+    const { focus, focusTrapRef, open } = thisState
     const handleKeyDown = getListBoxKeyboardEventHandler({
-      state,
+      state: thisState,
       isFixed: false,
     })
-    const isOpen = !!focus.length
+    const isOpen = isSubmenu
+      ? parentListBoxState.focus[level] === id
+      : !!focus.length
     const wasOpen = usePrevious(isOpen)
-    const isMobile = useIsMobile()
-    const listbox = (
-      <ListBoxBase
-        state={state}
-        onScrolledToBottom={onLoadMore}
-        role="menu"
-        {...props}
-      />
-    )
+
+    console.log(state.focus)
 
     const onCloseRef = useSyncedRef(dialogCtxt.onClose)
     useEffect(() => {
@@ -73,19 +159,23 @@ export const Menu = forwardRef(
       }
     }, [isOpen, dialogCtxt.isOpen])
 
-    if (isMobile)
-      return <Tray content={{ onScrolledToBottom: onLoadMore }}>{listbox}</Tray>
-
     return (
-      <Popout>
-        <span
-          aria-hidden
-          tabIndex={0}
-          ref={focusTrapRef}
-          onKeyDown={handleKeyDown}
+      <>
+        {isMobile || isSubmenu ? null : (
+          <span
+            aria-hidden
+            tabIndex={0}
+            ref={focusTrapRef}
+            onKeyDown={handleKeyDown}
+          />
+        )}
+        <ListBoxBase
+          state={thisState}
+          level={thisLevel}
+          role="menu"
+          {...props}
         />
-        {listbox}
-      </Popout>
+      </>
     )
   },
 )

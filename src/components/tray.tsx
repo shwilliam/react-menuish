@@ -3,11 +3,11 @@ import {
   useEffect,
   forwardRef,
   ReactNode,
-  useRef,
   useCallback,
+  ForwardedRef,
 } from 'react'
 import styled from 'styled-components'
-import { Transition, useSpring, config, a } from 'react-spring'
+import { Transition, useSpring, config } from 'react-spring'
 import useMeasure from 'react-use-measure'
 import {
   Dialog,
@@ -15,28 +15,43 @@ import {
   DialogContentProps,
   useDialogContext,
 } from './dialog'
-import { TrayProps } from './popout'
 import { useSafeViewportHeight } from '../hooks/viewport-size'
 import { useMounted } from '../hooks/mounted'
-import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
+
+interface TrayProps extends TrayContentProps {
+  header?: ReactNode
+  isSubtray?: boolean
+}
 
 export const Tray = forwardRef(
-  ({ content, children, ...props }: TrayProps, ref: any) => {
+  (
+    { isSubtray, header, children, ...props }: TrayProps,
+    ref: ForwardedRef<any>,
+  ) => {
     const dialogCtxt = useDialogContext()
     const [innerIsOpen, setInnerIsOpen] = useState(dialogCtxt.isOpen)
+    const trayChildren = (
+      <>
+        {header ? (
+          <div style={{ position: 'sticky', top: 0 }}>{header}</div>
+        ) : null}
+        {children}
+      </>
+    )
 
     useEffect(() => {
       if (dialogCtxt.isOpen) setInnerIsOpen(true)
     }, [dialogCtxt.isOpen])
 
+    if (isSubtray) return <Subtray {...props}>{trayChildren}</Subtray>
     return (
-      <Dialog isOpen={innerIsOpen} overlay {...props}>
+      <Dialog isOpen={innerIsOpen}>
         <TrayContent
           ref={ref}
           onRest={() => !dialogCtxt.isOpen && setInnerIsOpen(false)}
-          {...content}
+          {...props}
         >
-          {children}
+          {trayChildren}
         </TrayContent>
       </Dialog>
     )
@@ -44,22 +59,13 @@ export const Tray = forwardRef(
 )
 
 export interface TrayContentProps extends DialogContentProps {
-  header?: ReactNode
   isFullscreen?: boolean
   onRest?: () => void
-  onScrolledToBottom?: () => void
 }
 
 const TrayContent = forwardRef(
   (
-    {
-      isFullscreen = false,
-      onRest,
-      header,
-      onScrolledToBottom,
-      children,
-      ...props
-    }: TrayContentProps,
+    { isFullscreen = false, onRest, children, ...props }: TrayContentProps,
     ref,
   ) => {
     const dialogCtxt = useDialogContext()
@@ -90,9 +96,6 @@ const TrayContent = forwardRef(
       return () => window.removeEventListener('resize', measureTray)
     }, [dialogCtxt.isOpen, measureTray])
 
-    const bottomRef = useRef<any>()
-    useScrolledToBottom(bottomRef, onScrolledToBottom)
-
     return (
       <StyledDialogContent ref={ref} style={springStyle as any} {...props}>
         <div
@@ -103,11 +106,7 @@ const TrayContent = forwardRef(
             ...(isFullscreen ? {} : { minHeight: `${trayHeight}px` }),
           }}
         >
-          {header ? (
-            <div style={{ position: 'sticky', top: 0 }}>{header}</div>
-          ) : null}
           {children}
-          <div ref={bottomRef} />
         </div>
       </StyledDialogContent>
     )
@@ -125,7 +124,7 @@ const StyledDialogContent = styled(DialogContent)`
 interface SubtrayProps extends DialogContentProps {}
 
 export const Subtray = forwardRef(
-  ({ children, ...props }: SubtrayProps, ref: any) => {
+  ({ children, ...props }: SubtrayProps, ref: ForwardedRef<any>) => {
     const dialogCtxt = useDialogContext()
 
     return (
@@ -142,6 +141,8 @@ export const Subtray = forwardRef(
         {(style, item) =>
           item && (
             <DialogContent
+              ref={ref}
+              {...props}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -152,7 +153,9 @@ export const Subtray = forwardRef(
                 width: '100%',
                 background: 'white',
                 zIndex: 2,
+                overflowY: 'auto',
                 ...style,
+                ...(props.style || {}),
               }}
             >
               <button onClick={dialogCtxt.onClose}>close</button>

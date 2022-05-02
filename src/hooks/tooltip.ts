@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useId } from './id'
 import _ from 'lodash'
+import { useId } from './id'
 
 const SHOW_TOOLTIP_DELAY = 800
 const HIDE_TOOLTIP_DELAY = 500
@@ -9,6 +9,17 @@ const tooltips = {}
 let globalForceImmediate = false
 let globalShowTo: Timeout | null = null
 let globalHideTo: Timeout | null = null
+
+const clearGlobalShow = () => {
+  if (!globalShowTo) return
+  clearTimeout(globalShowTo)
+  globalShowTo = null
+}
+const clearGlobalHide = () => {
+  if (!globalHideTo) return
+  clearTimeout(globalHideTo)
+  globalHideTo = null
+}
 
 interface UseTooltipOptions {
   delay?: number
@@ -38,15 +49,8 @@ export const useTooltip = (options: UseTooltipOptions) => {
     setUpGlobalHideHandler()
     globalForceImmediate = true
     setIsOpen(true)
-
-    if (globalShowTo) {
-      clearTimeout(globalShowTo)
-      globalShowTo = null
-    }
-    if (globalHideTo) {
-      clearTimeout(globalHideTo)
-      globalHideTo = null
-    }
+    clearGlobalShow()
+    clearGlobalHide()
   }
   const hide = (immediate?: boolean) => {
     if (immediate) {
@@ -62,10 +66,7 @@ export const useTooltip = (options: UseTooltipOptions) => {
       }, HIDE_TOOLTIP_DELAY)
     }
 
-    if (globalShowTo) {
-      clearTimeout(globalShowTo)
-      globalShowTo = null
-    }
+    clearGlobalShow()
 
     if (globalForceImmediate) {
       if (globalHideTo) clearTimeout(globalHideTo)

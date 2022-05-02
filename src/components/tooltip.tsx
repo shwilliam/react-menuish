@@ -1,26 +1,30 @@
 import { ForwardedRef, forwardRef, ReactNode } from 'react'
-import { Popout, PopoutProps, PopoutTriggerContext } from './popout'
+import { useTransition, a, config } from 'react-spring'
+import styled from 'styled-components'
+import {
+  DialogVariantTriggerProps,
+  DialogVariantType,
+  PopoutVariant,
+  PopoutVariantProps,
+} from './dialog-variant'
+import { useKeyPress } from '../hooks/key-press'
 import { useTooltip } from '../hooks/tooltip'
 import { useHover } from '../hooks/hover'
 import { useId } from '../hooks/id'
-import { useKeyPress } from '../hooks/key-press'
-import { useTransition, a, config } from 'react-spring'
-import styled from 'styled-components'
 
-interface TooltipTriggerContext extends PopoutTriggerContext {
+interface TooltipTriggerContext extends DialogVariantTriggerProps {
   onVirtualFocusStart: () => void
   onVirtualFocusEnd: () => void
 }
 
-interface TooltipProps {
+interface TooltipProps<M extends DialogVariantType>
+  extends Omit<PopoutVariantProps<M>, 'trigger'> {
   trigger: (triggerContext: TooltipTriggerContext) => ReactNode
-  popout?: Partial<PopoutProps>
-  children: ReactNode
 }
 
 export const Tooltip = forwardRef(
-  (
-    { trigger, popout, children, ...props }: TooltipProps,
+  <M extends DialogVariantType>(
+    { trigger, children, ...props }: TooltipProps<M>,
     ref: ForwardedRef<any>,
   ) => {
     const tooltipId = useId()
@@ -39,9 +43,9 @@ export const Tooltip = forwardRef(
     useKeyPress('Escape', close, 'keydown')
 
     return (
-      <Popout
-        isOpen={isOpen}
-        onClose={() => close()}
+      <PopoutVariant
+        id={tooltipId}
+        role="tooltip"
         trigger={(triggerProps) =>
           trigger({
             ...triggerProps,
@@ -51,21 +55,24 @@ export const Tooltip = forwardRef(
             onVirtualFocusEnd: () => close(true),
           })
         }
-        isFocusTakeoverDisabled
-        {...popout}
-        content={{
-          ...(popout?.content || {}),
+        dialog={{
+          isOpen,
+          onClose: close,
+          isFocusTakeoverDisabled: true,
           noFocusLock: true,
           isolateDialog: false,
-          role: 'tooltip',
-          id: tooltipId,
+          ...(props.dialog || {}),
         }}
       >
         {transitions(
           (style, item) =>
-            item && <TooltipWrapper style={style}>{children}</TooltipWrapper>,
+            item && (
+              <TooltipWrapper ref={ref} style={style}>
+                {children}
+              </TooltipWrapper>
+            ),
         )}
-      </Popout>
+      </PopoutVariant>
     )
   },
 )
