@@ -203,8 +203,12 @@ export const MultilevelPicker = () => {
             isOpen: popoutOpen,
             onClose: () => setPopoutOpen(false),
           }}
-          trigger={({ ref, ...props }) => (
-            <FocusableItem ref={ref} {...props}>
+          trigger={({ ref, open, close, ...props }) => (
+            <FocusableItem
+              ref={ref}
+              onVirtualFocusEnd={() => close()}
+              {...props}
+            >
               {({ focusableRef, handleKeyDown }) => (
                 <button
                   ref={focusableRef}

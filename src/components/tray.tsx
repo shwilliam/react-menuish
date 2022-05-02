@@ -113,14 +113,6 @@ const TrayContent = forwardRef(
   },
 )
 
-const StyledDialogContent = styled(DialogContent)`
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 1px solid blue;
-`
-
 interface SubtrayProps extends DialogContentProps {}
 
 export const Subtray = forwardRef(
@@ -140,15 +132,11 @@ export const Subtray = forwardRef(
       >
         {(style, item) =>
           item && (
-            <DialogContent
+            <StyledDialogContent
               ref={ref}
               {...props}
               style={{
-                position: 'absolute',
                 top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
                 height: '100%',
                 width: '100%',
                 background: 'white',
@@ -160,10 +148,19 @@ export const Subtray = forwardRef(
             >
               <button onClick={dialogCtxt.onClose}>close</button>
               {children}
-            </DialogContent>
+            </StyledDialogContent>
           )
         }
       </Transition>
     )
   },
 )
+
+const StyledDialogContent = styled(DialogContent)`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-bottom: 20px;
+  border: 1px solid blue;
+`

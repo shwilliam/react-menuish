@@ -84,7 +84,7 @@ export const Menu = forwardRef(
                   ? undefined
                   : parentState.focusTrapRef,
                 noFocusLock: thisLevel > 0 || isMobile,
-                isFocusTakeoverDisabled: !isMobile,
+                isFocusTakeoverDisabled: true,
                 ...(dialog || {}),
               }
             : dialog

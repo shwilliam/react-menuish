@@ -57,6 +57,7 @@ export const DialogContent = forwardRef(
 
     useOnClickOutside(innerRef, () => {
       if (
+        !dialogCtxt.isFocusTakeoverDisabled && // handled by parent
         dialogCtxt.closeOnInteractOutside &&
         (focusTakeoverCtxt.getIsTopmost(dialogCtxt.dialogId) ||
           focusTakeoverCtxt.getIsDeactivated(dialogCtxt.dialogId))
@@ -117,7 +118,6 @@ export const Dialog = ({ isOpen: externalIsOpen, children }: DialogProps) => {
       >
         <FocusTakeoverBoundary
           id={dialogCtxt.dialogId}
-          parentId={dialogCtxt.parentDialogId}
           isDisabled={dialogCtxt.isFocusTakeoverDisabled}
           onClose={dialogCtxt.onClose}
           onActivate={() => console.log('activate: ', dialogCtxt.dialogId)}
@@ -154,7 +154,6 @@ export interface DialogOptions {
 }
 
 interface DialogContext extends Require<DialogOptions, 'dialogId' | 'isOpen'> {
-  parentDialogId?: string
   triggerRef?: RefObject<any>
   position?: UseFloatingReturn
   size?: Partial<DialogSize>

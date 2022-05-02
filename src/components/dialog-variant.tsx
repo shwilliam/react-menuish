@@ -22,11 +22,11 @@ import {
   size,
   useFloating,
 } from '@floating-ui/react-dom'
-import { useDialogContext, dialogContext, DialogOptions } from './dialog'
 import useMeasure from 'react-use-measure'
 import { Tray } from './tray'
 import { Popout } from './popout'
 import { Dialog as ModalDialog } from './modal'
+import { dialogContext, DialogOptions } from './dialog'
 import { mergeRefs } from '../util/merge-refs'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
@@ -142,7 +142,6 @@ export const DialogTrigger = ({
   ...props
 }: Require<DialogWrapperProps, 'trigger'>) => {
   const triggerRef = useRef<any>()
-  const parentDialogCtxt = useDialogContext()
   const [innerIsOpen, setInnerIsOpen] = useState(false)
   const isOpen = !!(_.isUndefined(externalIsOpen)
     ? innerIsOpen
@@ -169,7 +168,6 @@ export const DialogTrigger = ({
   const ctxt = useMemo(
     () => ({
       dialogId: innerDialogId,
-      parentDialogId: parentDialogCtxt.dialogId,
       onClose: close,
       onOpen: open,
       triggerRef,
@@ -187,7 +185,6 @@ export const DialogTrigger = ({
     }),
     [
       innerDialogId,
-      parentDialogCtxt.dialogId,
       open,
       close,
       popover.position,
@@ -228,7 +225,6 @@ export const DialogContainer = ({
   initialFocusRef,
   children,
 }: DialogWrapperProps) => {
-  const parentDialogCtxt = useDialogContext()
   const [measureRef, { width: triggerWidth }] = useMeasure()
   const popover = usePopoverPosition()
   const stableTriggerRef = useMemo(
@@ -243,7 +239,6 @@ export const DialogContainer = ({
   const ctxt = useMemo(
     () => ({
       dialogId: innerDialogId,
-      parentDialogId: parentDialogCtxt.dialogId,
       onOpen,
       onClose,
       triggerRef: stableTriggerRef,
@@ -261,7 +256,6 @@ export const DialogContainer = ({
     }),
     [
       innerDialogId,
-      parentDialogCtxt.dialogId,
       onOpen,
       onClose,
       stableTriggerRef,

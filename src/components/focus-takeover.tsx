@@ -79,9 +79,16 @@ export const FocusTakeoverContextProvider = ({ children }) => {
   )
 }
 
+interface FocusTakeoverBoundaryLevelContext {
+  lastActive?: string
+}
+const focusTakeoverBoundaryLevelContext =
+  createContext<FocusTakeoverBoundaryLevelContext>({})
+const useFocusTakeoverBoundaryLevelContext = () =>
+  useContext(focusTakeoverBoundaryLevelContext)
+
 interface FocusTakeoverBoundaryProps {
   id?: string
-  parentId?: string
   isDisabled?: boolean
   onClose?: () => void
   onActivate?: () => void
@@ -91,7 +98,6 @@ interface FocusTakeoverBoundaryProps {
 
 export const FocusTakeoverBoundary = ({
   id,
-  parentId,
   isDisabled = false,
   onClose,
   onActivate,
@@ -101,20 +107,32 @@ export const FocusTakeoverBoundary = ({
   const innerId = useId(id),
     { takeFocus, restoreFocus } = useFocusTakeoverContext()
 
+  const parentFocusTakeoverBoundaryLevelCtxt =
+    useFocusTakeoverBoundaryLevelContext()
+  const parentBoundary = parentFocusTakeoverBoundaryLevelCtxt.lastActive
   const onCloseRef = useSyncedRef(onClose)
   const onActivateRef = useSyncedRef(onActivate)
   const onRestoreRef = useSyncedRef(onRestore)
   useEffect(() => {
     if (isDisabled) return
-    takeFocus(innerId, parentId, onCloseRef.current)
+    takeFocus(innerId, parentBoundary, onCloseRef.current)
     onActivateRef.current?.()
     return () => {
-      restoreFocus(innerId, parentId)
+      restoreFocus(innerId, parentBoundary)
       onRestoreRef.current?.()
     }
-  }, [takeFocus, restoreFocus, innerId, parentId, isDisabled])
+  }, [takeFocus, restoreFocus, innerId, parentBoundary, isDisabled])
 
-  return <>{children}</>
+  if (isDisabled) return <>{children}</>
+  return (
+    <focusTakeoverBoundaryLevelContext.Provider
+      value={{
+        lastActive: isDisabled ? parentBoundary : id,
+      }}
+    >
+      {children}
+    </focusTakeoverBoundaryLevelContext.Provider>
+  )
 }
 
 export const useFocusTakeoverContext = () => useContext(focusTakeoverContext)

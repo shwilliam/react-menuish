@@ -607,11 +607,11 @@ export const Item = forwardRef(
     const hadVirtualFocus = usePrevious(hasVirtualFocus)
     useEffect(() => {
       if (!hadVirtualFocus && hasVirtualFocus) {
-        onVirtualFocusStart?.()
+        if (!isMobile) onVirtualFocusStart?.()
         scrollIntoView()
       }
       if (hadVirtualFocus && (!hasVirtualFocus || !focus.length))
-        onVirtualFocusEnd?.()
+        if (!isMobile) onVirtualFocusEnd?.()
     }, [
       focus,
       hadVirtualFocus,
@@ -619,6 +619,7 @@ export const Item = forwardRef(
       onVirtualFocusStart,
       onVirtualFocusEnd,
       scrollIntoView,
+      isMobile,
     ])
     useOnUnmount(() => {
       if (hadVirtualFocus) onVirtualFocusEnd?.()
