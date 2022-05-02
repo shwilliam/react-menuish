@@ -8,7 +8,6 @@ import { fruits, moreFruits } from '../util/fruits'
 import { Picker } from './picker'
 import { Lorem } from './lorem'
 import { Popout } from './popout'
-import { DialogTrigger } from './dialog'
 import { mergeRefs } from '../util/merge-refs'
 import { PopoutVariant } from './dialog-variant'
 
@@ -101,8 +100,9 @@ export const Async = () => {
           if (!pokemon.length) more()
         },
       }}
+      popout={{ maxHeight: 100 }}
       onChange={action('onChange')}
-      onLoadMore={more}
+      onScrolledToBottom={more}
     >
       {pokemon.map((pokemon) => (
         <Item>{pokemon.name}</Item>
@@ -189,6 +189,9 @@ export const MultilevelPicker = () => {
         <Item>{fruit}</Item>
       ))}
       <Menu trigger={(props) => <Item {...props}>letters</Item>}>
+        {moreFruits.map((fruit) => (
+          <Item>{fruit}</Item>
+        ))}
         <Item>a</Item>
         <Item>b</Item>
         <Item>c</Item>

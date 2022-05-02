@@ -31,7 +31,6 @@ import { usePrevious } from '../hooks/previous'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
-import { DialogTrigger } from './dialog'
 import { PopoutVariant } from './dialog-variant'
 
 type ShouldClose = boolean
@@ -327,13 +326,17 @@ export const getListBoxKeyboardEventHandler = (
 }
 
 interface ListBoxProps {
+  options?: UseListBoxStateOptions
   isFixed?: boolean
   children: ReactNode[]
 }
 
 export const ListBox = forwardRef(
-  ({ isFixed = true, ...props }: ListBoxProps, ref: ForwardedRef<any>) => {
-    const { state } = useListBoxState()
+  (
+    { isFixed = true, options, ...props }: ListBoxProps,
+    ref: ForwardedRef<any>,
+  ) => {
+    const { state } = useListBoxState(options)
     const handleKeyDown = getListBoxKeyboardEventHandler({ state, isFixed })
 
     return (

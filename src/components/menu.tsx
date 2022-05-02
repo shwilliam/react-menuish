@@ -16,7 +16,7 @@ import { useDialogContext } from './dialog'
 import { GetDialogVariantProps, PopoutVariant } from './dialog-variant'
 import { useId } from '../hooks/id'
 
-interface MenuProps extends MenuBaseProps {
+export interface MenuProps extends MenuBaseProps {
   dialog?: Omit<MenuDialogProps, 'trigger'>['dialog']
   popout?: Omit<Omit<MenuDialogProps, 'trigger'>, 'dialog'>
   trigger: MenuDialogProps['trigger']
@@ -84,7 +84,7 @@ export const Menu = forwardRef(
                   ? undefined
                   : parentState.focusTrapRef,
                 noFocusLock: thisLevel > 0 || isMobile,
-                isFocusTakeoverDisabled: true,
+                // isFocusTakeoverDisabled: true,
                 ...(dialog || {}),
               }
             : dialog
@@ -99,8 +99,7 @@ export const Menu = forwardRef(
 
 interface MenuDialogProps extends GetDialogVariantProps<'popout', 'tray'> {}
 
-interface MenuBaseProps
-  extends Omit<ListBoxBaseProps, 'state' | 'onScrolledToBottom'> {
+interface MenuBaseProps extends Omit<ListBoxBaseProps, 'state'> {
   value?: ReactNode
   onChange?: ChangeHandler
   activeOptionId?: string

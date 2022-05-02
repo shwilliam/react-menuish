@@ -21,7 +21,10 @@ export const Dialog = forwardRef(
     })
 
     return transitions((styles, item) => (
-      <BaseDialog isOpen={!!item}>
+      <BaseDialog
+        isOpen={!!item}
+        overlay={{ style: { opacity: styles.opacity } }}
+      >
         <ModalContent
           ref={ref}
           {...props}

@@ -4,31 +4,40 @@ import {
   useRef,
   useContext,
   useMemo,
+  useState,
   createContext,
   forwardRef,
   ReactNode,
   Fragment,
   ComponentPropsWithoutRef,
   RefObject,
+  ComponentProps,
 } from 'react'
 import _ from 'lodash'
+import styled from 'styled-components'
 import { a, AnimatedComponent } from 'react-spring'
-import FocusLock from 'react-focus-lock'
 import useOnClickOutside from 'use-onclickoutside'
 import { RemoveScroll } from 'react-remove-scroll'
+import FocusLock from 'react-focus-lock'
 import {
   Dimensions,
   ElementRects,
   UseFloatingReturn,
 } from '@floating-ui/react-dom'
-import { Portal } from './portal'
-import { Overlay } from './overlay'
 import {
   FocusTakeoverBoundary,
   useFocusTakeoverContext,
 } from './focus-takeover'
+import { Portal } from './portal'
+import { Overlay } from './overlay'
 import { mergeRefs } from '../util/merge-refs'
 import { Require } from '../types'
+
+// TODO:
+// dialog on click
+// close all children
+// const x = ({el=document.body})
+// <provider el={stableContentRef.current}>
 
 // require either aria-label or aria-labelledby to be provided
 
@@ -99,15 +108,20 @@ export const DialogContent = forwardRef(
 
 export interface DialogProps {
   isOpen?: boolean // useful for transitions
+  overlay?: ComponentProps<typeof Overlay>
   children: ReactNode
 }
 
-export const Dialog = ({ isOpen: externalIsOpen, children }: DialogProps) => {
+export const Dialog = ({
+  isOpen: externalIsOpen,
+  overlay,
+  children,
+}: DialogProps) => {
   const dialogCtxt = useDialogContext()
   const isOpen = _.isUndefined(externalIsOpen)
     ? dialogCtxt.isOpen
     : externalIsOpen
-  const OverlayEl = dialogCtxt.overlay ? Overlay : Fragment
+  const WrapperEl = dialogCtxt.overlay ? FsWrapper : Fragment
 
   if (!isOpen) return null
   return (
@@ -129,12 +143,24 @@ export const Dialog = ({ isOpen: externalIsOpen, children }: DialogProps) => {
             })
           }}
         >
-          <OverlayEl>{children}</OverlayEl>
+          {dialogCtxt.overlay ? <Overlay {...overlay} /> : null}
+          <WrapperEl>{children}</WrapperEl>
         </FocusTakeoverBoundary>
       </RemoveScroll>
     </Portal>
   )
 }
+
+const FsWrapper = styled.div`
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
 
 export type DialogSize = (Dimensions & ElementRects) & { triggerWidth?: number }
 

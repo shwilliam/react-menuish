@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import _ from 'lodash'
 import { autoUpdate } from '@floating-ui/react-dom'
 import {
   Dialog,
@@ -6,14 +7,17 @@ import {
   DialogContentProps,
   useDialogContext,
 } from './dialog'
+import { useMounted } from '../hooks/mounted'
 
 export interface PopoutProps extends DialogContentProps {
   maxHeight?: number
+  maxWidth?: number
   width?: 'trigger' | 'auto'
 }
 
 export const Popout = ({
   maxHeight,
+  maxWidth,
   width,
   children,
   ...props
@@ -24,6 +28,10 @@ export const Popout = ({
     size?.height || maxHeight
       ? Math.min(size?.height || Infinity, maxHeight || Infinity)
       : 0
+  // const popoutMaxWidth =
+  //   size?.width || maxWidth
+  //     ? Math.min(size?.width || Infinity, maxWidth || Infinity)
+  //     : 0
 
   const floatingEl = refs?.floating.current
   useEffect(() => {
@@ -42,6 +50,8 @@ export const Popout = ({
           top: y ?? '',
           left: x ?? '',
           maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
+          // maxWidth: popoutMaxWidth ? `${popoutMaxWidth}px` : '',
+          background: 'white',
           overflow: 'auto',
           border: '1px solid red',
           ...(width === 'trigger'
@@ -50,7 +60,7 @@ export const Popout = ({
           ...(props.style || {}),
         }}
       >
-        {children}
+        {_.isNull(x) ? null : children}
       </DialogContent>
     </Dialog>
   )
