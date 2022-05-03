@@ -11,15 +11,16 @@ import {
 } from 'react'
 import _ from 'lodash'
 import {
+  autoPlacement,
   autoUpdate,
   Dimensions,
   ElementRects,
-  flip,
   limitShift,
   offset,
   Placement,
   shift,
   size,
+  flip,
   useFloating,
 } from '@floating-ui/react-dom'
 import useMeasure from 'react-use-measure'
@@ -329,7 +330,7 @@ interface UsePopoverPositionOptions {
 }
 
 export const usePopoverPosition = (options: UsePopoverPositionOptions = {}) => {
-  const { placement = 'bottom' } = options
+  const { placement } = options
   const [popoverSize, setPopoverSize] = useState<Dimensions & ElementRects>()
   const position = useFloating({
     placement,
@@ -342,12 +343,34 @@ export const usePopoverPosition = (options: UsePopoverPositionOptions = {}) => {
           }),
         }),
       }),
-      flip(),
+      _.isUndefined(placement)
+        ? autoPlacement({
+            alignment: 'start',
+            allowedPlacements: [
+              'bottom',
+              'bottom-end',
+              'bottom-start',
+              'left',
+              'left-end',
+              'left-start',
+              'right',
+              'right-end',
+              'right-start',
+            ],
+          })
+        : flip(),
       size({ apply: (data) => setPopoverSize(data) }),
     ],
   })
+  const retVal = useMemo(
+    () => ({
+      position,
+      size: popoverSize,
+    }),
+    [position, popoverSize],
+  )
 
-  return { position, size: popoverSize }
+  return retVal
 }
 
 export type PopoutVariantProps<M extends DialogVariantType | undefined> = Omit<

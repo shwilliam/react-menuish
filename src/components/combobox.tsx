@@ -7,12 +7,9 @@ import {
   useRef,
   KeyboardEventHandler,
 } from 'react'
-import { Popout } from './popout'
 import { ChangeHandler, ListBoxBase, useListBoxState } from './listbox'
-import { Tray } from './tray'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useId } from '../hooks/id'
-import { DialogTrigger } from './dialog'
 import { PopoutVariant, TrayVariant } from './dialog-variant'
 
 interface ComboboxProps {
@@ -178,6 +175,7 @@ export const Combobox = forwardRef(
           isOpen,
           onClose: () => setFocus([]),
           isolateDialog: false,
+          placement: 'bottom',
         }}
         width="trigger"
       >
