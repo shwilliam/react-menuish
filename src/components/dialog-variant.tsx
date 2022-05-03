@@ -82,7 +82,6 @@ export const DialogVariant = <
   trigger,
   dialog = {},
   mobileOptions,
-  listIdx,
   children,
   ...props
 }: GetDialogVariantProps<T, M>) => {
@@ -94,11 +93,7 @@ export const DialogVariant = <
 
   if (trigger) {
     return (
-      <DialogTrigger
-        trigger={(args) => trigger({ ...args, listIdx })}
-        {...defaultVariantOptions}
-        {...dialog}
-      >
+      <DialogTrigger trigger={trigger} {...defaultVariantOptions} {...dialog}>
         <Comp {...compProps}>{children}</Comp>
       </DialogTrigger>
     )
@@ -119,6 +114,7 @@ export interface DialogVariantTriggerProps {
 
 interface DialogWrapperProps extends DialogOptions {
   trigger?: (props: DialogVariantTriggerProps) => ReactNode
+  triggerRef?: RefObject<any>
   placement?: Placement
   position?: PopoverPosition
   children: ReactNode
@@ -138,10 +134,12 @@ export const DialogTrigger = ({
   isolateDialog = true,
   closeOnInteractOutside = true,
   initialFocusRef,
+  triggerRef: externalTriggerRef,
   children,
   ...props
 }: Require<DialogWrapperProps, 'trigger'>) => {
-  const triggerRef = useRef<any>()
+  const internalTriggerRef = useRef<any>()
+  const triggerRef = externalTriggerRef || internalTriggerRef
   const [innerIsOpen, setInnerIsOpen] = useState(false)
   const isOpen = !!(_.isUndefined(externalIsOpen)
     ? innerIsOpen
@@ -161,14 +159,10 @@ export const DialogTrigger = ({
     setInnerIsOpen(false)
     onClose?.()
   }, [onClose])
-  const open = useCallback(
-    (e) => {
-      setInnerIsOpen(true)
-      onOpen?.()
-      e?.stopPropagation()
-    },
-    [onOpen],
-  )
+  const open = useCallback(() => {
+    setInnerIsOpen(true)
+    onOpen?.()
+  }, [onOpen])
   const ctxt = useMemo(
     () => ({
       dialogId: innerDialogId,

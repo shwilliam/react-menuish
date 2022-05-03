@@ -21,17 +21,15 @@ import {
   MouseEventHandler,
   useMemo,
   ComponentPropsWithoutRef,
+  RefObject,
 } from 'react'
 import _ from 'lodash'
-import { Subtray } from './tray'
-import { Popout, PopoutTriggerContext } from './popout'
 import { useId } from '../hooks/id'
 import { mergeRefs } from '../util/merge-refs'
 import { usePrevious } from '../hooks/previous'
 import { useIsMobile } from '../hooks/is-mobile'
 import { useOnUnmount } from '../hooks/on-unmount'
 import { useScrolledToBottom } from '../hooks/scrolled-to-bottom'
-import { PopoutVariant } from './dialog-variant'
 
 type ShouldClose = boolean
 type ActionHandler = (value?: string) => ShouldClose | void
@@ -90,7 +88,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
-  const open = () => setFocus([-1])
+  const open = () => setFocus([getNextFocusableIdx(0, 0)])
   const getNextFocusableIdx = useCallback((start: number, level: number) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
@@ -435,6 +433,7 @@ export const ListBoxBase = forwardRef(
       }
     })
 
+    // HACK: only correct focus on sticky children change
     const stickyIdxsStr = JSON.stringify(
       _.flatten(
         listChildStateRef.current?.map((state) => _.keys(state.stickyChildren)),
@@ -491,7 +490,6 @@ export const ListBoxBase = forwardRef(
         <listLevelContext.Provider value={{ level }}>
           <ul
             style={{
-              border: '1px solid blue',
               padding: 0,
               margin: 0,
             }}
@@ -662,7 +660,8 @@ export const Item = forwardRef(
 interface FocusableItemProps extends ItemProps {
   isVirtuallyFocusable?: boolean
   children: (props: {
-    focusableRef: any
+    listItemRef: RefObject<any>
+    focusableRef: RefObject<any>
     handleKeyDown: KeyboardEventHandler
   }) => ReactNode
 }
@@ -727,13 +726,13 @@ export const FocusableItem = forwardRef(
     return (
       <Item
         ref={ref}
-        // onClick={onClick || (() => false)}
         onClick={handleClick}
         listIdx={listIdx}
         isDisabled={!isVirtuallyFocusable || isDisabled}
         {...props}
       >
         {children({
+          listItemRef: ref,
           focusableRef,
           handleKeyDown,
         })}
@@ -759,87 +758,6 @@ export const Group = forwardRef(
           {children}
         </div>
       </div>
-    )
-  },
-)
-
-interface SubListProps {
-  id?: string
-  trigger: (
-    triggerContext: PopoutTriggerContext & {
-      id?: string
-      listIdx: number
-      onClick?: ActionHandler
-    },
-  ) => ReactNode
-  listIdx?: number
-  onAction?: () => void
-  children: ReactNode[]
-}
-
-export const SubList = forwardRef(
-  (
-    { id, listIdx = -1, trigger, children, ...props }: SubListProps,
-    ref: ForwardedRef<any>,
-  ) => {
-    const innerId = useId(id)
-    const isMobile = useIsMobile()
-    const state = useListBoxContext()
-    const { focus, setFocus, closeLevel, focusTrapRef } = state
-
-    const { level } = useListLevelContext()
-    const thisLevel = level + 1
-
-    const isOpen = focus[level] === innerId
-    const openSubList = () => {
-      setFocus((s) => {
-        const clone = _.clone(s)
-        clone[level] = innerId
-        clone[thisLevel] = 0
-        return clone
-      })
-      return false
-    }
-
-    useEffect(() => {
-      if (_.last(focus) === innerId)
-        setFocus((s) => {
-          const clone = _.clone(s)
-          clone[clone.length - 1] = listIdx
-          return clone
-        })
-    }, [focus, setFocus, listIdx, innerId])
-
-    return (
-      <PopoutVariant
-        mobileType="tray"
-        mobileOptions={{ isSubtray: true }}
-        trigger={({ ref }) =>
-          trigger({
-            ref,
-            id: innerId,
-            listIdx,
-            onClick: () => {
-              openSubList()
-              return false
-            },
-            triggeredOnHover: !isMobile,
-          })
-        }
-        dialog={{
-          isOpen,
-          onClose: () => closeLevel(thisLevel),
-          placement: 'right',
-          initialFocusRef: isMobile ? undefined : focusTrapRef,
-          noFocusLock: thisLevel > 0 || isMobile,
-          ...(props.dialog || {}),
-        }}
-        {...props}
-      >
-        <ListBoxBase level={thisLevel} ref={ref} state={state}>
-          {children}
-        </ListBoxBase>
-      </PopoutVariant>
     )
   },
 )

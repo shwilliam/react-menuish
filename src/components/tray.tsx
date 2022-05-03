@@ -153,5 +153,4 @@ const StyledDialogContent = styled(DialogContent)`
   right: 0;
   bottom: 0;
   background: white;
-  border: 1px solid blue;
 `

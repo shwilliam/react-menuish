@@ -18,8 +18,9 @@ import { useId } from '../hooks/id'
 
 export interface MenuProps extends MenuBaseProps {
   dialog?: Omit<MenuDialogProps, 'trigger'>['dialog']
-  popout?: Omit<Omit<MenuDialogProps, 'trigger'>, 'dialog'>
+  popout?: Omit<MenuDialogProps, 'trigger' | 'dialog' | 'children' | 'type'>
   trigger: MenuDialogProps['trigger']
+  listIdx?: number // used internally
 }
 
 export const Menu = forwardRef(

@@ -52,8 +52,7 @@ export const Popout = ({
           maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
           // maxWidth: popoutMaxWidth ? `${popoutMaxWidth}px` : '',
           background: 'white',
-          overflow: 'auto',
-          border: '1px solid red',
+          overflowY: 'auto',
           ...(width === 'trigger'
             ? { width: size?.triggerWidth ? `${size?.triggerWidth}px` : '' }
             : {}),

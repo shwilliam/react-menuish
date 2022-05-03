@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { fruits, moreFruits } from '../util/fruits'
-import { Group, Item, SubList } from './listbox'
+import { Group, Item } from './listbox'
 import { Combobox } from './combobox'
 import { LoremWrap } from './lorem'
+import { Menu } from './menu'
 
 export default {
   title: 'Combobox',
@@ -52,11 +53,11 @@ export const MultiLevel = () => {
       {filteredFruits.map((fruit, idx) => (
         <Item key={fruit}>{fruit}</Item>
       ))}
-      <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
+      <Menu trigger={(props) => <Item {...props}>more fruits</Item>}>
         {moreFruits.map((fruit) => (
           <Item key={fruit}>{fruit}</Item>
         ))}
-      </SubList>
+      </Menu>
     </Combobox>
   )
 }

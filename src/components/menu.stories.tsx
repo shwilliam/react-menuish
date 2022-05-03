@@ -1,15 +1,14 @@
 import { useRef, useState } from 'react'
 import { action } from '@storybook/addon-actions'
-import { FocusableItem, Group, Item, SubList } from './listbox'
+import { FocusableItem, Group, Item } from './listbox'
 import { Menu, MenuProps } from './menu'
 import _ from 'lodash'
 import { Tooltip } from './tooltip'
 import { fruits, moreFruits } from '../util/fruits'
 import { Picker } from './picker'
 import { Lorem } from './lorem'
-import { Popout } from './popout'
-import { mergeRefs } from '../util/merge-refs'
 import { PopoutVariant } from './dialog-variant'
+import { mergeRefs } from '../util/merge-refs'
 
 const fetchPokemon = async (
   url: string = 'https://pokeapi.co/api/v2/pokemon?limit=10',
@@ -75,7 +74,7 @@ export const WithTooltips = () => {
           more info about {fruit}
         </Tooltip>
       ))}
-      {/* <SubList trigger={(props) => <Item {...props}>more fruits</Item>}>
+      <Menu trigger={(props) => <Item {...props}>more fruits</Item>}>
         {moreFruits.map((fruit) => (
           <Tooltip
             trigger={(props) => <Item {...props}>{fruit}</Item>}
@@ -84,7 +83,7 @@ export const WithTooltips = () => {
             more info about {fruit}
           </Tooltip>
         ))}
-      </SubList> */}
+      </Menu>
     </Menu>
   )
 }
@@ -271,12 +270,12 @@ export const WithFilter = () => {
         .map((fruit) => (
           <Item>{fruit}</Item>
         ))}
-      <SubList trigger={(props) => <Item {...props}>letters</Item>}>
+      <Menu trigger={(props) => <Item {...props}>letters</Item>}>
         <Item>a</Item>
         <Item>b</Item>
         <Item>c</Item>
         <Item>d</Item>
-      </SubList>
+      </Menu>
       {moreFruits
         .filter((fruit) => fruit.includes(filter.toLowerCase()))
         .map((fruit) => (
@@ -309,6 +308,7 @@ export const WithMultipleFilter = () => {
           <input
             ref={focusableRef}
             value={filter}
+            onClick={() => console.log('CLEEK')}
             onChange={(...args) => {
               setFilter(args[0].target.value)
               action('onChange (input)')(...args)
@@ -353,21 +353,25 @@ export const WithMultipleFilter = () => {
 const MenuWPopout = () => {
   const [popoutOpen, setPopoutOpen] = useState(false)
   return (
-    <Menu {...defaultMenuProps}>
+    <Menu
+      dialog={{ onClose: () => setPopoutOpen(false) }}
+      {...defaultMenuProps}
+    >
       {fruits.map((fruit) => (
         <Item>{fruit}</Item>
       ))}
-      <PopoutVariant
-        dialog={{
-          placement: 'right',
-          isOpen: popoutOpen,
-          onClose: () => setPopoutOpen(false),
-        }}
-        trigger={({ ref, ...props }) => (
-          <FocusableItem ref={ref} {...props}>
-            {({ focusableRef, handleKeyDown }) => (
+      <FocusableItem>
+        {({ listItemRef, focusableRef, handleKeyDown }) => (
+          <PopoutVariant
+            dialog={{
+              triggerRef: listItemRef,
+              placement: 'right',
+              isOpen: popoutOpen,
+              onClose: () => setPopoutOpen(false),
+            }}
+            trigger={({ ref }) => (
               <button
-                ref={focusableRef}
+                ref={mergeRefs(ref, focusableRef)}
                 onClick={(e) => {
                   setPopoutOpen(true)
                   e.stopPropagation()
@@ -377,12 +381,19 @@ const MenuWPopout = () => {
                 open
               </button>
             )}
-          </FocusableItem>
+          >
+            <button
+              onClick={(e) => {
+                setPopoutOpen(false)
+                e.stopPropagation()
+              }}
+            >
+              close
+            </button>
+            <Lorem />
+          </PopoutVariant>
         )}
-      >
-        <button onClick={() => setPopoutOpen(false)}>close</button>
-        <Lorem />
-      </PopoutVariant>
+      </FocusableItem>
       <Item>yo</Item>
     </Menu>
   )

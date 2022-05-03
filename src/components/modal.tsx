@@ -44,7 +44,6 @@ export const Dialog = forwardRef(
 interface ModalContentProps extends DialogContentProps {}
 
 const ModalContent = styled(DialogContent)<ModalContentProps>`
-  border: 1px solid blue;
   max-height: calc(var(${VISUAL_VIEWPORT_HEIGHT_VAR}) * 0.9);
   max-width: 90vw;
   width: 800px;

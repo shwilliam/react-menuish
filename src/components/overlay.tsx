@@ -10,6 +10,5 @@ export const Overlay = styled(animated.div)<OverlayProps>`
   right: 0;
   bottom: 0;
   left: 0;
-  border: 5px solid blue;
   background-color: rgba(0, 0, 0, 20%);
 `

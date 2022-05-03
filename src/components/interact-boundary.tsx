@@ -58,7 +58,7 @@ export const InteractBoundary = ({
   }, [])
 
   useEventListener(
-    'pointerup',
+    'pointerdown',
     (e) => {
       childBoundary.current?.onClose?.()
       childBoundary.current = null
