@@ -600,7 +600,7 @@ export const Item = forwardRef(
       textValue,
       isMobile,
     ])
-    const handleMouseDown: MouseEventHandler = (e) => {
+    const handleClick: MouseEventHandler = (e) => {
       handleAction()
       e.preventDefault()
       e.stopPropagation()
@@ -640,7 +640,7 @@ export const Item = forwardRef(
         aria-selected={isSelected ? 'true' : 'false'}
         aria-disabled={isDisabled ? 'true' : 'false'}
         onMouseOver={handleHover}
-        onMouseDown={handleMouseDown}
+        onClick={handleClick}
         style={{
           listStyleType: 'none',
           background: hasVirtualFocus
