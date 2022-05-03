@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Tray, Subtray } from './tray'
+import { Tray, Subtray, TrayHeader } from './tray'
 import { Lorem } from './lorem'
 import { DialogTrigger, TrayVariant } from './dialog-variant'
 
@@ -76,6 +76,7 @@ export const WithSubtray = () => {
         </button>
       )}
     >
+      <TrayHeader />
       <Lorem paragraphs={2} />
       <TrayVariant
         isSubtray

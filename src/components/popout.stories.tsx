@@ -4,6 +4,7 @@ import { mergeRefs } from '../util/merge-refs'
 import { PopoutVariant, PopoverPosition } from './dialog-variant'
 import { FocusableItem, Item, ListBox } from './listbox'
 import { Lorem } from './lorem'
+import { PopoutCard } from './popout'
 
 export default {
   title: 'Popout',
@@ -18,7 +19,7 @@ export const Default = ({ children = 'hello' }: { children?: ReactNode }) => {
         </button>
       )}
     >
-      {children}
+      <PopoutCard>{children}</PopoutCard>
     </PopoutVariant>
   )
 }

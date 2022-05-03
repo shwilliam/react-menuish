@@ -352,11 +352,37 @@ export const WithMultipleFilter = () => {
 
 const MenuWPopout = () => {
   const [popoutOpen, setPopoutOpen] = useState(false)
+  const [anotherPopoutOpen, setAnotherPopoutOpen] = useState(false)
   return (
     <Menu
       dialog={{ onClose: () => setPopoutOpen(false) }}
       {...defaultMenuProps}
     >
+      <FocusableItem>
+        {({ listItemRef, focusableRef }) => (
+          <PopoutVariant
+            dialog={{
+              triggerRef: listItemRef,
+              placement: 'right',
+              isOpen: popoutOpen,
+              onClose: () => setPopoutOpen(false),
+            }}
+            trigger={({ ref }) => (
+              <div
+                ref={mergeRefs(ref, focusableRef)}
+                onClick={(e) => {
+                  setPopoutOpen(true)
+                  e.stopPropagation()
+                }}
+              >
+                open
+              </div>
+            )}
+          >
+            <Lorem />
+          </PopoutVariant>
+        )}
+      </FocusableItem>
       {fruits.map((fruit) => (
         <Item>{fruit}</Item>
       ))}
@@ -366,14 +392,14 @@ const MenuWPopout = () => {
             dialog={{
               triggerRef: listItemRef,
               placement: 'right',
-              isOpen: popoutOpen,
-              onClose: () => setPopoutOpen(false),
+              isOpen: anotherPopoutOpen,
+              onClose: () => setAnotherPopoutOpen(false),
             }}
             trigger={({ ref }) => (
               <button
                 ref={mergeRefs(ref, focusableRef)}
                 onClick={(e) => {
-                  setPopoutOpen(true)
+                  setAnotherPopoutOpen(true)
                   e.stopPropagation()
                 }}
                 onKeyDown={handleKeyDown}
@@ -384,7 +410,7 @@ const MenuWPopout = () => {
           >
             <button
               onClick={(e) => {
-                setPopoutOpen(false)
+                setAnotherPopoutOpen(false)
                 e.stopPropagation()
               }}
             >

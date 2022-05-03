@@ -641,11 +641,12 @@ export const Item = forwardRef(
         onClick={handleClick}
         style={{
           listStyleType: 'none',
-          background: hasVirtualFocus
-            ? 'lightblue'
-            : isDisabled
-            ? 'gray'
-            : 'white',
+          background:
+            hasVirtualFocus && !isMobile
+              ? 'lightblue'
+              : isDisabled
+              ? 'gray'
+              : 'white',
           cursor: isDisabled ? 'not-allowed' : 'default',
           padding: '0px 4px',
         }}

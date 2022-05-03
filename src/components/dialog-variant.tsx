@@ -54,6 +54,7 @@ export type DialogVariantType = keyof typeof variantTypeComponent
 const defaultDialogOptions = {
   popout: {
     isScrollDisabled: false,
+    closeOnEscape: true,
   },
   modal: {
     overlay: true,
@@ -137,7 +138,6 @@ export const DialogTrigger = ({
   triggerRef: externalTriggerRef,
   closeOnEscape,
   children,
-  ...props
 }: Require<DialogWrapperProps, 'trigger'>) => {
   const internalTriggerRef = useRef<any>()
   const triggerRef = externalTriggerRef || internalTriggerRef
@@ -202,7 +202,7 @@ export const DialogTrigger = ({
 
   return (
     <>
-      {trigger({ ref: stableTriggerRef, open, close, ...props })}
+      {trigger({ ref: stableTriggerRef, open, close })}
       <dialogContext.Provider value={ctxt}>{children}</dialogContext.Provider>
     </>
   )
@@ -379,17 +379,7 @@ export type PopoutVariantProps<M extends DialogVariantType | undefined> = Omit<
 >
 export const PopoutVariant = <M extends DialogVariantType | undefined>(
   props: PopoutVariantProps<M>,
-) => (
-  <DialogVariant
-    type="popout"
-    mobileType="tray"
-    {...props}
-    dialog={{
-      closeOnEscape: true,
-      ...(props.dialog || {}),
-    }}
-  />
-)
+) => <DialogVariant type="popout" mobileType="tray" {...props} />
 
 export type ModalVariantProps<M extends DialogVariantType | undefined> = Omit<
   GetDialogVariantProps<'modal', M>,
