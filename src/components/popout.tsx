@@ -64,8 +64,12 @@ export const Popout = ({
           ...(props.style || {}),
         }}
       >
-        <PopoutCloseButton />
-        {_.isNull(x) ? null : children}
+        {_.isNull(x) ? null : (
+          <>
+            <PopoutCloseButton />
+            {children}
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
