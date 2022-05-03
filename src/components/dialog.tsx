@@ -16,7 +16,6 @@ import {
 import _ from 'lodash'
 import styled from 'styled-components'
 import { a, AnimatedComponent } from 'react-spring'
-import useOnClickOutside from 'use-onclickoutside'
 import { RemoveScroll } from 'react-remove-scroll'
 import FocusLock from 'react-focus-lock'
 import {
@@ -24,20 +23,11 @@ import {
   ElementRects,
   UseFloatingReturn,
 } from '@floating-ui/react-dom'
-import {
-  FocusTakeoverBoundary,
-  useFocusTakeoverContext,
-} from './focus-takeover'
 import { Portal } from './portal'
 import { Overlay } from './overlay'
 import { mergeRefs } from '../util/merge-refs'
 import { Require } from '../types'
-
-// TODO:
-// dialog on click
-// close all children
-// const x = ({el=document.body})
-// <provider el={stableContentRef.current}>
+import { InteractBoundary } from './interact-boundary'
 
 // require either aria-label or aria-labelledby to be provided
 
@@ -55,26 +45,11 @@ export const DialogContent = forwardRef(
       () => mergeRefs(ref, innerRef),
       [ref, innerRef],
     )
-    const focusTakeoverCtxt = useFocusTakeoverContext()
     const activateFocusLock = useCallback(() => {
-      if (dialogCtxt.initialFocusRef?.current) {
+      if (dialogCtxt.initialFocusRef?.current)
         dialogCtxt.initialFocusRef.current.focus?.()
-        console.log('focus dialog initialFocusRef')
-      }
     }, [dialogCtxt.initialFocusRef])
     const isModal = !dialogCtxt.noFocusLock && dialogCtxt.isolateDialog
-
-    useOnClickOutside(innerRef, () => {
-      if (
-        !dialogCtxt.isFocusTakeoverDisabled && // handled by parent
-        dialogCtxt.closeOnInteractOutside &&
-        (focusTakeoverCtxt.getIsTopmost(dialogCtxt.dialogId) ||
-          focusTakeoverCtxt.getIsDeactivated(dialogCtxt.dialogId))
-      ) {
-        console.log('close: ', dialogCtxt.dialogId)
-        dialogCtxt.onClose?.()
-      }
-    })
 
     useEffect(() => {
       if (!dialogCtxt.isolateDialog) return
@@ -94,13 +69,15 @@ export const DialogContent = forwardRef(
         returnFocus
         autoFocus
       >
-        <a.div
-          ref={stableContentRef}
-          {...(isModal ? { 'aria-modal': true, role: 'dialog' } : {})}
-          {...props}
-        >
-          {children}
-        </a.div>
+        <InteractBoundary el={wrapperRef.current} onClose={dialogCtxt.onClose}>
+          <a.div
+            ref={stableContentRef}
+            {...(isModal ? { 'aria-modal': true, role: 'dialog' } : {})}
+            {...props}
+          >
+            {children}
+          </a.div>
+        </InteractBoundary>
       </FocusLock>
     )
   },
@@ -130,22 +107,8 @@ export const Dialog = ({
         allowPinchZoom={dialogCtxt.allowPinchZoom}
         enabled={dialogCtxt.isScrollDisabled}
       >
-        <FocusTakeoverBoundary
-          id={dialogCtxt.dialogId}
-          isDisabled={dialogCtxt.isFocusTakeoverDisabled}
-          onClose={dialogCtxt.onClose}
-          onActivate={() => console.log('activate: ', dialogCtxt.dialogId)}
-          onRestore={() => {
-            console.log('deactivate: ', dialogCtxt.dialogId)
-            requestAnimationFrame(() => {
-              console.log('try focus deez: ', dialogCtxt.triggerRef?.current)
-              dialogCtxt.triggerRef?.current?.focus?.()
-            })
-          }}
-        >
-          {dialogCtxt.overlay ? <Overlay {...overlay} /> : null}
-          <WrapperEl>{children}</WrapperEl>
-        </FocusTakeoverBoundary>
+        {dialogCtxt.overlay ? <Overlay {...overlay} /> : null}
+        <WrapperEl>{children}</WrapperEl>
       </RemoveScroll>
     </Portal>
   )
@@ -172,7 +135,6 @@ export interface DialogOptions {
   overlay?: boolean
   allowPinchZoom?: boolean
   isScrollDisabled?: boolean
-  isFocusTakeoverDisabled?: boolean
   noFocusLock?: boolean
   isolateDialog?: boolean
   closeOnInteractOutside?: boolean

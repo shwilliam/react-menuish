@@ -133,7 +133,6 @@ export const DialogTrigger = ({
   overlay = false,
   allowPinchZoom = false,
   isScrollDisabled = true,
-  isFocusTakeoverDisabled = false,
   noFocusLock = false,
   isolateDialog = true,
   closeOnInteractOutside = true,
@@ -161,10 +160,14 @@ export const DialogTrigger = ({
     setInnerIsOpen(false)
     onClose?.()
   }, [onClose])
-  const open = useCallback(() => {
-    setInnerIsOpen(true)
-    onOpen?.()
-  }, [onOpen])
+  const open = useCallback(
+    (e) => {
+      setInnerIsOpen(true)
+      onOpen?.()
+      e?.stopPropagation()
+    },
+    [onOpen],
+  )
   const ctxt = useMemo(
     () => ({
       dialogId: innerDialogId,
@@ -177,7 +180,6 @@ export const DialogTrigger = ({
       overlay,
       allowPinchZoom,
       isScrollDisabled,
-      isFocusTakeoverDisabled,
       noFocusLock,
       isolateDialog,
       closeOnInteractOutside,
@@ -193,7 +195,6 @@ export const DialogTrigger = ({
       overlay,
       allowPinchZoom,
       isScrollDisabled,
-      isFocusTakeoverDisabled,
       noFocusLock,
       isolateDialog,
       closeOnInteractOutside,
@@ -218,7 +219,6 @@ export const DialogContainer = ({
   overlay = false,
   allowPinchZoom = false,
   isScrollDisabled = true,
-  isFocusTakeoverDisabled = false,
   noFocusLock = false,
   isolateDialog = true,
   closeOnInteractOutside = true,
@@ -248,7 +248,6 @@ export const DialogContainer = ({
       overlay,
       allowPinchZoom,
       isScrollDisabled,
-      isFocusTakeoverDisabled,
       noFocusLock,
       isolateDialog,
       closeOnInteractOutside,
@@ -265,7 +264,6 @@ export const DialogContainer = ({
       overlay,
       allowPinchZoom,
       isScrollDisabled,
-      isFocusTakeoverDisabled,
       noFocusLock,
       isolateDialog,
       closeOnInteractOutside,

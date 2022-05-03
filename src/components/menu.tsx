@@ -84,7 +84,6 @@ export const Menu = forwardRef(
                   ? undefined
                   : parentState.focusTrapRef,
                 noFocusLock: thisLevel > 0 || isMobile,
-                // isFocusTakeoverDisabled: true,
                 ...(dialog || {}),
               }
             : dialog
@@ -140,8 +139,6 @@ const MenuBase = forwardRef(
       ? parentListBoxState.focus[level] === id
       : !!focus.length
     const wasOpen = usePrevious(isOpen)
-
-    console.log(state.focus)
 
     const onCloseRef = useSyncedRef(dialogCtxt.onClose)
     useEffect(() => {

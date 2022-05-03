@@ -827,7 +827,6 @@ export const SubList = forwardRef(
           placement: 'right',
           initialFocusRef: isMobile ? undefined : focusTrapRef,
           noFocusLock: thisLevel > 0 || isMobile,
-          isFocusTakeoverDisabled: !isMobile,
           ...(props.dialog || {}),
         }}
         {...props}

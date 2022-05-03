@@ -368,7 +368,10 @@ const MenuWPopout = () => {
             {({ focusableRef, handleKeyDown }) => (
               <button
                 ref={focusableRef}
-                onClick={() => setPopoutOpen(true)}
+                onClick={(e) => {
+                  setPopoutOpen(true)
+                  e.stopPropagation()
+                }}
                 onKeyDown={handleKeyDown}
               >
                 open

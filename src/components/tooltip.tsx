@@ -58,7 +58,6 @@ export const Tooltip = forwardRef(
         dialog={{
           isOpen,
           onClose: close,
-          isFocusTakeoverDisabled: true,
           noFocusLock: true,
           isolateDialog: false,
           ...(props.dialog || {}),
