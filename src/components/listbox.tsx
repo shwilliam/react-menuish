@@ -90,7 +90,7 @@ export const useListBoxState = (options?: UseListBoxStateOptions) => {
   const focusTrapRef = useRef<any>()
   const actionRef = useRef<Action | null>(null)
   const listChildStateRef = useRef<ListChildState[]>([])
-  const open = () => setFocus([getNextFocusableIdx(0, focus.length - 1)])
+  const open = () => setFocus([-1])
   const getNextFocusableIdx = useCallback((start: number, level: number) => {
     const levelChildState = listChildStateRef.current[level]
     const levelMax = levelChildState?.count
@@ -435,6 +435,11 @@ export const ListBoxBase = forwardRef(
       }
     })
 
+    const stickyIdxsStr = JSON.stringify(
+      _.flatten(
+        listChildStateRef.current?.map((state) => _.keys(state.stickyChildren)),
+      ),
+    )
     useEffect(() => {
       const activeOptionIdx =
         level === 0 && nextRootActiveOptionFocusIdx !== undefined
@@ -449,7 +454,7 @@ export const ListBoxBase = forwardRef(
             : activeOptionIdx
         return clone
       })
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [stickyIdxsStr]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // sync level child count
     useEffect(() => {
