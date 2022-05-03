@@ -69,7 +69,11 @@ export const DialogContent = forwardRef(
         returnFocus
         autoFocus
       >
-        <InteractBoundary el={wrapperRef.current} onClose={dialogCtxt.onClose}>
+        <InteractBoundary
+          el={wrapperRef.current}
+          onClose={dialogCtxt.onClose}
+          closeOnEscape={dialogCtxt.closeOnEscape}
+        >
           <a.div
             ref={stableContentRef}
             {...(isModal ? { 'aria-modal': true, role: 'dialog' } : {})}
@@ -138,6 +142,7 @@ export interface DialogOptions {
   noFocusLock?: boolean
   isolateDialog?: boolean
   closeOnInteractOutside?: boolean
+  closeOnEscape?: boolean
   initialFocusRef?: any
 }
 

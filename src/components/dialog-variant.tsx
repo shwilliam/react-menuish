@@ -135,6 +135,7 @@ export const DialogTrigger = ({
   closeOnInteractOutside = true,
   initialFocusRef,
   triggerRef: externalTriggerRef,
+  closeOnEscape,
   children,
   ...props
 }: Require<DialogWrapperProps, 'trigger'>) => {
@@ -179,6 +180,7 @@ export const DialogTrigger = ({
       isolateDialog,
       closeOnInteractOutside,
       initialFocusRef,
+      closeOnEscape,
     }),
     [
       innerDialogId,
@@ -194,6 +196,7 @@ export const DialogTrigger = ({
       isolateDialog,
       closeOnInteractOutside,
       initialFocusRef,
+      closeOnEscape,
     ],
   )
 
@@ -218,6 +221,7 @@ export const DialogContainer = ({
   isolateDialog = true,
   closeOnInteractOutside = true,
   initialFocusRef,
+  closeOnEscape,
   children,
 }: DialogWrapperProps) => {
   const [measureRef, { width: triggerWidth }] = useMeasure()
@@ -247,6 +251,7 @@ export const DialogContainer = ({
       isolateDialog,
       closeOnInteractOutside,
       initialFocusRef,
+      closeOnEscape,
     }),
     [
       innerDialogId,
@@ -263,6 +268,7 @@ export const DialogContainer = ({
       isolateDialog,
       closeOnInteractOutside,
       initialFocusRef,
+      closeOnEscape,
     ],
   )
 
@@ -373,7 +379,17 @@ export type PopoutVariantProps<M extends DialogVariantType | undefined> = Omit<
 >
 export const PopoutVariant = <M extends DialogVariantType | undefined>(
   props: PopoutVariantProps<M>,
-) => <DialogVariant type="popout" mobileType="tray" {...props} />
+) => (
+  <DialogVariant
+    type="popout"
+    mobileType="tray"
+    {...props}
+    dialog={{
+      closeOnEscape: true,
+      ...(props.dialog || {}),
+    }}
+  />
+)
 
 export type ModalVariantProps<M extends DialogVariantType | undefined> = Omit<
   GetDialogVariantProps<'modal', M>,

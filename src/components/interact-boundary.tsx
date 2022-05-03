@@ -29,6 +29,7 @@ interface InteractBoundaryContextProviderProps {
   id?: string
   el?: Element
   onClose?: () => void
+  closeOnEscape?: boolean
   children: ReactNode
 }
 
@@ -36,11 +37,20 @@ export const InteractBoundary = ({
   id,
   el = document.body,
   onClose,
+  closeOnEscape = false,
   children,
 }: InteractBoundaryContextProviderProps) => {
   const innerId = useId(id)
   const parentCtxt = useInteractBoundaryContext()
   const childBoundary = useRef<ChildInteractBoundary | null>(null)
+  const closeThisBoundary = () => {
+    onClose?.()
+    parentCtxt.boundary.current = null
+  }
+  const closeChildBoundary = () => {
+    childBoundary.current?.onClose?.()
+    childBoundary.current = null
+  }
 
   useEffect(() => {
     // parentCtxt.onClose.current?.()
@@ -58,10 +68,21 @@ export const InteractBoundary = ({
   }, [])
 
   useEventListener(
+    'keyup',
+    (e) => {
+      const event = e as KeyboardEvent
+      if (closeOnEscape && event.key === 'Escape') {
+        closeThisBoundary()
+        e.stopPropagation()
+      }
+    },
+    el,
+  )
+
+  useEventListener(
     'pointerdown',
     (e) => {
-      childBoundary.current?.onClose?.()
-      childBoundary.current = null
+      closeChildBoundary()
       e.stopPropagation()
     },
     el,
