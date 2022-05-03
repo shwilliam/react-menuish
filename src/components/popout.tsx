@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { ForwardedRef, forwardRef, useEffect, ComponentProps } from 'react'
 import _ from 'lodash'
 import { autoUpdate } from '@floating-ui/react-dom'
 import {
@@ -7,7 +7,7 @@ import {
   DialogContentProps,
   useDialogContext,
 } from './dialog'
-import { useMounted } from '../hooks/mounted'
+import styled from 'styled-components'
 
 export interface PopoutProps extends DialogContentProps {
   maxHeight?: number
@@ -51,16 +51,46 @@ export const Popout = ({
           left: x ?? '',
           maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
           // maxWidth: popoutMaxWidth ? `${popoutMaxWidth}px` : '',
+          border: '1px solid blue',
           background: 'white',
           overflowY: 'auto',
+          // popout only (not tooltip)
+          padding: '16px 8px',
+          borderRadius: '4px',
+          //
           ...(width === 'trigger'
             ? { width: size?.triggerWidth ? `${size?.triggerWidth}px` : '' }
             : {}),
           ...(props.style || {}),
         }}
       >
+        <PopoutCloseButton />
         {_.isNull(x) ? null : children}
       </DialogContent>
     </Dialog>
   )
 }
+
+interface PopoutCloseButtonProps extends ComponentProps<'button'> {}
+
+const PopoutCloseButton = forwardRef(
+  (props: PopoutCloseButtonProps, ref: any) => {
+    const dialogCtxt = useDialogContext()
+    return (
+      <StyledCloseButton ref={ref} onClick={dialogCtxt.onClose} {...props}>
+        <span role="img" aria-label="close">
+          x
+        </span>
+      </StyledCloseButton>
+    )
+  },
+)
+
+const StyledCloseButton = styled.button`
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  padding: 2px;
+  background: none;
+  border: none;
+`

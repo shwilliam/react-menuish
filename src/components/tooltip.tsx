@@ -11,10 +11,11 @@ import { useKeyPress } from '../hooks/key-press'
 import { useTooltip } from '../hooks/tooltip'
 import { useHover } from '../hooks/hover'
 import { useId } from '../hooks/id'
+import { useIsMobile } from '../hooks/is-mobile'
 
 interface TooltipTriggerContext extends DialogVariantTriggerProps {
-  onVirtualFocusStart: () => void
-  onVirtualFocusEnd: () => void
+  onVirtualFocusStart?: () => void
+  onVirtualFocusEnd?: () => void
 }
 
 interface TooltipProps<M extends DialogVariantType>
@@ -28,6 +29,7 @@ export const Tooltip = forwardRef(
     ref: ForwardedRef<any>,
   ) => {
     const tooltipId = useId()
+    const isMobile = useIsMobile()
     const { isOpen, open, close } = useTooltip({})
     const { hoverProps } = useHover({
       onHoverStart: open,
@@ -45,32 +47,38 @@ export const Tooltip = forwardRef(
     return (
       <PopoutVariant
         id={tooltipId}
-        role="tooltip"
-        trigger={(triggerProps) =>
+        {...(isMobile ? {} : { role: 'tooltip' })}
+        trigger={({ ref }) =>
           trigger({
-            ...triggerProps,
-            ...hoverProps,
+            ref,
             ...props,
-            onVirtualFocusStart: open,
-            onVirtualFocusEnd: () => close(true),
+            ...(isMobile
+              ? { onClick: open }
+              : {
+                  ...hoverProps,
+                  onVirtualFocusStart: open,
+                  onVirtualFocusEnd: () => close(true),
+                }),
           })
         }
         dialog={{
           isOpen,
-          onClose: close,
-          noFocusLock: true,
-          isolateDialog: false,
+          onClose: isMobile ? () => close(true) : close,
+          noFocusLock: !isMobile,
+          isolateDialog: isMobile,
           ...(props.dialog || {}),
         }}
       >
-        {transitions(
-          (style, item) =>
-            item && (
-              <TooltipWrapper ref={ref} style={style}>
-                {children}
-              </TooltipWrapper>
-            ),
-        )}
+        {isMobile
+          ? children
+          : transitions(
+              (style, item) =>
+                item && (
+                  <TooltipWrapper ref={ref} style={style}>
+                    {children}
+                  </TooltipWrapper>
+                ),
+            )}
       </PopoutVariant>
     )
   },

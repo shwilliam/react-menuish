@@ -45,3 +45,17 @@ export const FocusTrigger = () => {
     </>
   )
 }
+
+export const TriggerWithAltAction = () => {
+  return (
+    <Tooltip
+      trigger={(props) => (
+        <button {...props} onClick={() => alert('yeet')}>
+          hover me
+        </button>
+      )}
+    >
+      peekaboo
+    </Tooltip>
+  )
+}
