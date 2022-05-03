@@ -3,8 +3,8 @@ import {
   useEffect,
   forwardRef,
   ReactNode,
-  useCallback,
   ForwardedRef,
+  ComponentProps,
 } from 'react'
 import styled from 'styled-components'
 import { useSpring, config, useTransition } from 'react-spring'
@@ -55,11 +55,6 @@ const RootTray = forwardRef(
     const hasMounted = useMounted()
     const viewportHeight = useSafeViewportHeight()
     const [innerRef, { height: contentHeight }] = useMeasure()
-    const [trayHeight, setTrayHeight] = useState(0)
-    const measureTray = useCallback(() => {
-      if (isFullscreen) return
-      setTrayHeight(contentHeight)
-    }, [isFullscreen, contentHeight])
     const springStyle = useSpring({
       opacity: hasMounted && dialogCtxt.isOpen ? 1 : 0,
       height:
@@ -70,19 +65,12 @@ const RootTray = forwardRef(
           : 0,
       onRest: () => {
         if (!dialogCtxt.isOpen) setInnerIsOpen(false)
-        measureTray()
       },
     })
 
     useEffect(() => {
       if (dialogCtxt.isOpen) setInnerIsOpen(true)
     }, [dialogCtxt.isOpen])
-
-    useEffect(() => {
-      if (!dialogCtxt.isOpen) return
-      window.addEventListener('resize', measureTray)
-      return () => window.removeEventListener('resize', measureTray)
-    }, [dialogCtxt.isOpen, measureTray])
 
     return (
       <Dialog
@@ -91,15 +79,14 @@ const RootTray = forwardRef(
       >
         <StyledDialogContent
           ref={ref}
-          style={{ height: springStyle.height }}
           {...props}
+          style={{ height: springStyle.height, ...(props.style || {}) }}
         >
           <div
             ref={innerRef}
             style={{
               maxHeight: `${viewportHeight}px`,
               overflowY: 'auto',
-              ...(isFullscreen ? {} : { minHeight: `${trayHeight}px` }),
             }}
           >
             {children}
@@ -114,9 +101,9 @@ export const Subtray = forwardRef(
   ({ children, ...props }: TrayVariantProps, ref: ForwardedRef<any>) => {
     const dialogCtxt = useDialogContext()
     const transitions = useTransition(dialogCtxt.isOpen, {
-      from: { translateX: '100vw', opacity: 1 },
-      enter: { translateX: '0vw', opacity: 1 },
-      leave: { translateX: '100vw', opacity: 0 },
+      from: { translateX: '100vw' },
+      enter: { translateX: '0vw' },
+      leave: { translateX: '100vw' },
       config: {
         ...config.gentle,
         bounce: 0,
@@ -131,16 +118,15 @@ export const Subtray = forwardRef(
             {...props}
             style={{
               top: 0,
-              height: '100%',
-              width: '100%',
-              zIndex: 2,
-              overflowY: 'auto',
               ...transition,
               ...(props.style || {}),
             }}
           >
-            <button onClick={dialogCtxt.onClose}>close</button>
-            {children}
+            <div style={{ overflow: 'hidden', height: '100%' }}>
+              <div style={{ overflowY: 'auto', height: '100%' }}>
+                {children}
+              </div>
+            </div>
           </StyledDialogContent>
         ),
     )
@@ -154,3 +140,17 @@ const StyledDialogContent = styled(DialogContent)`
   bottom: 0;
   background: white;
 `
+
+interface TrayHeaderProps extends ComponentProps<'div'> {}
+
+export const TrayHeader = forwardRef(
+  ({ children, ...props }: TrayHeaderProps, ref: ForwardedRef<any>) => {
+    const dialogCtxt = useDialogContext()
+    return (
+      <div ref={ref} {...props}>
+        <button onClick={dialogCtxt.onClose}>close</button>
+        {children}
+      </div>
+    )
+  },
+)
