@@ -99,7 +99,8 @@ export const Combobox = forwardRef(
       if (!focus.length) setFocus([0])
     }
     const handleBlur = () => {
-      if (value) onInputChange?.((value && String(value)) || '')
+      if (isMobile) onInputChange?.('')
+      else if (value) onInputChange?.((value && String(value)) || '')
       close()
     }
 
@@ -107,8 +108,9 @@ export const Combobox = forwardRef(
     const isMobile = useIsMobile()
 
     useEffect(() => {
-      onInputChange?.((value && String(value)) || '')
-    }, [value, onInputChange])
+      if (isMobile) onInputChange?.('')
+      else onInputChange?.((value && String(value)) || '')
+    }, [value, onInputChange, isMobile])
 
     const listBoxId = useId()
     const listbox = <ListBoxBase id={listBoxId} state={state} {...props} />
