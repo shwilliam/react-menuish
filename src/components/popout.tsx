@@ -51,29 +51,37 @@ export const Popout = ({
           left: x ?? '',
           maxHeight: popoutMaxHeight ? `${popoutMaxHeight}px` : '',
           // maxWidth: popoutMaxWidth ? `${popoutMaxWidth}px` : '',
-          border: '1px solid blue',
           background: 'white',
           overflowY: 'auto',
-          // popout only (not tooltip)
-          padding: '16px 8px',
-          borderRadius: '4px',
-          //
           ...(width === 'trigger'
             ? { width: size?.triggerWidth ? `${size?.triggerWidth}px` : '' }
             : {}),
           ...(props.style || {}),
         }}
       >
-        {_.isNull(x) ? null : (
-          <>
-            <PopoutCloseButton />
-            {children}
-          </>
-        )}
+        {_.isNull(x) ? null : <>{children}</>}
       </DialogContent>
     </Dialog>
   )
 }
+
+interface PopoutCardProps extends ComponentProps<'div'> {}
+
+export const PopoutCard = forwardRef(
+  ({ children, ...props }: PopoutCardProps, ref: ForwardedRef<any>) => (
+    <div
+      ref={ref}
+      style={{
+        padding: '16px 8px',
+        borderRadius: '4px',
+      }}
+      {...props}
+    >
+      <PopoutCloseButton />
+      {children}
+    </div>
+  ),
+)
 
 interface PopoutCloseButtonProps extends ComponentProps<'button'> {}
 
