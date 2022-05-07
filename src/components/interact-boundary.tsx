@@ -2,6 +2,7 @@ import {
   createContext,
   MutableRefObject,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -79,14 +80,11 @@ export const InteractBoundary = ({
     el,
   )
 
-  useEventListener(
-    'pointerdown',
-    (e) => {
-      closeChildBoundary()
-      e.stopPropagation()
-    },
-    el,
-  )
+  const handlePointerDown = useCallback((e) => {
+    closeChildBoundary()
+    e.stopPropagation()
+  }, [])
+  useEventListener('pointerup', handlePointerDown, el)
 
   return (
     <interactBoundaryContext.Provider value={{ boundary: childBoundary }}>
